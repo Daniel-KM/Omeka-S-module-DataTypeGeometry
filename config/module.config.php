@@ -17,9 +17,10 @@ return [
         // are set in the bootstrap of the module.
         'functions' => [
             // See https://github.com/creof/doctrine2-spatial/blob/master/INSTALL.md.
+            // The commented keys can be used by another module: just enable them.
             /*
             'string' => [
-                // For postgresql.
+                // For PostgreSql.
                 'geometry' => \CrEOF\Spatial\ORM\Query\AST\Functions\PostgreSql\Geometry::class,
                 'stbuffer' => \CrEOF\Spatial\ORM\Query\AST\Functions\PostgreSql\STBuffer::class,
                 'stcollect' => \CrEOF\Spatial\ORM\Query\AST\Functions\PostgreSql\STCollect::class,
@@ -29,7 +30,7 @@ return [
             */
             'numeric' => [
                 /*
-                // For postgresql.
+                // For PostgreSql.
                 'starea' => \CrEOF\Spatial\ORM\Query\AST\Functions\PostgreSql\STArea::class,
                 'stasbinary' => \CrEOF\Spatial\ORM\Query\AST\Functions\PostgreSql\STAsBinary::class,
                 'stasgeojson' => \CrEOF\Spatial\ORM\Query\AST\Functions\PostgreSql\STAsGeoJson::class,
@@ -68,8 +69,7 @@ return [
                 'stsummary' => \CrEOF\Spatial\ORM\Query\AST\Functions\PostgreSql\STSummary::class,
                 'sttouches' => \CrEOF\Spatial\ORM\Query\AST\Functions\PostgreSql\STTouches::class,
                 'sttransform' => \CrEOF\Spatial\ORM\Query\AST\Functions\PostgreSql\STTransform::class,
-                */
-                // For mysql.
+                // For mySql.
                 'area' => \CrEOF\Spatial\ORM\Query\AST\Functions\MySql\Area::class,
                 'asbinary' => \CrEOF\Spatial\ORM\Query\AST\Functions\MySql\AsBinary::class,
                 'astext' => \CrEOF\Spatial\ORM\Query\AST\Functions\MySql\AsText::class,
@@ -111,11 +111,11 @@ return [
                 'point' => \CrEOF\Spatial\ORM\Query\AST\Functions\MySql\Point::class,
                 'srid' => \CrEOF\Spatial\ORM\Query\AST\Functions\MySql\SRID::class,
                 'startpoint' => \CrEOF\Spatial\ORM\Query\AST\Functions\MySql\StartPoint::class,
-                'st_buffer' => \CrEOF\Spatial\ORM\Query\AST\Functions\MySql\STBuffer::class,
-                'st_contains' => \CrEOF\Spatial\ORM\Query\AST\Functions\MySql\STContains::class,
+                // 'st_buffer' => \CrEOF\Spatial\ORM\Query\AST\Functions\MySql\STBuffer::class,
+                // 'st_contains' => \CrEOF\Spatial\ORM\Query\AST\Functions\MySql\STContains::class,
                 'st_crosses' => \CrEOF\Spatial\ORM\Query\AST\Functions\MySql\STCrosses::class,
                 'st_disjoint' => \CrEOF\Spatial\ORM\Query\AST\Functions\MySql\STDisjoint::class,
-                'st_distance' => \CrEOF\Spatial\ORM\Query\AST\Functions\MySql\STDistance::class,
+                // 'st_distance' => \CrEOF\Spatial\ORM\Query\AST\Functions\MySql\STDistance::class,
                 'st_equals' => \CrEOF\Spatial\ORM\Query\AST\Functions\MySql\STEquals::class,
                 'st_intersects' => \CrEOF\Spatial\ORM\Query\AST\Functions\MySql\STIntersects::class,
                 'st_overlaps' => \CrEOF\Spatial\ORM\Query\AST\Functions\MySql\STOverlaps::class,
@@ -125,8 +125,27 @@ return [
                 'within' => \CrEOF\Spatial\ORM\Query\AST\Functions\MySql\Within::class,
                 'x' => \CrEOF\Spatial\ORM\Query\AST\Functions\MySql\X::class,
                 'y' => \CrEOF\Spatial\ORM\Query\AST\Functions\MySql\Y::class,
+                */
+
+                // Functions used by this module.
+
+                'stdistancesphere' => \CrEOF\Spatial\ORM\Query\AST\Functions\PostgreSql\STDistanceSphere::class,
+                'mbrcontains' => \CrEOF\Spatial\ORM\Query\AST\Functions\MySql\MBRContains::class,
+                // Point in mySql, ST_Point in Postgre, so use only st_geomfromtext.
+                'point' => \CrEOF\Spatial\ORM\Query\AST\Functions\MySql\Point::class,
+
                 // Custom for this module (not yet available in Doctrine Spatial).
-                'st_geomfromtext' => Doctrine\ORM\Query\AST\Functions\MySql\STGeomFromText::class,
+                // Note: this method cannot be a common one, since Postgre uses "ST_DistanceSphere".
+                'st_distance_sphere' => Doctrine\ORM\Query\AST\Functions\MySql\STDistanceSphere::class,
+
+                // Create alias to manage mySql and PostgreSql with one code.
+                // Some extra postgre params may not be used.
+                'st_buffer' => Doctrine\ORM\Query\AST\Functions\STBuffer::class,
+                'st_contains' => Doctrine\ORM\Query\AST\Functions\STContains::class,
+                'st_distance' => Doctrine\ORM\Query\AST\Functions\STDistance::class,
+                'st_geomfromtext' => Doctrine\ORM\Query\AST\Functions\STGeomFromText::class,
+                'st_x' => Doctrine\ORM\Query\AST\Functions\STX::class,
+                'st_y' => Doctrine\ORM\Query\AST\Functions\STY::class,
             ],
         ],
     ],
