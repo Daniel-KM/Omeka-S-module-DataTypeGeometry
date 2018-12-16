@@ -81,18 +81,6 @@ class Module extends AbstractGenericModule
             \Annotate\Controller\Admin\AnnotationController::class,
         ];
         foreach ($controllers as $controller) {
-            // Display and filter the search for the advanced search pages.
-            $sharedEventManager->attach(
-                $controller,
-                'view.advanced_search',
-                [$this, 'displayAdvancedSearch']
-            );
-            $sharedEventManager->attach(
-                $controller,
-                'view.search.filters',
-                [$this, 'filterSearchFilters']
-            );
-
             // Manage the geometry data type.
             $sharedEventManager->attach(
                 $controller,
@@ -105,14 +93,32 @@ class Module extends AbstractGenericModule
                 [$this, 'prepareResourceForm']
             );
         }
+
+        $controllers[] = 'Omeka\Controller\Site\Item';
+        $controllers[] = 'Omeka\Controller\Site\ItemSet';
+        $controllers[] = 'Omeka\Controller\Site\Media';
+        $controllers[] = \Annotate\Controller\Site\AnnotationController::class;
+        foreach ($controllers as $controller) {
+            // Display and filter the search for the advanced search pages.
+            $sharedEventManager->attach(
+                $controller,
+                'view.advanced_search',
+                [$this, 'displayAdvancedSearch']
+            );
+            $sharedEventManager->attach(
+                $controller,
+                'view.search.filters',
+                [$this, 'filterSearchFilters']
+            );
+        }
+
         $adapters = [
             \Omeka\Api\Adapter\ItemAdapter::class,
             \Omeka\Api\Adapter\ItemSetAdapter::class,
             \Omeka\Api\Adapter\MediaAdapter::class,
             \Annotate\Api\Adapter\AnnotationAdapter::class,
-            // TODO Remove body and target adapters.
-            \Annotate\Api\Adapter\AnnotationBodyAdapter::class,
-            \Annotate\Api\Adapter\AnnotationTargetAdapter::class,
+            \Annotate\Api\Adapter\AnnotationBodyHydrator::class,
+            \Annotate\Api\Adapter\AnnotationTargetHydrator::class,
         ];
         foreach ($adapters as $adapter) {
             // Search resources and annotations by geometries.
@@ -122,6 +128,7 @@ class Module extends AbstractGenericModule
                 [$this, 'searchQuery']
             );
 
+            // Save geometries in the external table.
             $sharedEventManager->attach(
                 $adapter,
                 'api.hydrate.post',
