@@ -170,6 +170,7 @@ return [
     'form_elements' => [
         'invokables' => [
             Form\SearchFieldset::class => Form\SearchFieldset::class,
+            Form\SettingsFieldset::class => Form\SettingsFieldset::class,
         ],
     ],
     'translator' => [
@@ -183,6 +184,7 @@ return [
         ],
     ],
     'js_translate_strings' => [
+        'Geography', // @translate
         'Geometry', // @translate
         'Please enter a latitude.', // @translate
         'Please enter a longitude.', // @translate
@@ -193,5 +195,13 @@ return [
         'Please enter a valid radius in m.', // @translate
         'Please enter a valid radius in km.', // @translate
         'Please enter a valid wkt for the geometry.', // @translate
+    ],
+    'datatypegeometry' => [
+        'settings' => [
+            'datatypegeometry_buttons' => [
+                'geometry:geography',
+                'geometry:geometry',
+            ],
+        ],
     ],
 ];

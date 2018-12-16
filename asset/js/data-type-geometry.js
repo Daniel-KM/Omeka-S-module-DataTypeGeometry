@@ -16,15 +16,15 @@
      * Append the configured datatypes to a list of element.
      */
     var appendGeometryDatatypes = function(selector) {
-        if (geometryDatatypes.indexOf('geography') !== -1) {
-            $('<a>', {'class': 'add-value button o-icon-geography', 'href': '#', 'data-type': 'geography'})
-                .text(Omeka.jsTranslate('Geography'))
+        if (geometryDatatypes.indexOf('geometry:geometry') !== -1) {
+            $('<a>', {'class': 'add-value button o-icon-geometry', 'href': '#', 'data-type': 'geometry:geometry'})
+                .text(Omeka.jsTranslate('Geometry'))
                 .appendTo(selector);
             selector.append("\n");
         }
-        if (geometryDatatypes.indexOf('geometry') !== -1) {
-            $('<a>', {'class': 'add-value button o-icon-geometry', 'href': '#', 'data-type': 'geometry'})
-                .text(Omeka.jsTranslate('Geometry'))
+        if (geometryDatatypes.indexOf('geometry:geography') !== -1) {
+            $('<a>', {'class': 'add-value button o-icon-geography', 'href': '#', 'data-type': 'geometry:geography'})
+                .text(Omeka.jsTranslate('Geography'))
                 .appendTo(selector);
             selector.append("\n");
         }
@@ -38,14 +38,14 @@
      */
     var geometryCheck = function(element, datatype) {
         var primitive, message;
-        var val = element.value.trim();
-        if (datatype === 'geometry') {
+        var val = element.value.trim().toUpperCase();
+        if (datatype === 'geometry:geometry') {
             try {
                 primitive = Terraformer.WKT.parse(val);
             } catch (err) {
                 message = 'Please enter a valid wkt for the geometry.';
             }
-        } else if (datatype === 'geography') {
+        } else if (datatype === 'geometry:geography') {
             try {
                 primitive = Terraformer.WKT.parse(val);
             } catch (err) {
@@ -159,17 +159,17 @@
     $(document).ready(function() {
 
         $('textarea.value.geometry').on('keyup', function(e) {
-            geometryCheck(this, 'geometry');
+            geometryCheck(this, 'geometry:geometry');
         });
 
         $('textarea.value.geography').on('keyup', function(e) {
-            geometryCheck(this, 'geography');
+            geometryCheck(this, 'geometry:geography');
         });
 
         // The form uses geography only, because to query non-georeferenced
         // geometries has no meaning.
         $('textarea.query-geo-area').on('keyup', function(e) {
-            geometryCheck(this, 'geography');
+            geometryCheck(this, 'geometry:geography');
         });
 
         $('input.query-geo-around-latitude').on('keyup', function(e) {

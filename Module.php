@@ -70,6 +70,8 @@ class Module extends AbstractGenericModule
             ? $this->modulePath() . '/data/install/schema-myisam.sql'
             :  $this->modulePath() . '/data/install/schema.sql';
         $this->execSqlFromFile($filepath);
+
+        $this->manageMainSettings('install');
     }
 
     public function attachListeners(SharedEventManagerInterface $sharedEventManager)
@@ -135,6 +137,35 @@ class Module extends AbstractGenericModule
                 [$this, 'saveGeometryData']
             );
         }
+
+        $sharedEventManager->attach(
+            \Omeka\Form\SettingForm::class,
+            'form.add_elements',
+            [$this, 'handleMainSettings']
+        );
+        $sharedEventManager->attach(
+            \Omeka\Form\SettingForm::class,
+            'form.add_input_filters',
+            [$this, 'handleMainSettingsFilters']
+        );
+    }
+
+    public function handleMainSettingsFilters(Event $event)
+    {
+        $inputFilter = $event->getParam('inputFilter');
+        $inputFilter->get('datatypegeometry')->add([
+            'name' => 'datatypegeometry_buttons',
+            'required' => false,
+        ]);
+    }
+
+    public function handleMainSettingsFilters(Event $event)
+    {
+        $inputFilter = $event->getParam('inputFilter');
+        $inputFilter->get('datatypegeometry')->add([
+            'name' => 'datatypegeometry_buttons',
+            'required' => false,
+        ]);
     }
 
     /**
@@ -238,9 +269,8 @@ class Module extends AbstractGenericModule
     {
         $view = $event->getTarget();
         $headScript = $view->headScript();
-        // $settings = $this->getServiceLocator()->get('Omeka\Settings');
-        // $datatypes = $settings->get('cartography_datatypes', []);
-        $datatypes = ['geometry'];
+        $settings = $this->getServiceLocator()->get('Omeka\Settings');
+        $datatypes = $settings->get('datatypegeometry_buttons', []);
         $headScript->appendScript('var geometryDatatypes = ' . json_encode($datatypes, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . ';');
         $headScript->appendFile($view->assetUrl('vendor/terraformer/terraformer.min.js', __NAMESPACE__));
         $headScript->appendFile($view->assetUrl('vendor/terraformer-arcgis-parser/terraformer-arcgis-parser.min.js', __NAMESPACE__));
