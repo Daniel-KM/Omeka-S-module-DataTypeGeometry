@@ -68,7 +68,7 @@ class Module extends AbstractGenericModule
         $useMyIsam = $this->requireMyIsamToSupportGeometry();
         if ($useMyIsam) {
             $messenger = new \Omeka\Mvc\Controller\Plugin\Messenger();
-            $messenger->addWarning(sprintf('Your database does not support modern spatial indexing. See the minimum requirements in readme.')); // @translate
+            $messenger->addWarning(sprintf('Your database does not support modern spatial indexing. It has no impact in common cases. See the minimum requirements in readme.')); // @translate
         }
 
         $filepath = $useMyIsam

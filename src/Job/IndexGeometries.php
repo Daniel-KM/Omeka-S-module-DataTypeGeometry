@@ -6,20 +6,31 @@ use Omeka\Stdlib\Message;
 
 class IndexGeometries extends AbstractJob
 {
+    /**
+     * @var \Omeka\Mvc\Controller\Plugin\Logger $logger
+     */
+    protected $logger;
+
+    /**
+     * @var \Omeka\Mvc\Controller\Plugin\Api $api
+     */
+    protected $api;
+
+    /**
+     * @var \Doctrine\DBAL\Connection $connection
+     */
+    protected $connection;
+
     public function perform()
     {
-        /**
-         * @var \Omeka\Mvc\Controller\Plugin\Logger $logger
-         * @var \Omeka\Mvc\Controller\Plugin\Api $api
-         * @var \Doctrine\DBAL\Connection $connection
-         */
         $services = $this->getServiceLocator();
-        $logger = $services->get('Omeka\Logger');
-        $api = $services->get('ControllerPluginManager')->get('api');
-        $connection = $services->get('Omeka\Connection');
+        $this->logger = $services->get('Omeka\Logger');
+        $this->api = $services->get('ControllerPluginManager')->get('api');
+        $this->connection = $services->get('Omeka\Connection');
 
         $processMode = $this->getArg('process_mode');
         $processModes = [
+            'common',
             'resources reindex',
             'resources geometry',
             'resources geography',
@@ -28,36 +39,94 @@ class IndexGeometries extends AbstractJob
             'annotations geography',
             'cartography',
             'truncate',
+            'upgrade geometry',
         ];
         if (!in_array($processMode, $processModes)) {
-            $logger->info(new Message(
+            $this->logger->info(new Message(
                 'Indexing geometries stopped: no mode selected.' // @translate
             ));
             return;
         }
 
-        if ($processMode === 'truncate') {
-            $sql = <<<'SQL'
+        switch ($processMode) {
+            case 'resources reindex':
+            case 'resources geometry':
+            case 'resources geography':
+            case 'annotations reindex':
+            case 'annotations geometry':
+            case 'annotations geography':
+                $updateValues = strpos($processMode, 'reindex') === false;
+                $isAnnotation = strpos($processMode, 'annotations') !== false;
+                $isGeography = strpos($processMode, 'geography') !== false;
+                $this->reindex([
+                    'updateValues' => $updateValues,
+                    'isAnnotation' => $isAnnotation,
+                    'isGeography' => $isGeography,
+                ]);
+                break;
+            case 'cartography':
+                $this->indexCartographyTargets();
+                break;
+            case 'truncate':
+                $this->truncate();
+                break;
+            case 'upgrade geometry':
+                $this->upgradeGeometry();
+                // No break.
+            case 'common':
+                $this->truncate();
+                $this->reindex([
+                    'updateValues' => true,
+                    'isAnnotation' => false,
+                    'isGeography' => false,
+                ]);
+                $this->reindex([
+                    'updateValues' => true,
+                    'isAnnotation' => true,
+                    'isGeography' => false,
+                ]);
+                $this->indexCartographyTargets();
+                break;
+        }
+    }
+
+    protected function truncate()
+    {
+        $sql = <<<'SQL'
 SET foreign_key_checks = 0;
 TRUNCATE TABLE `data_type_geography`;
 TRUNCATE TABLE `data_type_geometry`;
 SET foreign_key_checks = 1;
 SQL;
-            $connection->exec($sql);
-            $logger->info(
-                'Tables "data_type_geometry" and "data_type_geography" were truncated.' // @translate
-            );
-            return;
-        }
+        $this->connection->exec($sql);
+        $this->logger->info(
+            'Tables "data_type_geometry" and "data_type_geography" were truncated.' // @translate
+        );
+    }
 
-        if ($processMode === 'cartography') {
-            $this->indexCartographyTargets();
-            return;
-        }
+    protected function upgradeGeometry()
+    {
+        $sql = <<<SQL
+UPDATE value
+SET type = "geometry:geometry"
+WHERE type = "geometry";
+SQL;
+        $this->connection->exec($sql);
+        $this->logger->info(
+            'Old data type "geometry" has been converted into "geometry:geometry".' // @translate
+        );
+    }
 
-        $updateValues = strpos($processMode, 'reindex') === false;
-        $isAnnotation = strpos($processMode, 'annotations') !== false;
-        $isGeography = strpos($processMode, 'geography') !== false;
+    protected function reindex(array $options)
+    {
+        $logger = $this->logger;
+        $api = $this->api;
+        $connection = $this->connection;
+
+        $updateValues = $options['updateValues'];
+        $isAnnotation = $options['isAnnotation'];
+        $isGeography = $options['isGeography'];
+
         $resourceType = $isAnnotation
             ? 'annotations'
             : 'resources';
@@ -70,7 +139,7 @@ SQL;
         $table = $isGeography
             ? 'data_type_geography'
             : 'data_type_geometry';
-        $defaultSrid = $services->get('Omeka\Settings')
+        $defaultSrid = $this->getServiceLocator()->get('Omeka\Settings')
             ->get('datatypegeometry_locate_srid', 4236);
 
         if ($updateValues) {
@@ -157,15 +226,9 @@ SQL;
 
     protected function indexCartographyTargets()
     {
-        /**
-         * @var \Omeka\Mvc\Controller\Plugin\Logger $logger
-         * @var \Omeka\Mvc\Controller\Plugin\Api $api
-         * @var \Doctrine\DBAL\Connection $connection
-         */
-        $services = $this->getServiceLocator();
-        $logger = $services->get('Omeka\Logger');
-        $api = $services->get('ControllerPluginManager')->get('api');
-        $connection = $services->get('Omeka\Connection');
+        $logger = $this->logger;
+        $api = $this->api;
+        $connection = $this->connection;
 
         // All annotation targets that have wkt and a media as selector are
         // "geometry:geometry", and other wkt targets are "geometry:geography".
@@ -174,7 +237,7 @@ SQL;
         $rdfValue = $api->searchOne('properties', ['term' => $property])->getContent()->id();
         $property = 'oa:hasSelector';
         $oaHasSelector = $api->searchOne('properties', ['term' => $property])->getContent()->id();
-        $defaultSrid = $services->get('Omeka\Settings')
+        $defaultSrid = $this->getServiceLocator()->get('Omeka\Settings')
             ->get('datatypegeometry_locate_srid', 4236);
 
         // Set all targets wkt a geography (only for property "rdf:value").

@@ -32,6 +32,7 @@ It is displayed in the json-ld output.', // @translate
             'options' => [
                 'label' => 'Process', // @translate
                 'value_options' => [
+                    'common' => 'Common (update values, reindex resources and annotations as geometries, and targets according to data)',
                     'resources reindex' => 'Reindex resources without update of values', // @translate
                     'resources geometry' => 'Set resources as geometry', // @translate
                     'resources geography' => 'Set resources as geography', // @translate
@@ -40,6 +41,7 @@ It is displayed in the json-ld output.', // @translate
                     'annotations geography' => 'Set annotations as geography', // @translate
                     'cartography' => 'Annotation targets (geometry if image, geography if map)', // @translate
                     'truncate' => 'Remove all indexes', // @translate
+                    'upgrade geometry' => 'Upgrade old base', // @translate
                 ],
             ],
             'attributes' => [
