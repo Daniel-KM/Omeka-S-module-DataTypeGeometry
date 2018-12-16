@@ -170,7 +170,7 @@ class Module extends AbstractGenericModule
         $this->prepareResourceForm($event);
         // There is no advanced search form, only a list of partials.
         $partials = $event->getParam('partials', []);
-        $partials[] = 'common/advanced-search/data-type-geometry';
+        $partials[] = 'common/advanced-search/data-type-geography';
         $event->setParam('partials', $partials);
     }
 
@@ -218,6 +218,9 @@ class Module extends AbstractGenericModule
                 $translate('Within box %1$s,%2$s/%3$s,%4$s'), // @translate
                 $geo['box'][0], $geo['box'][1], $geo['box'][2], $geo['box'][3]
             );
+        } elseif (!empty($geo['area'])) {
+            $filterLabel = $translate('Within area'); // @translate
+            $filters[$filterLabel][] = $geo['area'];
         } elseif (!empty($geo['zone'])) {
             $filterLabel = $translate('Within zone'); // @translate
             $filters[$filterLabel][] = $geo['zone'];

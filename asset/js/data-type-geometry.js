@@ -1,39 +1,5 @@
 (function($) {
 
-    $(document).ready( function() {
-
-        $('textarea.value.geometry').on('keyup', function(e) {
-            geometryCheck(this, 'geometry');
-        });
-
-        $('textarea.value.geography').on('keyup', function(e) {
-            geometryCheck(this, 'geography');
-        });
-
-        // The form uses geography only, because to query non-georeferenced
-        // geometries has no meaning.
-        $('textarea.query-geo-zone').on('keyup', function(e) {
-            geometryCheck(this, 'geography');
-        });
-
-        $('input.query-geo-around-latitude').on('keyup', function(e) {
-            latlongCheck(this, 'latitude');
-        });
-        $('input.query-geo-around-longitude').on('keyup', function(e) {
-            latlongCheck(this, 'longitude');
-        });
-        $('input.query-geo-around-radius').on('keyup', function(e) {
-            radiusCheck(this);
-        });
-        $('input.query-geo-around-unit').on('click', function(e) {
-            radiusCheck($('input.query-geo-around-radius')[0]);
-        });
-
-        // Initial load.
-        initGeometryDatatypes();
-
-    });
-
     /**
      * Prepare the geometry datatypes for the main resource template.
      *
@@ -50,6 +16,12 @@
      * Append the configured datatypes to a list of element.
      */
     var appendGeometryDatatypes = function(selector) {
+        if (geometryDatatypes.indexOf('geography') !== -1) {
+            $('<a>', {'class': 'add-value button o-icon-geography', 'href': '#', 'data-type': 'geography'})
+                .text(Omeka.jsTranslate('Geography'))
+                .appendTo(selector);
+            selector.append("\n");
+        }
         if (geometryDatatypes.indexOf('geometry') !== -1) {
             $('<a>', {'class': 'add-value button o-icon-geometry', 'href': '#', 'data-type': 'geometry'})
                 .text(Omeka.jsTranslate('Geometry'))
@@ -183,5 +155,39 @@
             element.setCustomValidity(Omeka.jsTranslate(message));
         }
     }
+
+    $(document).ready(function() {
+
+        $('textarea.value.geometry').on('keyup', function(e) {
+            geometryCheck(this, 'geometry');
+        });
+
+        $('textarea.value.geography').on('keyup', function(e) {
+            geometryCheck(this, 'geography');
+        });
+
+        // The form uses geography only, because to query non-georeferenced
+        // geometries has no meaning.
+        $('textarea.query-geo-area').on('keyup', function(e) {
+            geometryCheck(this, 'geography');
+        });
+
+        $('input.query-geo-around-latitude').on('keyup', function(e) {
+            latlongCheck(this, 'latitude');
+        });
+        $('input.query-geo-around-longitude').on('keyup', function(e) {
+            latlongCheck(this, 'longitude');
+        });
+        $('input.query-geo-around-radius').on('keyup', function(e) {
+            radiusCheck(this);
+        });
+        $('input.query-geo-around-unit').on('click', function(e) {
+            radiusCheck($('input.query-geo-around-radius')[0]);
+        });
+
+        // Initial load.
+        initGeometryDatatypes();
+
+    });
 
 })(jQuery);

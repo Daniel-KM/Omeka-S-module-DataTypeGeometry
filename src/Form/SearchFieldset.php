@@ -108,14 +108,14 @@ class SearchFieldset extends Fieldset
         ]);
 
         $this->add([
-            'name' => 'zone',
+            'name' => 'area',
             'type' => Element\Textarea::class,
             'options' => [
-                'label' => 'Within a zone', // @translate
+                'label' => 'Within an area', // @translate
             ],
             'attributes' => [
-                'id' => 'geo-zone',
-                'class' => 'query-geo-zone',
+                'id' => 'geo-area',
+                'class' => 'query-geo-area',
                 'placeholder' => 'POLYGON ((2.42 51.34, -5.71 48.51, -1.84 43.04, 3.66 42.15, 7.71 43.54, 8.28 48.95, 2.42 51.34))',
                 'aria-label' => 'WKT (well-known text that represents a geometry)', // @translate
             ],

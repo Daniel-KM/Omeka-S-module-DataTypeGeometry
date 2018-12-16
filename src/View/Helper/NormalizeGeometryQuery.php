@@ -32,6 +32,10 @@ class NormalizeGeometryQuery extends AbstractHelper
      *
      * Common for geometry and geography:
      * [geo][property] = 'dcterms:spatial' or another one (term or id)
+     * [geo][srid] = srid (Spatial Reference Identifier; default 0 for geometry,
+     * and 4326 for geography (the default map is a Mercator projection).
+     * When non empty with around, box, or zone, it is a geographic query.
+     * @see http://spatialreference.org/ref/epsg/wgs-84/ or https://epsg.io/4326
      *
      * Geometry (for flat image or projected map):
      * [geo][around][x] = x
@@ -46,11 +50,7 @@ class NormalizeGeometryQuery extends AbstractHelper
      * [geo][around][radius] = radius
      * [geo][around][unit] = 'km' (default) or 'm' (1 km = 1000 m)
      * [geo][mapbox] = [top lat, left long, bottom lat, right lat] or [[top, left], [bottom, right]] or string "lat1 long1 lat2 long2"
-     * [geo][box] = see above (can be used too when the srid is set).
-     * [geo][zone] = "wkt"
-     * [geo][srid] = srid (Spatial Reference Identifier, required for mapbox, box
-     * or zone; generally 4326 because the default map is a Mercator projection).
-     * @see http://spatialreference.org/ref/epsg/wgs-84/ or https://epsg.io/4326
+     * [geo][area] = "wkt"
      *
      * @param array $query
      * @return array The cleaned query.
@@ -86,8 +86,10 @@ class NormalizeGeometryQuery extends AbstractHelper
             'box' => null,
             // Two opposite geographic coordinates (latitude and longitued).
             'mapbox' => null,
-            // A well-known text for geometry or geography (with srid).
+            // A well-known text for geometry.
             'zone' => null,
+            // A well-known text for geography.
+            'area' => null,
             // The spatial reference identifier to use.
             'srid' => null,
         ];
@@ -141,6 +143,15 @@ class NormalizeGeometryQuery extends AbstractHelper
                 if ($zone) {
                     $geo = $result;
                     $geo ['zone'] = $zone;
+                    continue;
+                }
+            }
+
+            if ($geo['area']) {
+                $zone = $this->normalizeArea($geo['area']);
+                if ($zone) {
+                    $geo = $result;
+                    $geo ['area'] = $zone;
                     continue;
                 }
             }

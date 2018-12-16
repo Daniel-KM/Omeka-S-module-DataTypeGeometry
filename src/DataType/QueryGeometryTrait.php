@@ -47,8 +47,15 @@ trait QueryGeometryTrait
         if ($isSingle) {
             $geos = [$geos];
         }
-        $geometryAlias = $this->joinGeometry($adapter, $qb, $query);
+
         $srid = empty($geos[0]['srid']) ? 0 : (int) $geos[0]['srid'];
+        $isGeography = $srid
+            || isset($geos[0]['around']['latitude'])
+            || isset($geos[0]['mapbox'])
+            || isset($geos[0]['area']);
+        $geometryAlias = $isGeography
+            ? $this->joinGeography($adapter, $qb, $query)
+            : $this->joinGeometry($adapter, $qb, $query);
 
         foreach ($geos as $geo) {
             if (array_key_exists('around', $geo)) {
@@ -60,7 +67,9 @@ trait QueryGeometryTrait
             } elseif (array_key_exists('mapbox', $geo)) {
                 $this->searchMapBox($adapter, $qb, $geo['mapbox'], $srid, $geometryAlias);
             } elseif (array_key_exists('zone', $geo)) {
-                $this->searchWkt($adapter, $qb, $geo['zone'], $srid, $geometryAlias);
+                $this->searchZone($adapter, $qb, $geo['zone'], $srid, $geometryAlias);
+            } elseif (array_key_exists('area', $geo)) {
+                $this->searchZone($adapter, $qb, $geo['area'], $srid, $geometryAlias);
             }
         }
     }
@@ -78,7 +87,7 @@ trait QueryGeometryTrait
         $yLat = $adapter->createNamedParameter($qb, $around['y']);
         $srid = $adapter->createNamedParameter($qb, $srid);
         $qb->andWhere($qb->expr()->lte(
-            // Note: 'ST_GeomFromText("Point(2 50)")' is not correct.
+            // Note: 'ST_GeomFromText("Point(49 2)")' is not correct.
             "ST_Distance(ST_GeomFromText('Point($xLong $yLat)', $srid), $geometryAlias.value)",
             $adapter->createNamedParameter($qb, $around['radius'])
         ));
@@ -215,8 +224,36 @@ trait QueryGeometryTrait
      */
     protected function joinGeometry(AdapterInterface $adapter, QueryBuilder $qb, $query)
     {
-        $resourceClass = $adapter->getEntityClass();
         $dataTypeClass = \DataTypeGeometry\Entity\DataTypeGeometry::class;
+        return $this->joinGeo($adapter, $qb, $query, $dataTypeClass);
+    }
+
+    /**
+     * Join the geography table.
+     *
+     * @param AdapterInterface $adapter
+     * @param QueryBuilder $qb
+     * @param array $query
+     * @return string Alias used for the geography table.
+     */
+    protected function joinGeography(AdapterInterface $adapter, QueryBuilder $qb, $query)
+    {
+        $dataTypeClass = \DataTypeGeometry\Entity\DataTypeGeography::class;
+        return $this->joinGeo($adapter, $qb, $query, $dataTypeClass);
+    }
+
+    /**
+     * Join the geography table.
+     *
+     * @param AdapterInterface $adapter
+     * @param QueryBuilder $qb
+     * @param array $query
+     * @param string $dataTypeClass
+     * @return string Alias used for the geography table.
+     */
+    protected function joinGeo(AdapterInterface $adapter, QueryBuilder $qb, $query, $dataTypeClass)
+    {
+        $resourceClass = $adapter->getEntityClass();
         $alias = $adapter->createAlias();
         $property = isset($query['geo'][0]['property']) ? $query['geo'][0]['property'] : null;
         if ($property) {
