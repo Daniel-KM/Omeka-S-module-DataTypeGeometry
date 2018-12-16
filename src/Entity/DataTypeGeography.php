@@ -1,7 +1,7 @@
 <?php
 namespace DataTypeGeometry\Entity;
 
-use CrEOF\Spatial\PHP\Types\Geometry\GeometryInterface;
+use CrEOF\Spatial\PHP\Types\Geography\GeographyInterface;
 use Omeka\Entity\AbstractEntity;
 use Omeka\Entity\Property;
 use Omeka\Entity\Resource;
@@ -14,7 +14,7 @@ use Omeka\Entity\Resource;
  *     }
  * )
  */
-class DataTypeGeometry extends AbstractEntity
+class DataTypeGeography extends AbstractEntity
 {
     /**
      * @var int
@@ -49,9 +49,9 @@ class DataTypeGeometry extends AbstractEntity
     protected $property;
 
     /**
-     * @var GeometryInterface
+     * @var GeographyInterface
      * @Column(
-     *     type="geometry:geometry",
+     *     type="geometry:geography",
      *     nullable=false
      * )
      * InnoDb requires a geometry to be a non-null value. Anyway, it's a value.
@@ -100,17 +100,17 @@ class DataTypeGeometry extends AbstractEntity
     }
 
     /**
-     * @param GeometryInterface $value
+     * @param GeographyInterface $value
      * @return self
      */
-    public function setValue(GeometryInterface $value)
+    public function setValue(GeographyInterface $value)
     {
         $this->value = $value;
         return $this;
     }
 
     /**
-     * @return \CrEOF\Spatial\PHP\Types\Geometry\GeometryInterface
+     * @return \CrEOF\Spatial\PHP\Types\Geography\GeographyInterface
      */
     public function getValue()
     {

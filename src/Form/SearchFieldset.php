@@ -12,7 +12,7 @@ class SearchFieldset extends Fieldset
         // a geographic query.
 
         $this->setName('geo');
-        $this->setLabel('Geographic');
+        $this->setLabel('Geography');
 
         // Around a point.
         $this->add([

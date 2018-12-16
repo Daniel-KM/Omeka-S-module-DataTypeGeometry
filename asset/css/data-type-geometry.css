@@ -1,5 +1,8 @@
 /* Data type Geometry */
 
 .o-icon-geometry:before {
+    content: "\f5ee";
+}
+.o-icon-geography:before {
     content: "\f3c5";
 }

@@ -31,8 +31,12 @@ class Module extends AbstractGenericModule
 
         // TODO It is possible to register each geometry separately (line, point…). Is it useful? Or a Omeka type is enough (geometry:point…)? Or a column in the table (no)?
         \Doctrine\DBAL\Types\Type::addType(
-            'geometry',
+            'geometry:geometry',
             \CrEOF\Spatial\DBAL\Types\GeometryType::class
+        );
+        \Doctrine\DBAL\Types\Type::addType(
+            'geometry:geography',
+            \CrEOF\Spatial\DBAL\Types\GeographyType::class
         );
     }
 
@@ -153,7 +157,7 @@ class Module extends AbstractGenericModule
         $adapter = $event->getTarget();
         $qb = $event->getParam('queryBuilder');
         $dataTypes = $this->getGeometryDataTypes();
-        $dataTypes['geometry']->buildQuery($adapter, $qb, $query);
+        $dataTypes['geometry:geography']->buildQuery($adapter, $qb, $query);
     }
 
     /**
@@ -263,59 +267,58 @@ class Module extends AbstractGenericModule
 
         $entityValues = $entity->getValues();
 
-        $dataTypes = $this->getGeometryDataTypes();
-        $dataTypeName = 'geometry';
-        /** @var \DataTypeGeometry\DataType\Geometry $dataType */
-        $dataType = $dataTypes['geometry'];
-
-        $criteria = Criteria::create()->where(Criteria::expr()->eq('type', $dataTypeName));
-        $matchingValues = $entityValues->matching($criteria);
-        // This resource has no data values of this type.
-        if (!count($matchingValues)) {
-            return;
-        }
-
         $services = $this->getServiceLocator();
         $entityManager = $services->get('Omeka\EntityManager');
-        $dataTypeClass = $dataType->getEntityClass();
 
-        // TODO Remove this persist, that is used only when a geometry is updated on the map.
-        // Persist is required for annotation, since there is no cascade persist
-        // between annotation and values.
-        $entityManager->persist($entity);
-
-        /** @var \DataTypeGeometry\Entity\DataTypeGeometry[] $existingDataValues */
-        $existingDataValues = [];
-        if ($entity->getId()) {
-            $dql = sprintf('SELECT n FROM %s n WHERE n.resource = :resource', $dataTypeClass);
-            $query = $entityManager->createQuery($dql);
-            $query->setParameter('resource', $entity);
-            $existingDataValues = $query->getResult();
-        }
-
-        foreach ($matchingValues as $value) {
-            // Avoid ID churn by reusing data rows.
-            $dataValue = current($existingDataValues);
-            // No more number rows to reuse. Create a new one.
-            if ($dataValue === false) {
-                $dataValue = new $dataTypeClass;
-                $entityManager->persist($dataValue);
-            } else {
-                // Null out data values as we reuse them. Note that existing
-                // data values are already managed and will update during flush.
-                $existingDataValues[key($existingDataValues)] = null;
-                next($existingDataValues);
+        foreach ($this->getGeometryDataTypes() as $dataTypeName => $dataType) {
+            $criteria = Criteria::create()->where(Criteria::expr()->eq('type', $dataTypeName));
+            $matchingValues = $entityValues->matching($criteria);
+            // This resource has no data values of this type.
+            if (!count($matchingValues)) {
+                continue;
             }
-            $dataValue->setResource($entity);
-            $dataValue->setProperty($value->getProperty());
-            $geometry = $dataType->getGeometryFromValue($value->getValue());
-            $dataValue->setValue($geometry);
-        }
 
-        // Remove any data values that weren't reused.
-        foreach ($existingDataValues as $existingDataValue) {
-            if ($existingDataValue !== null) {
-                $entityManager->remove($existingDataValue);
+            $dataTypeClass = $dataType->getEntityClass();
+
+            // TODO Remove this persist, that is used only when a geometry is updated on the map.
+            // Persist is required for annotation, since there is no cascade persist
+            // between annotation and values.
+            $entityManager->persist($entity);
+
+            /** @var \DataTypeGeometry\Entity\DataTypeGeometry[] $existingDataValues */
+            $existingDataValues = [];
+            if ($entity->getId()) {
+                $dql = sprintf('SELECT n FROM %s n WHERE n.resource = :resource', $dataTypeClass);
+                $query = $entityManager->createQuery($dql);
+                $query->setParameter('resource', $entity);
+                $existingDataValues = $query->getResult();
+            }
+
+            foreach ($matchingValues as $value) {
+                // Avoid ID churn by reusing data rows.
+                $dataValue = current($existingDataValues);
+                // No more number rows to reuse. Create a new one.
+                if ($dataValue === false) {
+                    $dataValue = new $dataTypeClass;
+                    $entityManager->persist($dataValue);
+                } else {
+                    // Null out data values as we reuse them. Note that existing
+                    // data values are already managed and will update during flush.
+                    $existingDataValues[key($existingDataValues)] = null;
+                    next($existingDataValues);
+                }
+
+                $geometry = $dataType->getGeometryFromValue($value->getValue());
+                $dataValue->setResource($entity);
+                $dataValue->setProperty($value->getProperty());
+                $dataValue->setValue($geometry);
+            }
+
+            // Remove any data values that weren't reused.
+            foreach ($existingDataValues as $existingDataValue) {
+                if ($existingDataValue !== null) {
+                    $entityManager->remove($existingDataValue);
+                }
             }
         }
     }
@@ -323,13 +326,16 @@ class Module extends AbstractGenericModule
     /**
      * Get all data types added by this module.
      *
+     * Note: this is compliant with Omeka 1.2.
+     *
      * @return \Omeka\DataType\AbstractDataType[]
      */
     public function getGeometryDataTypes()
     {
         $dataTypes = $this->getServiceLocator()->get('Omeka\DataTypeManager');
         return [
-            'geometry' => $dataTypes->get('geometry'),
+            'geometry:geography' => $dataTypes->get('geometry:geography'),
+            'geometry:geometry' => $dataTypes->get('geometry:geometry'),
         ];
     }
 

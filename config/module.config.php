@@ -4,6 +4,7 @@ namespace DataTypeGeometry;
 return [
     'entity_manager' => [
         'resource_discriminator_map' => [
+            Entity\DataTypeGeography::class => Entity\DataTypeGeography::class,
             Entity\DataTypeGeometry::class => Entity\DataTypeGeometry::class,
         ],
         'mapping_classes_paths' => [
@@ -151,7 +152,8 @@ return [
     ],
     'data_types' => [
         'invokables' => [
-            'geometry' => DataType\Geometry::class,
+            'geometry:geography' => DataType\Geography::class,
+            'geometry:geometry' => DataType\Geometry::class,
         ],
     ],
     'view_manager' => [
@@ -161,8 +163,8 @@ return [
     ],
     'view_helpers' => [
         'factories' => [
-            'normalizeGeometryQuery' => Service\ViewHelper\NormalizeGeometryQueryFactory::class,
             'geometryFieldset' => Service\ViewHelper\GeometryFieldsetFactory::class,
+            'normalizeGeometryQuery' => Service\ViewHelper\NormalizeGeometryQueryFactory::class,
         ],
     ],
     'form_elements' => [

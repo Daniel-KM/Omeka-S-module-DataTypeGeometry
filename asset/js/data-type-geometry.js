@@ -2,8 +2,18 @@
 
     $(document).ready( function() {
 
-        $('textarea.value.geometry, textarea.query-geo-zone').on('keyup', function(e) {
+        $('textarea.value.geometry').on('keyup', function(e) {
             geometryCheck(this, 'geometry');
+        });
+
+        $('textarea.value.geography').on('keyup', function(e) {
+            geometryCheck(this, 'geography');
+        });
+
+        // The form uses geography only, because to query non-georeferenced
+        // geometries has no meaning.
+        $('textarea.query-geo-zone').on('keyup', function(e) {
+            geometryCheck(this, 'geography');
         });
 
         $('input.query-geo-around-latitude').on('keyup', function(e) {
@@ -63,6 +73,25 @@
             } catch (err) {
                 message = 'Please enter a valid wkt for the geometry.';
             }
+        } else if (datatype === 'geography') {
+            try {
+                primitive = Terraformer.WKT.parse(val);
+            } catch (err) {
+                var error = true;
+                // Check ewkt.
+                if (/^srid\s*=\s*\d{1,5}\s*;\s*.+/i.test(val)) {
+                    try {
+                        primitive = Terraformer.WKT.parse(val.slice(val.indexOf(';')+ 1));
+                        error = false;
+                    } catch (err) {
+                    }
+                }
+                if (error) {
+                    message = 'Please enter a valid wkt for the geography.';
+                }
+            }
+
+            // TODO Check all x and y, that should be below 180 and 90.
         }
 
         if (val === '' || primitive) {
