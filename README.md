@@ -1,9 +1,9 @@
 Data type Geometry (module for Omeka S)
 =======================================
 
-[Data type Geometry] is a module for [Omeka S] that adds a new data type for the
-properties: `geometry`. It allows to manage points and areas on images and maps.
-It uses the [WKT] format and can use an external database.
+[Data type Geometry] is a module for [Omeka S] that adds two new data types for
+the properties: `geometry` and `geography`. It allows to manage points and areas
+on images and maps. It uses the [WKT] format and can use an external database.
 
 It is used by the module [Annotate Cartography], that allows to point markers
 and to highlight images and maps. This module can be used independantly too.
@@ -36,7 +36,7 @@ the module to `DataTypeGeometry`, go to the root of the module, and run:
     gulp
 ```
 
-### Omeka database or external database
+### Omeka database or external database [work in progress]
 
 The geometries can be saved in Omeka database or in an external one. It’s useful
 to share them with other GIS systems. It allows to do advanced search and to
@@ -58,9 +58,10 @@ geometry, see the [spatial support matrix].
 You may prefer to use an external database. To config it, set the parameters in
 the file `config/database-cartography.ini`, beside your main `config/database.ini`.
 See the file `config/database-cartography.ini.dist` for more information. The
-table is named [`data_type_geometry`]. Furthermore, if PostgreSql is used, the
-`config/local.config.php``should indicate it in `[entity_manager][functions][numeric]`,
-by overriding keys of the mysql functions.
+tables are named [`data_type_geometry`] and [`data_type_geography`].
+Furthermore, if PostgreSql is used, the `config/local.config.php` should
+indicate it in `[entity_manager][functions][numeric]`, by overriding keys of the
+mysql functions.
 
 The support for MariaDB, mySql and PostgreSql is provided though [doctrine2-spatial].
 
@@ -68,7 +69,9 @@ The support for MariaDB, mySql and PostgreSql is provided though [doctrine2-spat
 Configuration
 -------------
 
-### Geometries
+### Geometry
+
+Geometries are WKT data: `POINT (2.294497 48.858252)`.
 
 The geometries are saved as standard Omeka values and indexed in a specific
 table with a spatial index for quick search.
@@ -79,16 +82,36 @@ by the viewer. It is saved as a `POINT` in the database, without radius.
 Only common sql spatial functions are enabled. Other ones can be enabled in the
 config of the module (via `local.config.php`).
 
+### Geography
+
+Geography is a second data type to manage geographic data. It is the same than
+the geometry above, but an additional spatial referentiel identifier (srid) is
+saved, so the geometries are georeferenced. It allows to do precise searches on
+the Earth, in particular when the distances are longer than some dozen of
+kilometers.
+
+Most of the time, the srid is [`4326`], because it’s the Mercator projection
+used by default in many geographic systems and by OpenStreetMap, the most truely
+open layer used for the web geolocation and by the module [Annotate Cartography].
+Another value can be set in the main settings, and each value can set a specific
+one with the ewkt format: `SRID=4326; POINT (2.294497 48.858252)`. It is not
+recommended to set it when it is the default one.
+
+**Warning**: The data type `Geography` doesn’t support complex geometries (
+multipoint, multiline and multipolygon). In that case, it’s recommended to use
+collections.
+
 ### JSON-LD and GeoJSON
 
 According to the [discussion] on the working group of JSON-LD and GeoJSON, the
 GeoJson cannot be used in all cases inside a JSON-LD. So the representation uses
-the deprecated, but largely used, datatype [`geo:asWKT`]:
+the data type `http://www.opengis.net/ont/geosparql#wktLiteral` of the [OGC standard].
+The deprecated datatype `http://geovocab.org/geometry#asWKT` is no more used.
 
 ```json
 {
-    '@value' => 'POINT (2.294497 48.858252)',
-    '@type' => 'http://geovocab.org/geometry#asWKT'
+    "@value": "POINT (2.294497 48.858252)",
+    "@type": "http://www.opengis.net/ont/geosparql#wktLiteral"
 }
 ```
 
@@ -148,7 +171,7 @@ of the CeCILL license and that you accept its terms.
 
 ### Libraries
 
-This module uses many open source leaflet libraries. See [asset/vendor] for
+This module uses many open source leaflet libraries. See `asset/vendor` for
 details.
 
 
@@ -176,8 +199,10 @@ sociales [EHESS].
 [MariaDB 5.3.3]: https://mariadb.com/kb/en/library/mariadb-533-release-notes/
 [spatial support matrix]: https://mariadb.com/kb/en/library/mysqlmariadb-spatial-support-matrix/
 [`data_type_geometry`]: https://github.com/Daniel-KM/Omeka-S-module-DataTypeGeometry/tree/master/data/install/schema.sql
+[`DataTypeGeometry.zip`]: https://github.com/Daniel-KM/Omeka-S-module-DataTypeGeometry/releases
 [doctrine2-spatial]: https://github.com/creof/doctrine2-spatial/blob/HEAD/doc/index.md
-[`geo:asWKT`]: http://geovocab.org/geometry#asWKT
+[`4326`]: https://epsg.io/4326
+[OGC standard]: http://www.opengeospatial.org/standards/geosparql
 [module issues]: https://github.com/Daniel-KM/Omeka-S-module-DataTypeGeometry/issues
 [CeCILL v2.1]: https://www.cecill.info/licences/Licence_CeCILL_V2.1-en.html
 [GNU/GPL]: https://www.gnu.org/licenses/gpl-3.0.html
