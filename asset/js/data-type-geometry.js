@@ -2,21 +2,21 @@
 
     $(document).ready( function() {
 
-        $('textarea.value.geometry, textarea.query-geo-wkt').on('keyup', function(e) {
+        $('textarea.value.geometry, textarea.query-geo-zone').on('keyup', function(e) {
             geometryCheck(this, 'geometry');
         });
 
-        $('input.query-geo-latlong-lat').on('keyup', function(e) {
+        $('input.query-geo-around-latitude').on('keyup', function(e) {
             latlongCheck(this, 'latitude');
         });
-        $('input.query-geo-latlong-long').on('keyup', function(e) {
+        $('input.query-geo-around-longitude').on('keyup', function(e) {
             latlongCheck(this, 'longitude');
         });
-        $('input.query-geo-radius').on('keyup', function(e) {
+        $('input.query-geo-around-radius').on('keyup', function(e) {
             radiusCheck(this);
         });
-        $('input.query-geo-unit').on('click', function(e) {
-            radiusCheck($('input.query-geo-radius')[0]);
+        $('input.query-geo-around-unit').on('click', function(e) {
+            radiusCheck($('input.query-geo-around-radius')[0]);
         });
 
         // Initial load.
@@ -82,15 +82,15 @@
         var message;
         var val = element.value.trim();
         var element2;
-        var elementRadius = $('input.query-geo-radius')[0];
+        var elementRadius = $('input.query-geo-around-radius')[0];
         var radius = elementRadius.value.trim();
         if (datatype === 'latitude') {
-            element2 = $('input.query-geo-latlong-long')[0];
+            element2 = $('input.query-geo-around-longitude')[0];
             if (val < -90 || val > 90) {
                 message = 'Please enter a valid latitude.';
             }
         } else if (datatype === 'longitude') {
-            element2 = $('input.query-geo-latlong-lat')[0];
+            element2 = $('input.query-geo-around-latitude')[0];
             if (val < -180 || val > 180) {
                 message = 'Please enter a valid longitude.';
             }
@@ -130,9 +130,9 @@
         var message;
         var val = element.value.trim();
         var radius = val;
-        var latitude = $('input.query-geo-latlong-lat')[0].value.trim();
-        var longitude = $('input.query-geo-latlong-long')[0].value.trim();
-        var unit = $('input.query-geo-unit[name="geo[unit]"]:checked').val();
+        var latitude = $('input.query-geo-around-latitude')[0].value.trim();
+        var longitude = $('input.query-geo-around-longitude')[0].value.trim();
+        var unit = $('input.query-geo-around-unit[name="geo[around][unit]"]:checked').val();
         if (latitude.length || longitude.length) {
             if (radius <= 0) {
                 message = 'Please enter a valid radius.';

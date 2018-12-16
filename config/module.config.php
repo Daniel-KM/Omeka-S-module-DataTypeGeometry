@@ -143,6 +143,12 @@ return [
     'view_helpers' => [
         'factories' => [
             'normalizeGeometryQuery' => Service\ViewHelper\NormalizeGeometryQueryFactory::class,
+            'geometryFieldset' => Service\ViewHelper\GeometryFieldsetFactory::class,
+        ],
+    ],
+    'form_elements' => [
+        'invokables' => [
+            Form\SearchFieldset::class => Form\SearchFieldset::class,
         ],
     ],
     'translator' => [

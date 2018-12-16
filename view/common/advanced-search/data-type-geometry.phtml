@@ -1,0 +1,60 @@
+<?php
+/**
+ * @var \Zend\View\Renderer\PhpRenderer $this
+ * @var array $query
+ */
+
+/** @var \DataTypeGeometry\Form\SearchFieldset $fieldset */
+$fieldset = $this->geometryFieldset();
+if (!empty($query['geo'])) $fieldset->populateValues($query['geo']);
+
+// The collection is not used to improve the around part.
+// echo $this->formCollection($fieldset);
+
+?>
+<?php $around = $fieldset->get('around'); ?>
+<div class="field">
+    <div class="field-meta">
+        <?php echo $this->formLabel($around); ?>
+    </div>
+    <div class="inputs">
+        <?php
+        $element = $around->get('latitude');
+        echo $this->formNumber($element);
+        $element = $around->get('longitude');
+        echo $this->formNumber($element);
+        $element = $around->get('radius');
+        echo $this->formNumber($element);
+        $element = $around->get('unit');
+        echo $this->formRadio($element);
+        ?>
+    </div>
+</div>
+
+<?php $element = $fieldset->get('mapbox'); ?>
+<div class="field">
+    <div class="field-meta">
+        <?php echo $this->formLabel($element); ?>
+    </div>
+    <div class="inputs">
+        <?php
+        echo $this->formText($element);
+        ?>
+    </div>
+</div>
+
+<?php $element = $fieldset->get('zone'); ?>
+<div class="field">
+    <div class="field-meta">
+        <?php echo $this->formLabel($element); ?>
+    </div>
+    <div class="inputs">
+        <?php
+        echo $this->formTextarea($element);
+        ?>
+    </div>
+</div>
+
+<?php
+$element = $fieldset->get('srid');
+echo $this->formHidden($element);

@@ -158,8 +158,9 @@ class Module extends AbstractGenericModule
     public function displayAdvancedSearch(Event $event)
     {
         $this->prepareResourceForm($event);
+        // There is no advanced search form, only a list of partials.
         $partials = $event->getParam('partials', []);
-        $partials[] = 'common/advanced-search/annotation-cartography';
+        $partials[] = 'common/advanced-search/data-type-geometry';
         $event->setParam('partials', $partials);
     }
 
@@ -183,17 +184,17 @@ class Module extends AbstractGenericModule
         $filters = $event->getParam('filters');
         $translate = $event->getTarget()->plugin('translate');
         $geo = $query['geo'];
-        if (!empty($geo['latlong']) && !empty($geo['radius'])) {
+        if (!empty($geo['around'])) {
             $filterLabel = $translate('Geographic coordinates'); // @translate
             $filters[$filterLabel][] = sprintf(
                 $translate('Within %1$s %2$s of point %3$s %4$s'), // @translate
-                $geo['radius'], $geo['unit'], $geo['latlong'][0], $geo['latlong'][1]
+                $geo['around']['radius'], $geo['around']['unit'], $geo['around']['latitude'], $geo['around']['longitude']
             );
-        } elseif (!empty($geo['xy']) && !empty($geo['radius'])) {
+        } elseif (!empty($geo['around']['xy'])) {
             $filterLabel = $translate('Geometric coordinates'); // @translate
             $filters[$filterLabel][] = sprintf(
                 $translate('Within %1$s pixels of point x: %2$s, y: %3$s)'), // @translate
-                $geo['radius'], $geo['xy'][0], $geo['xy'][1]
+                $geo['around']['radius'], $geo['around']['x'], $geo['around']['y']
             );
         } elseif (!empty($geo['mapbox'])) {
             $filterLabel = $translate('Map box'); // @translate
@@ -207,9 +208,9 @@ class Module extends AbstractGenericModule
                 $translate('Within box %1$s,%2$s/%3$s,%4$s'), // @translate
                 $geo['box'][0], $geo['box'][1], $geo['box'][2], $geo['box'][3]
             );
-        } elseif (!empty($geo['wkt'])) {
-            $filterLabel = $translate('Within geometry'); // @translate
-            $filters[$filterLabel][] = $geo['wkt'];
+        } elseif (!empty($geo['zone'])) {
+            $filterLabel = $translate('Within zone'); // @translate
+            $filters[$filterLabel][] = $geo['zone'];
         }
 
         $event->setParam('filters', $filters);
