@@ -6,6 +6,10 @@
             geometryCheck(this, 'geometry');
         });
 
+        $('input.query-geo-latlong').on('keyup', function(e) {
+            latlongCheck(this);
+        });
+
         // Initial load.
         initGeometryDatatypes();
 
@@ -53,6 +57,27 @@
         }
 
         if (val === '' || primitive) {
+            element.setCustomValidity('');
+        } else {
+            element.setCustomValidity(Omeka.jsTranslate(message));
+        }
+    }
+
+    /**
+     * Check user input lat long.
+     *
+     * @param object element
+     */
+    var latlongCheck = function(element) {
+        var message;
+        var val = element.value.trim();
+        // @see https://stackoverflow.com/questions/3518504/regular-expression-for-matching-latitude-longitude-coordinates#answer-18690202
+        var latLongPattern = /^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?)\s*[,\s]?\s*[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$/;
+        if (!latLongPattern.test(val)) {
+            message = 'Please enter a valid latitude longitude for the coordinates.';
+        }
+
+        if (val === '' || !message) {
             element.setCustomValidity('');
         } else {
             element.setCustomValidity(Omeka.jsTranslate(message));
