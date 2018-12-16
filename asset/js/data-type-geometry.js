@@ -2,7 +2,7 @@
 
     $(document).ready( function() {
 
-        $('textarea.value.geometry').on('keyup', function(e) {
+        $('textarea.value.geometry, textarea.query-geo-wkt').on('keyup', function(e) {
             geometryCheck(this, 'geometry');
         });
 

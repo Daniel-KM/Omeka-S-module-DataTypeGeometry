@@ -150,6 +150,7 @@ class Module extends AbstractGenericModule
      */
     public function displayAdvancedSearch(Event $event)
     {
+        $this->prepareResourceForm($event);
         $partials = $event->getParam('partials', []);
         $partials[] = 'common/advanced-search/annotation-cartography';
         $event->setParam('partials', $partials);
@@ -221,6 +222,7 @@ class Module extends AbstractGenericModule
         $datatypes = ['geometry'];
         $headScript->appendScript('var geometryDatatypes = ' . json_encode($datatypes, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . ';');
         $headScript->appendFile($view->assetUrl('vendor/terraformer/terraformer.min.js', __NAMESPACE__));
+        $headScript->appendFile($view->assetUrl('vendor/terraformer-arcgis-parser/terraformer-arcgis-parser.min.js', __NAMESPACE__));
         $headScript->appendFile($view->assetUrl('vendor/terraformer-wkt-parser/terraformer-wkt-parser.min.js', __NAMESPACE__));
         $headScript->appendFile($view->assetUrl('js/data-type-geometry.js', __NAMESPACE__));
     }
