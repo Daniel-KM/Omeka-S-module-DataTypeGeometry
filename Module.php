@@ -3,9 +3,7 @@ namespace DataTypeGeometry;
 
 // TODO Remove this requirement.
 require_once __DIR__ . '/src/Module/AbstractGenericModule.php';
-require_once __DIR__ . '/src/Api/Adapter/QueryGeometryTrait.php';
 
-use DataTypeGeometry\Api\Adapter\QueryGeometryTrait;
 use DataTypeGeometry\Module\AbstractGenericModule;
 use Doctrine\Common\Collections\Criteria;
 use Zend\EventManager\Event;
@@ -24,8 +22,6 @@ use Zend\ServiceManager\ServiceLocatorInterface;
  */
 class Module extends AbstractGenericModule
 {
-    use QueryGeometryTrait;
-
     public function onBootstrap(MvcEvent $event)
     {
         parent::onBootstrap($event);
@@ -144,10 +140,20 @@ class Module extends AbstractGenericModule
      */
     public function searchQuery(Event $event)
     {
+        $query = $event->getParam('request')->getContent();
+        if (empty($query['geo'])) {
+            return;
+        }
+        $normalizeGeometryQuery = $this->getServiceLocator()
+            ->get('ViewHelperManager')->get('normalizeGeometryQuery');
+        $query = $normalizeGeometryQuery($query);
+        if (empty($query['geo'])) {
+            return;
+        }
         $adapter = $event->getTarget();
         $qb = $event->getParam('queryBuilder');
-        $query = $event->getParam('request')->getContent();
-        $this->searchGeometry($adapter, $qb, $query);
+        $dataTypes = $this->getGeometryDataTypes();
+        $dataTypes['geometry']->buildQuery($adapter, $qb, $query);
     }
 
     /**
@@ -255,12 +261,13 @@ class Module extends AbstractGenericModule
             return;
         }
 
-        $services = $this->getServiceLocator();
+        $entityValues = $entity->getValues();
+
+        $dataTypes = $this->getGeometryDataTypes();
         $dataTypeName = 'geometry';
         /** @var \DataTypeGeometry\DataType\Geometry $dataType */
-        $dataType = $services->get('Omeka\DataTypeManager')->get($dataTypeName);
+        $dataType = $dataTypes['geometry'];
 
-        $entityValues = $entity->getValues();
         $criteria = Criteria::create()->where(Criteria::expr()->eq('type', $dataTypeName));
         $matchingValues = $entityValues->matching($criteria);
         // This resource has no data values of this type.
@@ -268,8 +275,9 @@ class Module extends AbstractGenericModule
             return;
         }
 
+        $services = $this->getServiceLocator();
         $entityManager = $services->get('Omeka\EntityManager');
-        $dataTypeClass = \DataTypeGeometry\Entity\DataTypeGeometry::class;
+        $dataTypeClass = $dataType->getEntityClass();
 
         // TODO Remove this persist, that is used only when a geometry is updated on the map.
         // Persist is required for annotation, since there is no cascade persist
@@ -319,13 +327,10 @@ class Module extends AbstractGenericModule
      */
     public function getGeometryDataTypes()
     {
-        $dataTypes = $this->getConfig()['data_types']['invokables'];
-        $list = $this->getConfig()['data_types']['invokables'];
-        $geometryDataTypes = [];
-        foreach (array_keys($list) as $dataType) {
-            $geometryDataTypes[$dataType] = $dataTypes->get($dataType);
-        }
-        return $geometryDataTypes;
+        $dataTypes = $this->getServiceLocator()->get('Omeka\DataTypeManager');
+        return [
+            'geometry' => $dataTypes->get('geometry'),
+        ];
     }
 
     /**

@@ -1,14 +1,9 @@
 <?php
-namespace DataTypeGeometry\Api\Adapter;
+namespace DataTypeGeometry\DataType;
 
 use Doctrine\ORM\QueryBuilder;
 use Omeka\Api\Adapter\AdapterInterface;
 
-/**
- * This trait must be used inside an adapter, because there are calls to the
- * adapter methods.
- * Nevertheless, the second method is used in Module too.
- */
 trait QueryGeometryTrait
 {
     /**
@@ -24,11 +19,11 @@ trait QueryGeometryTrait
     /**
      * Build query on geometry (coordinates, box, zone).
      *
+     * The query should be normalized with the helper normalizeGeometryQuery().
      * Only the first property and the first srid are used, if set.
+     * @see \DataTypeGeometry\View\Helper\NormalizeGeometryQuery
      *
      * @todo Manage another operator than within (intersect, outside…): use direct queries or a specialized database.
-     *
-     * @see \DataTypeGeometry\View\Helper\NormalizeGeometryQuery for the format.
      *
      * Difference between mysql and postgresql:
      * - Point = ST_Point => use only with ST_GeomFromText
@@ -40,13 +35,12 @@ trait QueryGeometryTrait
      * @param QueryBuilder $qb
      * @param array $query
      */
-    public function searchGeometry(AdapterInterface $adapter, QueryBuilder $qb, array $query)
+    public function buildQuery(AdapterInterface $adapter, QueryBuilder $qb, array $query)
     {
-        $normalizeGeometryQuery = $adapter->getServiceLocator()->get('ViewHelperManager')->get('normalizeGeometryQuery');
-        $query = $normalizeGeometryQuery($query);
         if (empty($query['geo'])) {
             return;
         }
+
         $geos = $query['geo'];
         $first = reset($geos);
         $isSingle = !is_array($first) || !is_numeric(key($geos));

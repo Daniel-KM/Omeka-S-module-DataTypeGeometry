@@ -12,6 +12,8 @@ use Zend\View\Renderer\PhpRenderer;
 
 class Geometry extends AbstractDataType
 {
+    use QueryGeometryTrait;
+
     public function getName()
     {
         return 'geometry';
@@ -83,6 +85,11 @@ class Geometry extends AbstractDataType
             '@value' => $value->value(),
             '@type' => 'http://geovocab.org/geometry#asWKT',
         ];
+    }
+
+    public function getEntityClass()
+    {
+        return \DataTypeGeometry\Entity\DataTypeGeometry::class;
     }
 
     /**
