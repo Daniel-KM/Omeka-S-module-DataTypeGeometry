@@ -4,12 +4,17 @@ namespace DataTypeGeometry;
 // TODO Remove this requirement.
 require_once __DIR__ . '/src/Module/AbstractGenericModule.php';
 
+use DataTypeGeometry\Form\ConfigForm;
+use DataTypeGeometry\Job\IndexGeometries;
 use DataTypeGeometry\Module\AbstractGenericModule;
 use Doctrine\Common\Collections\Criteria;
+use Omeka\Stdlib\Message;
 use Zend\EventManager\Event;
 use Zend\EventManager\SharedEventManagerInterface;
+use Zend\Mvc\Controller\AbstractController;
 use Zend\Mvc\MvcEvent;
 use Zend\ServiceManager\ServiceLocatorInterface;
+use Zend\View\Renderer\PhpRenderer;
 
 /**
  * Data type Geometry
@@ -42,6 +47,8 @@ class Module extends AbstractGenericModule
 
     public function install(ServiceLocatorInterface $serviceLocator)
     {
+        $this->setServiceLocator($serviceLocator);
+
         // In case of upgrade of a recent version of Cartography, the database
         // may exist.
         /** @var \Doctrine\DBAL\Connection $connection */
@@ -50,10 +57,8 @@ class Module extends AbstractGenericModule
         $stmt = $connection->query($sql);
         $table = $stmt->fetchColumn();
         if ($table) {
-            return;
+            $this->execSqlFromFile($this->modulePath() . '/data/install/uninstall-cartography.sql');
         }
-
-        $this->setServiceLocator($serviceLocator);
 
         if (!$this->supportSpatialSearch()) {
             $messenger = new \Omeka\Mvc\Controller\Plugin\Messenger();
@@ -150,13 +155,56 @@ class Module extends AbstractGenericModule
         );
     }
 
-    public function handleMainSettingsFilters(Event $event)
+    public function getConfigForm(PhpRenderer $renderer)
     {
-        $inputFilter = $event->getParam('inputFilter');
-        $inputFilter->get('datatypegeometry')->add([
-            'name' => 'datatypegeometry_buttons',
-            'required' => false,
-        ]);
+        $html = parent::getConfigForm($renderer);
+        $html = '<p>'
+            . $renderer->translate('Reindex geometries or resources and annotations as geometry or geography.') // @translate
+            . '</p>'
+            . $html;
+        return $html;
+    }
+
+    public function handleConfigForm(AbstractController $controller)
+    {
+        // Save the srid.
+        parent::handleConfigForm($controller);
+
+        $services = $this->getServiceLocator();
+        $form = $services->get('FormElementManager')->get(ConfigForm::class);
+
+        $params = $controller->getRequest()->getPost();
+
+        $form->init();
+        $form->setData($params);
+        if (!$form->isValid()) {
+            $controller->messenger()->addErrors($form->getMessages());
+            return false;
+        }
+
+        $params = $form->getData();
+
+        if (empty($params['process']) || $params['process'] !== $controller->translate('Process')) {
+            $message = 'No job launched.'; // @translate
+            $controller->messenger()->addWarning($message);
+            return;
+        }
+
+        unset($params['csrf']);
+        unset($params['process']);
+
+        $dispatcher = $services->get(\Omeka\Job\Dispatcher::class);
+        $job = $dispatcher->dispatch(IndexGeometries::class, $params);
+        $message = new Message(
+            'Processing in the background (%sjob #%d%s)', // @translate
+            sprintf('<a href="%s">',
+                htmlspecialchars($controller->url()->fromRoute('admin/id', ['controller' => 'job', 'id' => $job->getId()]))
+            ),
+            $job->getId(),
+            '</a>'
+        );
+        $message->setEscapeHtml(false);
+        $controller->messenger()->addSuccess($message);
     }
 
     public function handleMainSettingsFilters(Event $event)
@@ -302,8 +350,11 @@ class Module extends AbstractGenericModule
 
         $services = $this->getServiceLocator();
         $entityManager = $services->get('Omeka\EntityManager');
+        $srid = $services->get('Omeka\Settings')
+            ->get('datatypegeometry_locate_srid', 4326);
 
         foreach ($this->getGeometryDataTypes() as $dataTypeName => $dataType) {
+            // TODO Improve criteria when the types are mixed in a property.
             $criteria = Criteria::create()->where(Criteria::expr()->eq('type', $dataTypeName));
             $matchingValues = $entityValues->matching($criteria);
             // This resource has no data values of this type.
@@ -341,7 +392,15 @@ class Module extends AbstractGenericModule
                     next($existingDataValues);
                 }
 
+                // Set the default srid when needed for geographic geometries.
                 $geometry = $dataType->getGeometryFromValue($value->getValue());
+                if ($srid
+                    && $dataTypeName === 'geometry:geography'
+                    && empty($geometry->getSrid())
+                ) {
+                   $geometry->setSrid($srid);
+                }
+
                 $dataValue->setResource($entity);
                 $dataValue->setProperty($value->getProperty());
                 $dataValue->setValue($geometry);

@@ -169,6 +169,7 @@ return [
     ],
     'form_elements' => [
         'invokables' => [
+            Form\ConfigForm::class => Form\ConfigForm::class,
             Form\SearchFieldset::class => Form\SearchFieldset::class,
             Form\SettingsFieldset::class => Form\SettingsFieldset::class,
         ],
@@ -197,6 +198,9 @@ return [
         'Please enter a valid wkt for the geometry.', // @translate
     ],
     'datatypegeometry' => [
+        'config' => [
+            'datatypegeometry_locate_srid' => 4326,
+        ],
         'settings' => [
             'datatypegeometry_buttons' => [
                 'geometry:geography',
