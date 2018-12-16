@@ -12,7 +12,7 @@ class Geography extends AbstractDataType
      * @link http://www.opengis.net/def/crs/OGC/1.3/CRS84
      * @link https://epsg.io/4326
      *
-     * @var integer
+     * @var int
      */
     const DEFAULT_SRID = 4326;
 

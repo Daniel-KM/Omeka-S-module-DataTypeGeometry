@@ -419,7 +419,7 @@ class Module extends AbstractGenericModule
                     && $dataTypeName === 'geometry:geography'
                     && empty($geometry->getSrid())
                 ) {
-                   $geometry->setSrid($srid);
+                    $geometry->setSrid($srid);
                 }
 
                 $dataValue->setResource($entity);
@@ -515,7 +515,7 @@ class Module extends AbstractGenericModule
 
         $sql = 'SHOW VARIABLES LIKE "version";';
         $stmt = $connection->query($sql);
-        $version= $stmt->fetchAll(\PDO::FETCH_KEY_PAIR);
+        $version = $stmt->fetchAll(\PDO::FETCH_KEY_PAIR);
         $version = reset($version);
 
         $isMySql = stripos($version, 'mysql') !== false;
@@ -533,7 +533,7 @@ class Module extends AbstractGenericModule
 
         $sql = 'SHOW VARIABLES LIKE "innodb_version";';
         $stmt = $connection->query($sql);
-        $version= $stmt->fetchAll(\PDO::FETCH_KEY_PAIR);
+        $version = $stmt->fetchAll(\PDO::FETCH_KEY_PAIR);
         $version = reset($version);
         $isInnoDb = !empty($version);
         if ($isInnoDb) {

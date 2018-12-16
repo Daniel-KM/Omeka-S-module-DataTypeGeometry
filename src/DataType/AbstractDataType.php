@@ -94,7 +94,7 @@ abstract class AbstractDataType extends BaseAbstractDataType implements DataType
         return $geometry;
     }
 
-    abstract function getEntityClass();
+    abstract public function getEntityClass();
 
-    abstract function getGeometryFromValue($value);
+    abstract public function getGeometryFromValue($value);
 }

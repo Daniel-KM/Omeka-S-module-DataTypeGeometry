@@ -72,7 +72,7 @@ class IndexGeometries extends AbstractJob
                 break;
             case 'upgrade geometry':
                 $this->upgradeGeometry();
-                // No break.
+                // no break.
             case 'common':
                 $this->truncate();
                 $this->reindex([
