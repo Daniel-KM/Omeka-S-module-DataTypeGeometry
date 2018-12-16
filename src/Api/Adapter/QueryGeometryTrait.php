@@ -80,10 +80,12 @@ trait QueryGeometryTrait
      */
     protected function searchXy(AdapterInterface $adapter, QueryBuilder $qb, array $around, $srid, $geometryAlias)
     {
-        // Note: 'ST_GeomFromText("Point(2 50)")' is not correct.
-        $point = sprintf("ST_GeomFromText('Point(%s %s)', %d)", $around['x'], $around['y'], $srid);
+        $xLong = $adapter->createNamedParameter($qb, $around['x']);
+        $yLat = $adapter->createNamedParameter($qb, $around['y']);
+        $srid = $adapter->createNamedParameter($qb, $srid);
         $qb->andWhere($qb->expr()->lte(
-            "ST_Distance($point, $geometryAlias.value)",
+            // Note: 'ST_GeomFromText("Point(2 50)")' is not correct.
+            "ST_Distance(ST_GeomFromText('Point($xLong $yLat)', $srid), $geometryAlias.value)",
             $adapter->createNamedParameter($qb, $around['radius'])
         ));
     }
@@ -97,48 +99,46 @@ trait QueryGeometryTrait
      */
     protected function searchAround(AdapterInterface $adapter, QueryBuilder $qb, array $around, $srid, $geometryAlias)
     {
-        $latitude = $around['latitude'];
-        $longitude = $around['longitude'];
-        $radius = $around['radius'];
-        $unit = $around['unit'];
-
         // With srid 4326 (Mercator), the radius should be in metre.
-        $radiusMetre = $unit === 'km' ? $radius * 1000 : $radius;
+        $radiusMetre = $around['unit'] === 'km' ? $around['radius'] * 1000 : $around['radius'];
+
+        $xLong = $adapter->createNamedParameter($qb, $around['longitude']);
+        $yLat = $adapter->createNamedParameter($qb, $around['latitude']);
 
         $expr = $qb->expr();
         if ($this->isPosgreSql) {
-            $point = sprintf("ST_GeomFromText('Point(%s %s)', %d)", $around['longitude'], $around['latitude'], $srid);
+            $srid = $adapter->createNamedParameter($qb, $srid);
             $qb
                 ->andWhere($expr->lte(
-                    "ST_DistanceSphere($point, $geometryAlias.value)",
+                    "ST_DistanceSphere(ST_GeomFromText('Point($xLong $yLat)', $srid), $geometryAlias.value)",
                     $adapter->createNamedParameter($qb, $radiusMetre)
                 ));
         } elseif ($this->isMysql576) {
-            $point = sprintf("ST_GeomFromText('Point(%s %s)', %d)", $around['longitude'], $around['latitude'], $srid);
+            $srid = $adapter->createNamedParameter($qb, $srid);
             $qb
                 ->andWhere($expr->lte(
-                    "ST_Distance_Sphere($point, $geometryAlias.value)",
+                    "ST_Distance_Sphere(ST_GeomFromText('Point($xLong $yLat)', $srid), $geometryAlias.value)",
                     $adapter->createNamedParameter($qb, $radiusMetre)
                 ));
         } else {
             $radiusDegree = $radiusMetre / 111133;
-            $buffer = sprintf("ST_Buffer(Point(%s, %s), %s)", $longitude, $latitude, $radiusDegree);
+            $radius = $adapter->createNamedParameter($qb, $radiusDegree);
             $qb
                 ->andWhere($expr->eq(
-                    "ST_Contains($buffer, $geometryAlias.value)",
+                    "ST_Contains(ST_Buffer(Point($xLong, $yLat), $radius), $geometryAlias.value)",
                     $expr->literal(true)
                 ));
             /*
             // Flat or small map.
             $qb->andWhere($expr->lte(
-                "ST_Distance($point, $geometryAlias.value)",
+                "ST_Distance(Point($xLong, $yLat), $geometryAlias.value)",
                 $adapter->createNamedParameter($qb, $radiusMetre)
             ));
             // Ok but only for points.
             // @see https://stackoverflow.com/questions/1973878/sql-search-using-haversine-in-doctrine#2102375
             $qb
                 ->andWhere($expr->lte(
-                    "(6370986 * ACOS(SIN(RADIANS($around['latitude'])) * SIN(RADIANS(ST_Y($geometryAlias.value))) + COS(RADIANS($around['latitude'])) * COS(RADIANS(ST_Y($geometryAlias.value))) * COS(RADIANS(ST_X($geometryAlias.value)) - RADIANS($around['longitude']))))",
+                    "(6370986 * ACOS(SIN(RADIANS($yLat)) * SIN(RADIANS(ST_Y($geometryAlias.value))) + COS(RADIANS($yLat)) * COS(RADIANS(ST_Y($geometryAlias.value))) * COS(RADIANS(ST_X($geometryAlias.value)) - RADIANS($xLong))))",
                     $adapter->createNamedParameter($qb, $radiusMetre)
                 ));
             */
@@ -154,16 +154,24 @@ trait QueryGeometryTrait
      */
     protected function searchBox(AdapterInterface $adapter, QueryBuilder $qb, array $box, $srid, $geometryAlias)
     {
-        $polygon = 'Polygon((%1$s %2$s, %3$s %2$s, %3$s %4$s, %1$s %4$s, %1$s %2$s))';
-        $mbr = vsprintf($polygon, $box);
+        $x1 = $adapter->createNamedParameter($qb, $box[0]);
+        $y1 = $adapter->createNamedParameter($qb, $box[1]);
+        $x2 = $adapter->createNamedParameter($qb, $box[2]);
+        $y2 = $adapter->createNamedParameter($qb, $box[3]);
+        $srid = $adapter->createNamedParameter($qb, $srid);
+        $mbr = "Polygon(($x1 $y1, $x2 $y1, $x2 $y2, $x1 $y2, $x1 $y1))";
 
+        $expr = $qb->expr();
         if ($this->isPosgreSql) {
             // Or use an enveloppe or a box.
-            return $this->searchZone($adapter, $qb, $mbr, $srid, $geometryAlias);
+            $qb->andWhere($expr->eq(
+                "ST_Contains(ST_GeomFromText('$mbr', $srid), $geometryAlias.value)",
+                $expr->literal(true)
+            ));
+            return;
         }
 
         // "= true" is needed only to avoid an issue when converting dql to sql.
-        $expr = $qb->expr();
         $qb->andWhere($expr->eq(
             "MBRContains(ST_GeomFromText('$mbr', $srid), $geometryAlias.value)",
             $expr->literal(true)
@@ -179,20 +187,8 @@ trait QueryGeometryTrait
      */
     protected function searchMapBox(AdapterInterface $adapter, QueryBuilder $qb, array $mapbox, $srid, $geometryAlias)
     {
-        $polygon = 'Polygon((%2$s %1$s, %2$s %3$s, %4$s %3$s, %4$s %1$s, %2$s %1$s))';
-        $mbr = vsprintf($polygon, $mapbox);
-
-        if ($this->isPosgreSql) {
-            // Or use an enveloppe or a box.
-            return $this->searchZone($adapter, $qb, $mbr, $srid, $geometryAlias);
-        }
-
-        // "= true" is needed only to avoid an issue when converting dql to sql.
-        $expr = $qb->expr();
-        $qb->andWhere($expr->eq(
-            "MBRContains(ST_GeomFromText('$mbr', $srid), $geometryAlias.value)",
-            $expr->literal(true)
-        ));
+        $box = [$mapbox[1], $mapbox[0], $mapbox[3], $mapbox[2]];
+        $this->searchBox($adapter, $qb, $box, $srid, $geometryAlias);
     }
 
     /**
@@ -204,11 +200,13 @@ trait QueryGeometryTrait
      */
     protected function searchZone(AdapterInterface $adapter, QueryBuilder $qb, $wkt, $srid, $geometryAlias)
     {
+        $geometry = $adapter->createNamedParameter($qb, $wkt);
+        $srid = $adapter->createNamedParameter($qb, $srid);
+
         // "= true" is needed only to avoid an issue when converting dql to sql.
-        $geometry = "ST_GeomFromText('$wkt', $srid)";
         $expr = $qb->expr();
         $qb->andWhere($expr->eq(
-            "ST_Contains($geometry, $geometryAlias.value)",
+            "ST_Contains(ST_GeomFromText($geometry, $srid), $geometryAlias.value)",
             $expr->literal(true)
         ));
     }
@@ -230,7 +228,7 @@ trait QueryGeometryTrait
         if ($property) {
             $propertyId = $this->getPropertyId($adapter, $property);
             $expr = $qb->expr();
-            $qb->join(
+            $qb->leftJoin(
                 $dataTypeClass,
                 $alias,
                 \Doctrine\ORM\Query\Expr\Join::WITH,
@@ -240,7 +238,7 @@ trait QueryGeometryTrait
                 )
             );
         } else {
-            $qb->join(
+            $qb->leftJoin(
                 $dataTypeClass,
                 $alias,
                 \Doctrine\ORM\Query\Expr\Join::WITH,
