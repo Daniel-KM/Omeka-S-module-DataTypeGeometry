@@ -6,8 +6,17 @@
             geometryCheck(this, 'geometry');
         });
 
-        $('input.query-geo-latlong').on('keyup', function(e) {
-            latlongCheck(this);
+        $('input.query-geo-latlong-lat').on('keyup', function(e) {
+            latlongCheck(this, 'latitude');
+        });
+        $('input.query-geo-latlong-long').on('keyup', function(e) {
+            latlongCheck(this, 'longitude');
+        });
+        $('input.query-geo-radius').on('keyup', function(e) {
+            radiusCheck(this);
+        });
+        $('input.query-geo-unit').on('click', function(e) {
+            radiusCheck($('input.query-geo-radius')[0]);
         });
 
         // Initial load.
@@ -64,20 +73,82 @@
     }
 
     /**
-     * Check user input lat long.
+     * Check user input lat or long.
+     *
+     * @param object element
+     * @param string datatype
+     */
+    var latlongCheck = function(element, datatype) {
+        var message;
+        var val = element.value.trim();
+        var element2;
+        var elementRadius = $('input.query-geo-radius')[0];
+        var radius = elementRadius.value.trim();
+        if (datatype === 'latitude') {
+            element2 = $('input.query-geo-latlong-long')[0];
+            if (val < -90 || val > 90) {
+                message = 'Please enter a valid latitude.';
+            }
+        } else if (datatype === 'longitude') {
+            element2 = $('input.query-geo-latlong-lat')[0];
+            if (val < -180 || val > 180) {
+                message = 'Please enter a valid longitude.';
+            }
+        }
+
+        var val2 = element2.value.trim();
+
+        if (val === '' && val2 === '') {
+            element.setCustomValidity('');
+            element2.setCustomValidity('');
+            elementRadius.setCustomValidity('');
+        } else if (val === '' && val2 !== '') {
+            message = 'Please enter a latitude or longitude.';
+            element.setCustomValidity(Omeka.jsTranslate(message));
+        } else if (val !== '' && val2 === '') {
+            message = 'Please enter a latitude or longitude.';
+            element2.setCustomValidity(Omeka.jsTranslate(message));
+        } else if (message) {
+            element.setCustomValidity(Omeka.jsTranslate(message));
+        } else {
+            element.setCustomValidity('');
+        }
+
+        if ((val !== '' || val2 !== '') && radius === '') {
+            message = 'Please enter a radius.';
+            elementRadius.setCustomValidity(Omeka.jsTranslate(message));
+        }
+    }
+
+    /**
+     * Check user input radius, according to unit and required when a latitude
+     * and longitude are set.
      *
      * @param object element
      */
-    var latlongCheck = function(element) {
+    var radiusCheck = function(element) {
         var message;
         var val = element.value.trim();
-        // @see https://stackoverflow.com/questions/3518504/regular-expression-for-matching-latitude-longitude-coordinates#answer-18690202
-        var latLongPattern = /^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?)\s*[,\s]?\s*[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$/;
-        if (!latLongPattern.test(val)) {
-            message = 'Please enter a valid latitude longitude for the coordinates.';
+        var radius = val;
+        var latitude = $('input.query-geo-latlong-lat')[0].value.trim();
+        var longitude = $('input.query-geo-latlong-long')[0].value.trim();
+        var unit = $('input.query-geo-unit[name="geo[unit]"]:checked').val();
+        if (latitude.length || longitude.length) {
+            if (radius <= 0) {
+                message = 'Please enter a valid radius.';
+            } else if (unit === 'm') {
+                if (radius > 20038000) {
+                    message = 'Please enter a valid radius in m.';
+                }
+            } else if (radius > 20038) {
+                message = 'Please enter a valid radius in km.';
+            }
         }
 
-        if (val === '' || !message) {
+        if ((latitude.length || longitude.length) && val === '') {
+            message = 'Please enter a radius.';
+            element.setCustomValidity(Omeka.jsTranslate(message));
+        } else if (val === '' || !message) {
             element.setCustomValidity('');
         } else {
             element.setCustomValidity(Omeka.jsTranslate(message));

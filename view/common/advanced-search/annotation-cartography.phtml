@@ -8,7 +8,7 @@
 // Manage any properties for wkt, because use the data type: there is no more useless complexity.
 $defaults = [
     // Geographic coordinates as latitude and longitude.
-    'latlong' => '',
+    'latlong' => ['', ''],
     // Geometric coordinates as x and y.
     'xy' => '',
     // A float.
@@ -29,61 +29,38 @@ $query += ['geo' => $defaults];
 $translate = $this->plugin('translate');
 ?>
 
-<fieldset class="fieldset">
-    <label><?php echo $translate('Search around a point or by area'); ?></label>
-
 <div class="field">
     <div class="field-meta">
-        <label for="geo[latlong]"><?php echo $translate('Coordinates'); ?></label>
+        <label for=""><?php echo $translate('Around a point'); ?></label>
     </div>
     <div class="inputs">
     <?php
-        $element = (new \Zend\Form\Element\Text())
-            ->setName('geo[latlong]')
-            ->setOptions([
-                'info' => $translate('The radius should be set below.'),
-            ])
+        $element = (new \Zend\Form\Element\Number())
+            ->setName('geo[latlong][0]')
             ->setAttributes([
-                'class' => 'query-geo-latlong',
-                'value' => $query['geo']['latlong'],
-                'placeholder' => $translate('latitude longitude'),
-                'aria-label' => $translate('Coordinates (latitude / longitude)'),
+                'type' => 'number',
+                'class' => 'query-geo-latlong-lat',
+                'value' => $query['geo']['latlong'][0],
+                'min' => '-90',
+                'max' => '90',
+                'step' => '1',
+                'placeholder' => $translate('Latitude'),
+                'aria-label' => $translate('Latitude'),
             ]);
-        echo $this->formText($element);
-    ?>
-    </div>
-</div>
-
-<?php /* // For non-georeferenced images. Managed, but not displayed.
-<div class="field">
-    <div class="field-meta">
-        <label for="geo[xy]"><?php echo $translate('Coordinates x/y'); ?></label>
-    </div>
-    <div class="inputs">
-    <?php
-        $element = (new \Zend\Form\Element\Text())
-            ->setName('geo[xy]')
-            ->setOptions([
-                'info' => $translate('The radius should be set below, in pixels.'),
-            ])
+        echo $this->formNumber($element);
+        $element = (new \Zend\Form\Element\Number())
+            ->setName('geo[latlong][1]')
             ->setAttributes([
-                'class' => 'query-geo-xy',
-                'value' => $query['geo']['xy'],
-                'placeholder' => $translate('x y'),
-                'aria-label' => $translate('Coordinates (x y)'),
+                'type' => 'number',
+                'class' => 'query-geo-latlong-long',
+                'value' => $query['geo']['latlong'][1],
+                'min' => '-180',
+                'max' => '180',
+                'step' => '1',
+                'placeholder' => $translate('Longitude'),
+                'aria-label' => $translate('Longitude)'),
             ]);
-        echo $this->formText($element);
-    ?>
-    </div>
-</div>
-*/ ?>
-
-<div class="field">
-    <div class="field-meta">
-        <label for="geo[radius]"><?php echo $translate('Radius'); ?></label>
-    </div>
-    <div class="inputs">
-    <?php
+        echo $this->formNumber($element);
         $element = (new \Zend\Form\Element\Number())
             ->setName('geo[radius]')
             ->setOptions([
@@ -92,25 +69,15 @@ $translate = $this->plugin('translate');
             ->setAttributes([
                 'type' => 'number',
                 'class' => 'query-geo-radius',
-                'value' => $query['geo']['radius'],
+                'value' => $query['geo']['radius'] ?: 'km',
                 'aria-label' => $translate('Radius'),
                 'min' => '1',
-                'max' => '20038',
+                'max' => '20038000',
                 'step' => '1',
-                'placeholder' => '1',
+                'placeholder' => 'radius',
             ]);
         echo $this->formNumber($element);
-    ?>
-    </div>
-</div>
-
-<div class="field">
-    <div class="field-meta">
-        <label for="geo[unit]"><?php echo $translate('Unit'); ?></label>
-    </div>
-    <div class="inputs">
-    <?php
-        $element = (new \Zend\Form\Element\Select())
+        $element = (new \Zend\Form\Element\Radio())
             ->setName('geo[unit]')
             ->setValueOptions([
                 'km' => 'kilometres', // @translate
@@ -121,14 +88,14 @@ $translate = $this->plugin('translate');
                 'value' => $query['geo']['unit'],
                 'aria-label' => $translate('Unit of the radius for geographic point'),
             ]);
-        echo $this->formSelect($element);
-    ?>
+        echo $this->formRadio($element);
+        ?>
     </div>
 </div>
 
 <div class="field">
     <div class="field-meta">
-        <label for="geo[mapbox]"><?php echo $translate('Map box'); ?></label>
+        <label for="geo[mapbox]"><?php echo $translate('Inside a box'); ?></label>
     </div>
     <div class="inputs">
     <?php
@@ -148,33 +115,9 @@ $translate = $this->plugin('translate');
     </div>
 </div>
 
-<?php /* // For non-georeferenced images. Managed, but not displayed.
 <div class="field">
     <div class="field-meta">
-        <label for="geo[box]"><?php echo $translate('Box'); ?></label>
-    </div>
-    <div class="inputs">
-    <?php
-        $element = (new \Zend\Form\Element\Text())
-            ->setName('geo[box]')
-            ->setOptions([
-                'info' => $translate('Two opposite coordinates.'),
-            ])
-            ->setAttributes([
-                'class' => 'query-geo-box',
-                'value' => $query['geo']['box'],
-                'aria-label' => $translate('Rectangle box with two opposite coordinates'),
-                'placeholder' => $translate('Top left x y Bottom right x y'),
-            ]);
-        echo $this->formText($element);
-    ?>
-    </div>
-</div>
-*/ ?>
-
-<div class="field">
-    <div class="field-meta">
-        <label for="geo[wkt]"><?php echo $translate('Geometry (WKT)'); ?></label>
+        <label for="geo[wkt]"><?php echo $translate('Within a geometry (WKT)'); ?></label>
     </div>
     <div class="inputs">
     <?php
@@ -193,5 +136,3 @@ $translate = $this->plugin('translate');
     ?>
     </div>
 </div>
-
-</fieldset>

@@ -155,4 +155,16 @@ return [
             ],
         ],
     ],
+    'js_translate_strings' => [
+        'Geometry', // @translate
+        'Please enter a latitude.', // @translate
+        'Please enter a longitude.', // @translate
+        'Please enter a radius.', // @translate
+        'Please enter a valid latitude.', // @translate
+        'Please enter a valid longitude.', // @translate
+        'Please enter a valid radius.', // @translate
+        'Please enter a valid radius in m.', // @translate
+        'Please enter a valid radius in km.', // @translate
+        'Please enter a valid wkt for the geometry.', // @translate
+    ],
 ];

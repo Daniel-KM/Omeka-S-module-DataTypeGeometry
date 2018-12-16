@@ -12,6 +12,9 @@ class NormalizeGeometryQuery extends AbstractHelper
      */
     protected $entityManager;
 
+    /**
+     * @param EntityManager $entityManager
+     */
     public function __construct(EntityManager $entityManager)
     {
         $this->entityManager = $entityManager;
@@ -53,11 +56,11 @@ class NormalizeGeometryQuery extends AbstractHelper
             return $query;
         }
 
-        $first = reset($query['geo']);
-        $isSingle = !is_array($first) || !is_numeric(key($first));
+        $isSingle = !is_numeric(key($query['geo']));
         if ($isSingle) {
             $query['geo'] = [$query['geo']];
         }
+
 
         $defaults = [
             // Geographic coordinates as latitude and longitude.
