@@ -5,6 +5,7 @@ namespace DataTypeGeometry;
 require_once __DIR__ . '/src/Module/AbstractGenericModule.php';
 
 use DataTypeGeometry\Form\ConfigForm;
+use DataTypeGeometry\Form\SearchFieldset;
 use DataTypeGeometry\Job\IndexGeometries;
 use DataTypeGeometry\Module\AbstractGenericModule;
 use Doctrine\Common\Collections\Criteria;
@@ -144,6 +145,17 @@ class Module extends AbstractGenericModule
         }
 
         $sharedEventManager->attach(
+            \Annotate\Controller\Admin\AnnotationController::class,
+            'view.browse.before',
+            [$this, 'prepareResourceForm']
+        );
+        $sharedEventManager->attach(
+            \Annotate\Form\QuickSearchForm::class,
+            'form.add_elements',
+            [$this, 'addFormElementsAnnotateQuickSearch']
+        );
+
+        $sharedEventManager->attach(
             \Omeka\Form\SettingForm::class,
             'form.add_elements',
             [$this, 'handleMainSettings']
@@ -216,6 +228,14 @@ class Module extends AbstractGenericModule
         ]);
     }
 
+    public function addFormElementsAnnotateQuickSearch(Event $event)
+    {
+        $services = $this->getServiceLocator();
+        $fieldset = $services->get('FormElementManager')->get(SearchFieldset::class);
+        $form = $event->getTarget();
+        $form->add($fieldset);
+    }
+
     /**
      * Helper to filter search queries.
      *
@@ -246,6 +266,7 @@ class Module extends AbstractGenericModule
      */
     public function displayAdvancedSearch(Event $event)
     {
+        // Load js.
         $this->prepareResourceForm($event);
         // There is no advanced search form, only a list of partials.
         $partials = $event->getParam('partials', []);
