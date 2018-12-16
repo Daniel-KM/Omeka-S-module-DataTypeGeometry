@@ -1,9 +1,0 @@
-{
-    "o:label": "Annotation Target dcterms:format",
-    "o:lang": "",
-    "o:terms": [
-        "application/vnd.ogc.gml",
-        "application/vnd.google-earth.kml+xml",
-        "application/wkt"
-    ]
-}
