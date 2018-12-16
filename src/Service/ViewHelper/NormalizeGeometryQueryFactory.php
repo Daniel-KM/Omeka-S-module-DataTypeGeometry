@@ -1,7 +1,7 @@
 <?php
-namespace Cartography\Service\ViewHelper;
+namespace DataTypeGeometry\Service\ViewHelper;
 
-use Cartography\View\Helper\NormalizeGeometryQuery;
+use DataTypeGeometry\View\Helper\NormalizeGeometryQuery;
 use Interop\Container\ContainerInterface;
 use Zend\ServiceManager\Factory\FactoryInterface;
 

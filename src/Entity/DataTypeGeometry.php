@@ -1,5 +1,5 @@
 <?php
-namespace Cartography\Entity;
+namespace DataTypeGeometry\Entity;
 
 use CrEOF\Spatial\PHP\Types\Geometry\GeometryInterface;
 use Omeka\Entity\AbstractEntity;
@@ -100,7 +100,7 @@ class DataTypeGeometry extends AbstractEntity
     }
 
     /**
-     * @param string $value
+     * @param GeometryInterface $value
      * @return self
      */
     public function setValue(GeometryInterface $value)
@@ -110,7 +110,7 @@ class DataTypeGeometry extends AbstractEntity
     }
 
     /**
-     * @return string
+     * @return \CrEOF\Spatial\PHP\Types\Geometry\GeometryInterface
      */
     public function getValue()
     {

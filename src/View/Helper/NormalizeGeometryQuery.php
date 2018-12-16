@@ -1,5 +1,5 @@
 <?php
-namespace Cartography\View\Helper;
+namespace DataTypeGeometry\View\Helper;
 
 use CrEOF\Geo\WKT\Parser as GeoWktParser;
 use Doctrine\ORM\EntityManager;

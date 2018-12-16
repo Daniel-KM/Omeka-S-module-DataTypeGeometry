@@ -1,5 +1,5 @@
 <?php
-namespace Cartography\Api\Adapter;
+namespace DataTypeGeometry\Api\Adapter;
 
 use Doctrine\ORM\QueryBuilder;
 use Omeka\Api\Adapter\AdapterInterface;
@@ -18,7 +18,7 @@ trait QueryGeometryTrait
      * @todo Allow to have multiple arguments (via a check of the first key: integer or string).
      * @todo Manage another operator than within.
      *
-     * @see \Cartography\View\Helper\NormalizeGeometryQuery for the format.
+     * @see \DataTypeGeometry\View\Helper\NormalizeGeometryQuery for the format.
      *
      * Warning: the sql functions are the mariaDB/mySql ones, not the PostgreSql
      * ones. For example, MBRContains is not supported by PostgreSql and a
@@ -160,7 +160,7 @@ trait QueryGeometryTrait
     protected function joinGeometry(AdapterInterface $adapter, QueryBuilder $qb, $query)
     {
         $resourceClass = $adapter->getEntityClass();
-        $dataTypeClass = \Cartography\Entity\DataTypeGeometry::class;
+        $dataTypeClass = \DataTypeGeometry\Entity\DataTypeGeometry::class;
         $alias = $adapter->createAlias();
         $property = isset($query['geo']['property']) ? $query['geo']['property'] : null;
         if ($property) {

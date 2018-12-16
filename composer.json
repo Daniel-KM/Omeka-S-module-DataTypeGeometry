@@ -10,7 +10,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "CartographyTest\\": "test/CartographyTest/"
+            "DataTypeGeometryTest\\": "test/DataTypeGeometryTest/"
         }
     }
 }

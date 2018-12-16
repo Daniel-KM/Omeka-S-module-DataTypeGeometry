@@ -1,8 +1,8 @@
 <?php
-namespace Cartography\DataType;
+namespace DataTypeGeometry\DataType;
 
-use Cartography\Doctrine\PHP\Types\Geometry\Geometry as GenericGeometry;
 use CrEOF\Geo\WKT\Parser as GeoWktParser;
+use DataTypeGeometry\Doctrine\PHP\Types\Geometry\Geometry as GenericGeometry;
 use Omeka\Api\Adapter\AbstractEntityAdapter;
 use Omeka\Api\Representation\ValueRepresentation;
 use Omeka\DataType\AbstractDataType;
@@ -24,13 +24,13 @@ class Geometry extends AbstractDataType
 
     public function getOptgroupLabel()
     {
-        return 'Cartography'; // @translate
+        return 'Various'; // @translate
     }
 
     public function prepareForm(PhpRenderer $view)
     {
-        $view->headLink()->appendStylesheet($view->assetUrl('css/cartography.css', 'Cartography'));
-        $view->headScript()->appendFile($view->assetUrl('js/cartography-geometry-datatype.js', 'Cartography'));
+        $view->headLink()->appendStylesheet($view->assetUrl('css/data-type-geometry.css', 'DataTypeGeometry'));
+        $view->headScript()->appendFile($view->assetUrl('js/data-type-geometry.js', 'DataTypeGeometry'));
     }
 
     public function form(PhpRenderer $view)
@@ -90,7 +90,7 @@ class Geometry extends AbstractDataType
      *
      * @param string $value Accept AbstractGeometry and geometry array too.
      * @throws \InvalidArgumentException
-     * @return \CrEOF\Spatial\PHP\Types\AbstractGeometry
+     * @return \CrEOF\Spatial\PHP\Types\Geometry\GeometryInterface
      */
     public function getGeometryFromValue($value)
     {

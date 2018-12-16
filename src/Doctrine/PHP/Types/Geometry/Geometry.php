@@ -1,7 +1,9 @@
 <?php
 
-namespace Cartography\Doctrine\PHP\Types\Geometry;
+namespace DataTypeGeometry\Doctrine\PHP\Types\Geometry;
 
+use CrEOF\Geo\WKT\Parser as GeoWktParser;
+use CrEOF\Spatial\DBAL\Types\GeometryType;
 use CrEOF\Spatial\PHP\Types\AbstractGeometry;
 use CrEOF\Spatial\PHP\Types\Geometry\LineString;
 use CrEOF\Spatial\PHP\Types\Geometry\MultiLineString;
@@ -9,8 +11,6 @@ use CrEOF\Spatial\PHP\Types\Geometry\MultiPoint;
 use CrEOF\Spatial\PHP\Types\Geometry\MultiPolygon;
 use CrEOF\Spatial\PHP\Types\Geometry\Point;
 use CrEOF\Spatial\PHP\Types\Geometry\Polygon;
-use CrEOF\Geo\WKT\Parser as GeoWktParser;
-use CrEOF\Spatial\DBAL\Types\GeometryType;
 
 /**
  * Generic geometry that can manage all geometries, individual or multiple.

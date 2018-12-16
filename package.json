@@ -1,26 +1,16 @@
 {
-  "name": "omeka-s-module-cartography",
+  "name": "omeka-s-module-data-type-geometry",
   "version": "3.0.0",
   "license": "CECILL-2.1",
-  "description": "Cartography (module for Omeka S)",
+  "description": "Data type Geometry (module for Omeka S)",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Daniel-KM/Omeka-S-module-Cartography.git"
+    "url": "https://github.com/Daniel-KM/Omeka-S-module-DataTypeGeometry.git"
   },
   "dependencies": {
-    "leaflet": "^1.3.4",
-    "leaflet-draw": "^1.0.4",
-    "leaflet-fullscreen": "^1.0.2",
-    "leaflet-geosearch": "^2.7.0",
-    "leaflet-groupedlayercontrol": "^0.6.1",
-    "leaflet-providers": "^1.5.0",
-    "leaflet-styleeditor": "^0.1.10-beta",
-    "leaflet-tilelayer-wmts": "^1.0.0",
-    "leaflet.markercluster": "^1.4.1",
     "terraformer": "^1.0.9",
     "terraformer-arcgis-parser": "^1.1.0",
-    "terraformer-wkt-parser": "^1.2.0",
-    "webui-popover": "^1.2.18"
+    "terraformer-wkt-parser": "^1.2.0"
   },
   "devDependencies": {
     "del": "^3.0.0",
