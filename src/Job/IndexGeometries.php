@@ -62,6 +62,9 @@ class IndexGeometries extends AbstractJob
                 $updateValues = strpos($processMode, 'reindex') === false;
                 $isAnnotation = strpos($processMode, 'annotations') !== false;
                 $isGeography = strpos($processMode, 'geography') !== false;
+                if (!$this->checkBefore([['isGeography' => $isGeography]])) {
+                    return;
+                }
                 $this->reindex([
                     'updateValues' => $updateValues,
                     'isAnnotation' => $isAnnotation,
@@ -69,6 +72,9 @@ class IndexGeometries extends AbstractJob
                 ]);
                 break;
             case 'cartography':
+                if (!$this->checkBefore([['isGeography' => null]])) {
+                    return;
+                }
                 $this->indexCartographyTargets();
                 break;
             case 'check':
@@ -91,6 +97,9 @@ class IndexGeometries extends AbstractJob
                 break;
             case 'upgrade geometry':
                 $this->upgradeGeometry();
+                if (!$this->checkBefore([['isGeography' => null]])) {
+                    return;
+                }
                 // no break.
             case 'common':
                 $this->truncate();
@@ -353,6 +362,22 @@ SQL;
     }
 
     /**
+     * Check before a process.
+     *
+     * @param array $options
+     */
+    protected function checkBefore(array $options)
+    {
+        $success = $this->check($options);
+        if (!$success) {
+            $this->logger->err(new Message(
+                'Cannot process: there are errors in your original values. Try to fix them first.' // @translate
+            ));
+        }
+        return $success;
+    }
+
+    /**
      * Check if geo values are not well-formed.
      *
      * @param array $options
@@ -376,7 +401,7 @@ SQL;
                 : ['geometry:geometry'];
         }
 
-        $hasError = false;
+        $success = true;
 
         foreach ($dataTypes as $dataType) {
             $sql = <<<SQL
@@ -403,7 +428,7 @@ SQL;
                 continue;
             }
 
-            $hasError = true;
+            $success = false;
 
             $sql = <<<SQL
 SELECT
@@ -440,7 +465,7 @@ SQL;
             }
         }
 
-        return !$hasError;
+        return $success;
     }
 
     protected function fix(array $options)
