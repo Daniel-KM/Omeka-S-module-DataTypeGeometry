@@ -386,8 +386,8 @@ class Module extends AbstractGenericModule
             $dataTypeClass = $dataType->getEntityClass();
 
             // TODO Remove this persist, that is used only when a geometry is updated on the map.
-            // Persist is required for annotation, since there is no cascade persist
-            // between annotation and values.
+            // Persist is required for annotation, since there is no cascade
+            // persist between annotation and values.
             $entityManager->persist($entity);
 
             /** @var \DataTypeGeometry\Entity\DataTypeGeometry[] $existingDataValues */
@@ -408,7 +408,8 @@ class Module extends AbstractGenericModule
                     $entityManager->persist($dataValue);
                 } else {
                     // Null out data values as we reuse them. Note that existing
-                    // data values are already managed and will update during flush.
+                    // data values are already managed and will update during
+                    // flush.
                     $existingDataValues[key($existingDataValues)] = null;
                     next($existingDataValues);
                 }
