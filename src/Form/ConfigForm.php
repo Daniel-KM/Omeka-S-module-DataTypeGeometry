@@ -30,7 +30,7 @@ It is displayed in the json-ld output.', // @translate
             'name' => 'process_mode',
             'type' => Element\Radio::class,
             'options' => [
-                'label' => 'Process', // @translate
+                'label' => 'Process job in background', // @translate
                 'value_options' => [
                     'common' => 'Common (update values, reindex resources and annotations as geometries, and targets according to data)',
                     'resources reindex' => 'Reindex resources without update of values', // @translate
@@ -48,6 +48,9 @@ It is displayed in the json-ld output.', // @translate
                 'id' => 'process_mode',
             ],
         ]);
+
+        // Fix the formatting issue of the label in Omeka
+        $this->get('process_mode')->setLabelAttributes(['style' => 'display: inline-block']);
 
         $this->add([
             'name' => 'process',
