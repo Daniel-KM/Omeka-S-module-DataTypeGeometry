@@ -40,6 +40,9 @@ It is displayed in the json-ld output.', // @translate
                     'annotations geometry' => 'Set annotations as geometry', // @translate
                     'annotations geography' => 'Set annotations as geography', // @translate
                     'cartography' => 'Annotation targets (geometry if image, geography if map)', // @translate
+                    'check' => 'Basic check any geo value well-formedness', // @translate
+                    'check geometry' => 'Basic check geometries well-formedness', // @translate
+                    'check geography' => 'Basic check geographies well-formedness', // @translate
                     'truncate' => 'Remove all indexes', // @translate
                     'upgrade geometry' => 'Upgrade old base', // @translate
                 ],

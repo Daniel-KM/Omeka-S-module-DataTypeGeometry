@@ -38,6 +38,9 @@ class IndexGeometries extends AbstractJob
             'annotations geometry',
             'annotations geography',
             'cartography',
+            'check',
+            'check geometry',
+            'check geography',
             'truncate',
             'upgrade geometry',
         ];
@@ -66,6 +69,18 @@ class IndexGeometries extends AbstractJob
                 break;
             case 'cartography':
                 $this->indexCartographyTargets();
+                break;
+            case 'check':
+                $this->check([
+                    'isGeography' => null,
+                ]);
+                break;
+            case 'check geometry':
+            case 'check geography':
+                $isGeography = strpos($processMode, 'geography') !== false;
+                $this->check([
+                    'isGeography' => $isGeography,
+                ]);
                 break;
             case 'truncate':
                 $this->truncate();
@@ -331,5 +346,96 @@ SQL;
         $logger->info(new Message(
             'Geometries were indexed for annotation targets.' // @translate
         ));
+    }
+
+    /**
+     * Check if geo values are not well-formed.
+     *
+     * @param array $options
+     * @return bool True if ok, false if error.
+     */
+    protected function check(array $options)
+    {
+        $logger = $this->logger;
+        $api = $this->api;
+        $connection = $this->connection;
+
+        $isGeography = $options['isGeography'];
+        if (is_null($isGeography)) {
+            $dataTypes = [
+                'geometry:geography',
+                'geometry:geometry',
+            ];
+        } else {
+            $dataTypes = $isGeography
+                ? ['geometry:geography']
+                : ['geometry:geometry'];
+        }
+
+        $hasError = false;
+
+        foreach ($dataTypes as $dataType) {
+            $sql = <<<SQL
+SELECT COUNT(value.id)
+FROM value
+INNER JOIN resource ON resource.id = value.resource_id
+WHERE value.type = "$dataType"
+AND (
+    value.value LIKE "POINT%,%"
+    OR (value.value LIKE "LINESTRING%" AND value.value NOT LIKE "%,%")
+    OR (value.value LIKE "POLYGON%" AND value.value NOT LIKE "%,%,%,%")
+)
+ORDER BY value.id ASC;
+SQL;
+
+            $stmt = $connection->query($sql);
+            $total = $stmt->fetchColumn();
+
+            if (!$total) {
+                $logger->notice(new Message(
+                    'There seems no issues in %s.', // @translate
+                    $dataType === 'geometry:geography' ? 'geographies' : 'geometries'
+                ));
+                continue;
+            }
+
+            $hasError = true;
+
+            $sql = <<<SQL
+SELECT
+    value.id AS "value id",
+    resource.resource_type as "resource type",
+    value.resource_id as "resource id",
+    CASE
+        WHEN value.value LIKE "POINT%,%" THEN "Bad point"
+        WHEN (value.value LIKE "LINESTRING%" AND value.value NOT LIKE "%,%") THEN "Line requires at least two points"
+        WHEN (value.value LIKE "POLYGON%" AND value.value NOT LIKE "%,%,%,%") THEN "Polygon requires at least four points"
+    END AS "issue",
+    value.value AS "value"
+FROM value
+INNER JOIN resource ON resource.id = value.resource_id
+WHERE value.type = "$dataType"
+AND (
+    value.value LIKE "POINT%,%"
+    OR (value.value LIKE "LINESTRING%" AND value.value NOT LIKE "%,%")
+    OR (value.value LIKE "POLYGON%" AND value.value NOT LIKE "%,%,%,%")
+)
+ORDER BY value.id ASC;
+SQL;
+
+            $logger->warn(new Message(
+                'These %d %s have issues.', // @translate
+                $total, $dataType === 'geometry:geography' ? 'geographies' : 'geometries'
+            ));
+
+            $stmt = $connection->query($sql);
+            while ($row = $stmt->fetch()) {
+                $logger->warn(new Message(
+                    json_encode($row)
+                ));
+            }
+        }
+
+        return !$hasError;
     }
 }
