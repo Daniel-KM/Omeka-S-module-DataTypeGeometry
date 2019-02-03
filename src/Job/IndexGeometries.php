@@ -41,6 +41,7 @@ class IndexGeometries extends AbstractJob
             'check',
             'check geometry',
             'check geography',
+            'fix linestring',
             'truncate',
             'upgrade geometry',
         ];
@@ -81,6 +82,9 @@ class IndexGeometries extends AbstractJob
                 $this->check([
                     'isGeography' => $isGeography,
                 ]);
+                break;
+            case 'fix linestring':
+                $this->fix(['fix' => ['linestring']]);
                 break;
             case 'truncate':
                 $this->truncate();
@@ -437,5 +441,39 @@ SQL;
         }
 
         return !$hasError;
+    }
+
+    protected function fix(array $options)
+    {
+        $logger = $this->logger;
+        $api = $this->api;
+        $connection = $this->connection;
+
+        $fixes = $options['fix'];
+        foreach ($fixes as $fix) {
+            switch ($fix) {
+                case 'linestring':
+                    $sql = <<<SQL
+UPDATE value
+INNER JOIN resource ON resource.id = value.resource_id
+SET value = REPLACE(value, "LINESTRING", "POINT")
+WHERE
+    value.value LIKE "LINESTRING%" AND value.value NOT LIKE "%,%"
+SQL;
+
+                    $total = $connection->exec($sql);
+                    if ($total) {
+                        $logger->notice(new Message(
+                            '%d bad "linestring()" were replaced by "point()".', // @translate
+                            $total
+                        ));
+                    } else {
+                        $logger->notice(new Message(
+                            'No bad "linestring()" found.' // @translate
+                        ));
+                    }
+                    break;
+            }
+        }
     }
 }

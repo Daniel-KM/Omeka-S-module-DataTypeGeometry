@@ -43,6 +43,7 @@ It is displayed in the json-ld output.', // @translate
                     'check' => 'Basic check any geo value well-formedness', // @translate
                     'check geometry' => 'Basic check geometries well-formedness', // @translate
                     'check geography' => 'Basic check geographies well-formedness', // @translate
+                    'fix linestring' => 'Replace bad linestrings by points', // @translate
                     'truncate' => 'Remove all indexes', // @translate
                     'upgrade geometry' => 'Upgrade old base', // @translate
                 ],
