@@ -1,14 +1,17 @@
 <?php
 namespace DataTypeGeometry;
 
-// TODO Remove this requirement.
-require_once __DIR__ . '/src/Module/AbstractGenericModule.php';
+if (!class_exists(\Generic\AbstractModule::class)) {
+    require file_exists(dirname(__DIR__) . '/Generic/AbstractModule.php')
+        ? dirname(__DIR__) . '/Generic/AbstractModule.php'
+        : __DIR__ . '/src/Generic/AbstractModule.php';
+}
 
 use DataTypeGeometry\Form\ConfigForm;
 use DataTypeGeometry\Form\SearchFieldset;
 use DataTypeGeometry\Job\IndexGeometries;
-use DataTypeGeometry\Module\AbstractGenericModule;
 use Doctrine\Common\Collections\Criteria;
+use Generic\AbstractModule;
 use Omeka\Stdlib\Message;
 use Zend\EventManager\Event;
 use Zend\EventManager\SharedEventManagerInterface;
@@ -26,8 +29,10 @@ use Zend\View\Renderer\PhpRenderer;
  * @copyright Daniel Berthereau, 2018
  * @license http://www.cecill.info/licences/Licence_CeCILL_V2.1-en.txt
  */
-class Module extends AbstractGenericModule
+class Module extends AbstractModule
 {
+    const NAMESPACE = __NAMESPACE__;
+
     public function onBootstrap(MvcEvent $event)
     {
         parent::onBootstrap($event);
