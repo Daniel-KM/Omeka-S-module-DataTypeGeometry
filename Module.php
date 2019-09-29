@@ -463,9 +463,6 @@ class Module extends AbstractGenericModule
     protected function supportSpatialSearch()
     {
         $db = $this->databaseVersion();
-        if (empty($db)) {
-            return true;
-        }
         switch ($db['db']) {
             case 'mysql':
                 return version_compare($db['version'], '5.6.1', '>=');
@@ -487,9 +484,6 @@ class Module extends AbstractGenericModule
     protected function requireMyIsamToSupportGeometry()
     {
         $db = $this->databaseVersion();
-        if (empty($db)) {
-            return false;
-        }
         switch ($db['db']) {
             case 'mysql':
                 return version_compare($db['version'], '5.7.5', '<');
@@ -505,11 +499,14 @@ class Module extends AbstractGenericModule
     /**
      * Get  the version of the database.
      *
-     * @return array
+     * @return array with keys "db" and "version".
      */
     protected function databaseVersion()
     {
-        $result = [];
+        $result = [
+            'db' => '',
+            'version' => '',
+        ];
 
         /** @var \Doctrine\DBAL\Connection $connection */
         $connection = $this->getServiceLocator()->get('Omeka\Connection');
@@ -520,15 +517,16 @@ class Module extends AbstractGenericModule
         $version = reset($version);
 
         $isMySql = stripos($version, 'mysql') !== false;
-        $result['version'] = $version;
         if ($isMySql) {
             $result['db'] = 'mysql';
+            $result['version'] = $version;
             return $result;
         }
 
         $isMariaDb = stripos($version, 'mariadb') !== false;
         if ($isMariaDb) {
             $result['db'] = 'mariadb';
+            $result['version'] = $version;
             return $result;
         }
 
@@ -542,5 +540,7 @@ class Module extends AbstractGenericModule
             $result['version'] = $version;
             return $result;
         }
+
+        return $result;
     }
 }

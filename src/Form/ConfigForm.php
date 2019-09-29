@@ -53,7 +53,7 @@ It is displayed in the json-ld output.', // @translate
             ],
         ]);
 
-        // Fix the formatting issue of the label in Omeka
+        // Fix the formatting issue of the label in Omeka.
         $this->get('process_mode')->setLabelAttributes(['style' => 'display: inline-block']);
 
         $this->add([
