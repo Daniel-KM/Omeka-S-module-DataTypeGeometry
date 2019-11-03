@@ -256,9 +256,9 @@ trait QueryGeometryTrait
         $resourceClass = $adapter->getEntityClass();
         $alias = $adapter->createAlias();
         $property = isset($query['geo'][0]['property']) ? $query['geo'][0]['property'] : null;
+        $expr = $qb->expr();
         if ($property) {
             $propertyId = $this->getPropertyId($adapter, $property);
-            $expr = $qb->expr();
             $qb->leftJoin(
                 $dataTypeClass,
                 $alias,
@@ -273,7 +273,7 @@ trait QueryGeometryTrait
                 $dataTypeClass,
                 $alias,
                 \Doctrine\ORM\Query\Expr\Join::WITH,
-                $qb->expr()->eq($alias . '.resource', $resourceClass . '.id')
+                $expr->eq($alias . '.resource', $resourceClass . '.id')
             );
         }
         return $alias;
