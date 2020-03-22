@@ -342,14 +342,15 @@ class Module extends AbstractModule
     public function prepareResourceForm(Event $event)
     {
         $view = $event->getTarget();
-        $headScript = $view->headScript();
+        $assetUrl = $view->plugin('assetUrl');
         $settings = $this->getServiceLocator()->get('Omeka\Settings');
         $datatypes = $settings->get('datatypegeometry_buttons', []);
-        $headScript->appendScript('var geometryDatatypes = ' . json_encode($datatypes, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . ';');
-        $headScript->appendFile($view->assetUrl('vendor/terraformer/terraformer.min.js', __NAMESPACE__));
-        $headScript->appendFile($view->assetUrl('vendor/terraformer-arcgis-parser/terraformer-arcgis-parser.min.js', __NAMESPACE__));
-        $headScript->appendFile($view->assetUrl('vendor/terraformer-wkt-parser/terraformer-wkt-parser.min.js', __NAMESPACE__));
-        $headScript->appendFile($view->assetUrl('js/data-type-geometry.js', __NAMESPACE__));
+        $view->headScript()
+            ->appendScript('var geometryDatatypes = ' . json_encode($datatypes, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . ';')
+            ->appendFile($assetUrl('vendor/terraformer/terraformer.min.js', 'DataTypeGeometry'), 'text/javascript', ['defer' => 'defer'])
+            ->appendFile($assetUrl('vendor/terraformer-arcgis-parser/terraformer-arcgis-parser.min.js', 'DataTypeGeometry'), 'text/javascript', ['defer' => 'defer'])
+            ->appendFile($assetUrl('vendor/terraformer-wkt-parser/terraformer-wkt-parser.min.js', 'DataTypeGeometry'), 'text/javascript', ['defer' => 'defer'])
+            ->appendFile($assetUrl('js/data-type-geometry.js', 'DataTypeGeometry'), 'text/javascript', ['defer' => 'defer']);
     }
 
     /**

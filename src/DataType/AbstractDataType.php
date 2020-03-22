@@ -20,7 +20,7 @@ abstract class AbstractDataType extends BaseAbstractDataType implements DataType
     public function prepareForm(PhpRenderer $view)
     {
         $view->headLink()->appendStylesheet($view->assetUrl('css/data-type-geometry.css', 'DataTypeGeometry'));
-        $view->headScript()->appendFile($view->assetUrl('js/data-type-geometry.js', 'DataTypeGeometry'));
+        $view->headScript()->appendFile($view->assetUrl('js/data-type-geometry.js', 'DataTypeGeometry'), 'text/javascript', ['defer' => 'defer']);
     }
 
     public function isValid(array $valueObject)
