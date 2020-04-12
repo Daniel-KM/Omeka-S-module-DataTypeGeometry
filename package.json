@@ -8,9 +8,9 @@
     "url": "https://github.com/Daniel-KM/Omeka-S-module-DataTypeGeometry.git"
   },
   "dependencies": {
-    "terraformer": "^1.0.9",
+    "terraformer": "^1.0.12",
     "terraformer-arcgis-parser": "^1.1.0",
-    "terraformer-wkt-parser": "^1.2.0"
+    "terraformer-wkt-parser": "^1.2.1"
   },
   "devDependencies": {
     "del": "^3.0.0",
