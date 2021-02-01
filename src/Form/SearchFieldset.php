@@ -1,8 +1,8 @@
 <?php
 namespace DataTypeGeometry\Form;
 
-use Zend\Form\Element;
-use Zend\Form\Fieldset;
+use Laminas\Form\Element;
+use Laminas\Form\Fieldset;
 
 class SearchFieldset extends Fieldset
 {

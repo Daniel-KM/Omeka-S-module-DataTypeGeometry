@@ -3,7 +3,7 @@ namespace DataTypeGeometry\View\Helper;
 
 use CrEOF\Geo\WKT\Parser as GeoWktParser;
 use Doctrine\ORM\EntityManager;
-use Zend\View\Helper\AbstractHelper;
+use Laminas\View\Helper\AbstractHelper;
 
 class NormalizeGeometryQuery extends AbstractHelper
 {

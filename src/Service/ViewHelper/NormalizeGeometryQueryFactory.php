@@ -3,7 +3,7 @@ namespace DataTypeGeometry\Service\ViewHelper;
 
 use DataTypeGeometry\View\Helper\NormalizeGeometryQuery;
 use Interop\Container\ContainerInterface;
-use Zend\ServiceManager\Factory\FactoryInterface;
+use Laminas\ServiceManager\Factory\FactoryInterface;
 
 class NormalizeGeometryQueryFactory implements FactoryInterface
 {

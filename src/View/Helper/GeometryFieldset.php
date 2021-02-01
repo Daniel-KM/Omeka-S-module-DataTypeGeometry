@@ -2,8 +2,8 @@
 namespace DataTypeGeometry\View\Helper;
 
 use DataTypeGeometry\Form\SearchFieldset;
-use Zend\Form\Form;
-use Zend\View\Helper\AbstractHelper;
+use Laminas\Form\Form;
+use Laminas\View\Helper\AbstractHelper;
 
 class GeometryFieldset extends AbstractHelper
 {

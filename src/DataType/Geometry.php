@@ -2,8 +2,8 @@
 namespace DataTypeGeometry\DataType;
 
 use DataTypeGeometry\Doctrine\PHP\Types\Geometry\Geometry as GenericGeometry;
-use Zend\Form\Element;
-use Zend\View\Renderer\PhpRenderer;
+use Laminas\Form\Element;
+use Laminas\View\Renderer\PhpRenderer;
 
 class Geometry extends AbstractDataType
 {
