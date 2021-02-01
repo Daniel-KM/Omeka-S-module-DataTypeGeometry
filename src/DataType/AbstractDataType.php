@@ -1,12 +1,12 @@
-<?php
+<?php declare(strict_types=1);
 namespace DataTypeGeometry\DataType;
 
 use CrEOF\Geo\WKT\Parser as GeoWktParser;
+use Laminas\View\Renderer\PhpRenderer;
 use Omeka\Api\Adapter\AbstractEntityAdapter;
 use Omeka\Api\Representation\ValueRepresentation;
 use Omeka\DataType\AbstractDataType as BaseAbstractDataType;
 use Omeka\Entity\Value;
-use Laminas\View\Renderer\PhpRenderer;
 
 abstract class AbstractDataType extends BaseAbstractDataType implements DataTypeInterface
 {
@@ -17,7 +17,7 @@ abstract class AbstractDataType extends BaseAbstractDataType implements DataType
         return 'Cartography'; // @translate
     }
 
-    public function prepareForm(PhpRenderer $view)
+    public function prepareForm(PhpRenderer $view): void
     {
         $view->headLink()->appendStylesheet($view->assetUrl('css/data-type-geometry.css', 'DataTypeGeometry'));
         $view->headScript()->appendFile($view->assetUrl('js/data-type-geometry.js', 'DataTypeGeometry'), 'text/javascript', ['defer' => 'defer']);
@@ -29,7 +29,7 @@ abstract class AbstractDataType extends BaseAbstractDataType implements DataType
         return !empty($result);
     }
 
-    public function hydrate(array $valueObject, Value $value, AbstractEntityAdapter $adapter)
+    public function hydrate(array $valueObject, Value $value, AbstractEntityAdapter $adapter): void
     {
         $string = strtoupper(str_replace('  ', ' ', (trim($valueObject['@value']))));
         $value->setValue($string);

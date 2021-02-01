@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 namespace DataTypeGeometry\DataType;
 
 use DataTypeGeometry\Doctrine\PHP\Types\Geometry\Geometry as GenericGeometry;

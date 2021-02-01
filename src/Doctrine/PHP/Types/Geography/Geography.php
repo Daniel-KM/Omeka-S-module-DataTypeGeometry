@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace DataTypeGeometry\Doctrine\PHP\Types\Geography;
 
@@ -171,7 +171,7 @@ class Geography extends AbstractGeometry implements GeographyInterface
     /**
      * Check if the geometry is ready (not null, so not the type "Geometry").
      */
-    private function isReady()
+    private function isReady(): void
     {
         if (empty($this->geometryObject)) {
             throw new \CrEOF\Spatial\Exception\InvalidValueException('Empty geometry.'); // @translate

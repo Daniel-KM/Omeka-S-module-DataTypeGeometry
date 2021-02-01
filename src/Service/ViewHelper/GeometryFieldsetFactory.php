@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 namespace DataTypeGeometry\Service\ViewHelper;
 
 use DataTypeGeometry\View\Helper\GeometryFieldset;

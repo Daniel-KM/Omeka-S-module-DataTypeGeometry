@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 namespace DataTypeGeometry\View\Helper;
 
 use CrEOF\Geo\WKT\Parser as GeoWktParser;

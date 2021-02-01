@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 namespace DataTypeGeometry\Form;
 
 use Laminas\Form\Element;
@@ -6,7 +6,7 @@ use Laminas\Form\Fieldset;
 
 class SearchFieldset extends Fieldset
 {
-    public function init()
+    public function init(): void
     {
         // Because the srid below is set to 4326 by default, this is a form for
         // a geographic query.

@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 namespace DataTypeGeometry\Entity;
 
 use CrEOF\Spatial\PHP\Types\Geography\GeographyInterface;

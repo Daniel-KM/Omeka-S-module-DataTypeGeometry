@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 namespace DataTypeGeometry;
 
 if (!class_exists(\Generic\AbstractModule::class)) {
@@ -12,13 +12,13 @@ use DataTypeGeometry\Form\SearchFieldset;
 use DataTypeGeometry\Job\IndexGeometries;
 use Doctrine\Common\Collections\Criteria;
 use Generic\AbstractModule;
-use Omeka\Stdlib\Message;
 use Laminas\EventManager\Event;
 use Laminas\EventManager\SharedEventManagerInterface;
 use Laminas\Mvc\Controller\AbstractController;
 use Laminas\Mvc\MvcEvent;
 use Laminas\ServiceManager\ServiceLocatorInterface;
 use Laminas\View\Renderer\PhpRenderer;
+use Omeka\Stdlib\Message;
 
 /**
  * Data type Geometry
@@ -33,7 +33,7 @@ class Module extends AbstractModule
 {
     const NAMESPACE = __NAMESPACE__;
 
-    public function onBootstrap(MvcEvent $event)
+    public function onBootstrap(MvcEvent $event): void
     {
         parent::onBootstrap($event);
 
@@ -51,7 +51,7 @@ class Module extends AbstractModule
         );
     }
 
-    public function install(ServiceLocatorInterface $serviceLocator)
+    public function install(ServiceLocatorInterface $serviceLocator): void
     {
         $this->setServiceLocator($serviceLocator);
 
@@ -85,7 +85,7 @@ class Module extends AbstractModule
         $this->manageMainSettings('install');
     }
 
-    public function attachListeners(SharedEventManagerInterface $sharedEventManager)
+    public function attachListeners(SharedEventManagerInterface $sharedEventManager): void
     {
         $controllers = [
             'Omeka\Controller\Admin\Item',
@@ -224,7 +224,7 @@ class Module extends AbstractModule
         $controller->messenger()->addSuccess($message);
     }
 
-    public function handleMainSettingsFilters(Event $event)
+    public function handleMainSettingsFilters(Event $event): void
     {
         $inputFilter = $event->getParam('inputFilter');
         $inputFilter->get('datatypegeometry')->add([
@@ -233,7 +233,7 @@ class Module extends AbstractModule
         ]);
     }
 
-    public function addFormElementsAnnotateQuickSearch(Event $event)
+    public function addFormElementsAnnotateQuickSearch(Event $event): void
     {
         $services = $this->getServiceLocator();
         $fieldset = $services->get('FormElementManager')->get(SearchFieldset::class);
@@ -246,7 +246,7 @@ class Module extends AbstractModule
      *
      * @param Event $event
      */
-    public function searchQuery(Event $event)
+    public function searchQuery(Event $event): void
     {
         $query = $event->getParam('request')->getContent();
         if (empty($query['geo'])) {
@@ -269,7 +269,7 @@ class Module extends AbstractModule
      *
      * @param Event $event
      */
-    public function displayAdvancedSearch(Event $event)
+    public function displayAdvancedSearch(Event $event): void
     {
         // Load js.
         $this->prepareResourceForm($event);
@@ -284,7 +284,7 @@ class Module extends AbstractModule
      *
      * @param Event $event
      */
-    public function filterSearchFilters(Event $event)
+    public function filterSearchFilters(Event $event): void
     {
         $view = $event->getTarget();
         $query = $event->getParam('query', []);
@@ -339,7 +339,7 @@ class Module extends AbstractModule
      *
      * @param Event $event
      */
-    public function prepareResourceForm(Event $event)
+    public function prepareResourceForm(Event $event): void
     {
         $view = $event->getTarget();
         $assetUrl = $view->plugin('assetUrl');
@@ -365,7 +365,7 @@ class Module extends AbstractModule
      *
      * @param Event $event
      */
-    public function saveGeometryData(Event $event)
+    public function saveGeometryData(Event $event): void
     {
         $entity = $event->getParam('entity');
         if (!$entity instanceof \Omeka\Entity\Resource) {

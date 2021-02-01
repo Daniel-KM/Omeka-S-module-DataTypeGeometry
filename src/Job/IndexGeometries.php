@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 namespace DataTypeGeometry\Job;
 
 use Omeka\Job\AbstractJob;
@@ -21,7 +21,7 @@ class IndexGeometries extends AbstractJob
      */
     protected $connection;
 
-    public function perform()
+    public function perform(): void
     {
         $services = $this->getServiceLocator();
         $this->logger = $services->get('Omeka\Logger');
@@ -118,7 +118,7 @@ class IndexGeometries extends AbstractJob
         }
     }
 
-    protected function truncate()
+    protected function truncate(): void
     {
         $sql = <<<'SQL'
 SET foreign_key_checks = 0;
@@ -132,7 +132,7 @@ SQL;
         );
     }
 
-    protected function upgradeGeometry()
+    protected function upgradeGeometry(): void
     {
         $sql = <<<SQL
 UPDATE value
@@ -145,7 +145,7 @@ SQL;
         );
     }
 
-    protected function reindex(array $options)
+    protected function reindex(array $options): void
     {
         $logger = $this->logger;
         $api = $this->api;
@@ -252,7 +252,7 @@ SQL;
         ));
     }
 
-    protected function indexCartographyTargets()
+    protected function indexCartographyTargets(): void
     {
         $logger = $this->logger;
         $api = $this->api;
@@ -468,7 +468,7 @@ SQL;
         return $success;
     }
 
-    protected function fix(array $options)
+    protected function fix(array $options): void
     {
         $logger = $this->logger;
         $api = $this->api;
