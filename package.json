@@ -5,7 +5,7 @@
   "description": "Data type Geometry (module for Omeka S)",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Daniel-KM/Omeka-S-module-DataTypeGeometry.git"
+    "url": "https://gitlab.com/Daniel-KM/Omeka-S-module-DataTypeGeometry.git"
   },
   "dependencies": {
     "terraformer": "^1.0.12",

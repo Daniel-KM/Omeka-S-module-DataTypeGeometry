@@ -36,7 +36,7 @@ the module to `DataTypeGeometry`, go to the root of the module, and run:
 
 ```
     npm install
-    composer install
+composer install --no-dev
     gulp
 ```
 
@@ -141,7 +141,7 @@ your archives regularly so you can roll back if needed.
 Troubleshooting
 ---------------
 
-See online issues on the [module issues] page on GitHub.
+See online issues on the [module issues] page on GitLab.
 
 
 License
@@ -184,16 +184,16 @@ Copyright
 
 * See `asset/vendor/` and `vendor/` for the copyright of the libraries.
 * Some portions are adapterd from the modules [Numeric data types] and [Neatline].
-* Copyright Daniel Berthereau, 2018, (see [Daniel-KM] on GitHub)
+* Copyright Daniel Berthereau, 2018, (see [Daniel-KM] on GitLab)
 
 This module was built first for the French École des hautes études en sciences
 sociales [EHESS].
 
 
-[Data type Geometry]: https://github.com/Daniel-KM/Omeka-S-module-DataTypeGeometry
+[Data type Geometry]: https://gitlab.com/Daniel-KM/Omeka-S-module-DataTypeGeometry
 [Omeka S]: https://omeka.org/s
 [WKT]: https://wikipedia.org/wiki/Well-known_text
-[Annotate Cartography]: https://github.com/Daniel-KM/Omeka-S-module-Cartography
+[Annotate Cartography]: https://gitlab.com/Daniel-KM/Omeka-S-module-Cartography
 [Installing a module]: https://omeka.org/s/docs/user-manual/modules/#installing-modules
 [MariaDB 10.2.2]: https://mariadb.com/kb/en/library/spatial-index/
 [mySql 5.7.5]: https://dev.mysql.com/doc/relnotes/mysql/5.7/en/news-5-7-5.html#mysqld-5-7-5-innodb
@@ -202,12 +202,12 @@ sociales [EHESS].
 [mySql 5.6.1]: https://dev.mysql.com/doc/relnotes/mysql/5.6/en/news-5-6-1.html
 [MariaDB 5.3.3]: https://mariadb.com/kb/en/library/mariadb-533-release-notes/
 [spatial support matrix]: https://mariadb.com/kb/en/library/mysqlmariadb-spatial-support-matrix/
-[`data_type_geometry`]: https://github.com/Daniel-KM/Omeka-S-module-DataTypeGeometry/tree/master/data/install/schema.sql
-[`DataTypeGeometry.zip`]: https://github.com/Daniel-KM/Omeka-S-module-DataTypeGeometry/releases
+[`data_type_geometry`]: https://gitlab.com/Daniel-KM/Omeka-S-module-DataTypeGeometry/-/tree/master/data/install/schema.sql
+[`DataTypeGeometry.zip`]: https://gitlab.com/Daniel-KM/Omeka-S-module-DataTypeGeometry/-/releases
 [doctrine2-spatial]: https://github.com/creof/doctrine2-spatial/blob/HEAD/doc/index.md
 [`4326`]: https://epsg.io/4326
 [OGC standard]: http://www.opengeospatial.org/standards/geosparql
-[module issues]: https://github.com/Daniel-KM/Omeka-S-module-DataTypeGeometry/issues
+[module issues]: https://gitlab.com/Daniel-KM/Omeka-S-module-DataTypeGeometry/-/issues
 [CeCILL v2.1]: https://www.cecill.info/licences/Licence_CeCILL_V2.1-en.html
 [GNU/GPL]: https://www.gnu.org/licenses/gpl-3.0.html
 [FSF]: https://www.fsf.org
@@ -216,4 +216,4 @@ sociales [EHESS].
 [Neatline]: https://github.com/performant-software/neatline-omeka-s
 [EHESS]: https://www.ehess.fr
 [GitLab]: https://gitlab.com/Daniel-KM
-[Daniel-KM]: https://github.com/Daniel-KM "Daniel Berthereau"
+[Daniel-KM]: https://gitlab.com/Daniel-KM "Daniel Berthereau"
