@@ -253,9 +253,6 @@ trait QueryGeometryTrait
      */
     protected function joinGeo(AdapterInterface $adapter, QueryBuilder $qb, $query, $dataTypeClass)
     {
-        $isOldOmeka = \Omeka\Module::VERSION < 2;
-        $resourceClassAlias = $isOldOmeka ? $adapter->getEntityClass() : 'omeka_root';
-
         $alias = $adapter->createAlias();
         $property = $query['geo'][0]['property'] ?? null;
         $expr = $qb->expr();
@@ -266,7 +263,7 @@ trait QueryGeometryTrait
                 $alias,
                 \Doctrine\ORM\Query\Expr\Join::WITH,
                 $qb->expr()->andX(
-                    $expr->eq($alias . '.resource', $resourceClassAlias . '.id'),
+                    $expr->eq($alias . '.resource', 'omeka_root.id'),
                     $expr->eq($alias . '.property', $propertyId)
                 )
             );
@@ -275,7 +272,7 @@ trait QueryGeometryTrait
                 $dataTypeClass,
                 $alias,
                 \Doctrine\ORM\Query\Expr\Join::WITH,
-                $expr->eq($alias . '.resource', $resourceClassAlias . '.id')
+                $expr->eq($alias . '.resource', 'omeka_root.id')
             );
         }
         return $alias;

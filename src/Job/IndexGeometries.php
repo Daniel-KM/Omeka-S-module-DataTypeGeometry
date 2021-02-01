@@ -135,9 +135,9 @@ SQL;
     protected function upgradeGeometry(): void
     {
         $sql = <<<SQL
-UPDATE value
-SET type = "geometry:geometry"
-WHERE type = "geometry";
+UPDATE `value`
+SET `type` = "geometry:geometry"
+WHERE `type` = "geometry";
 SQL;
         $this->connection->exec($sql);
         $this->logger->info(
@@ -172,11 +172,11 @@ SQL;
 
         if ($updateValues) {
             $sql = <<<SQL
-UPDATE value
-INNER JOIN resource ON resource.id = value.resource_id
-SET type = "$dataType", lang = NULL, value_resource_id = NULL, uri = NULL
-WHERE resource.resource_type IN ($resourceTypes)
-AND value.type IN ("geometry:geometry", "geometry:geography");
+UPDATE `value`
+INNER JOIN `resource` ON `resource`.`id` = `value`.`resource_id`
+SET `type` = "$dataType", `lang` = NULL, `value_resource_id` = NULL, `uri` = NULL
+WHERE `resource`.`resource_type` IN ($resourceTypes)
+AND `value`.`type` IN ("geometry:geometry", "geometry:geography");
 SQL;
             $connection->exec($sql);
             $logger->info(new Message(
@@ -199,8 +199,8 @@ DELETE FROM `$table`
 WHERE EXISTS (
     SELECT 1
     FROM `resource`
-    WHERE resource.id = $table.resource_id
-    AND resource.resource_type IN ($resourceTypes)
+    WHERE `resource`.`id` = `$table`.`resource_id`
+    AND `resource`.`resource_type` IN ($resourceTypes)
 );
 SQL;
             $connection->exec($sql);
@@ -224,25 +224,25 @@ SQL;
 
             // Keep the existing srid in all cases, even for geometries.
             $sql = <<<SQL
-INSERT INTO `$table` (resource_id, property_id, value)
-SELECT resource_id, property_id, GeomFromText(value, $srid)
-FROM value
-INNER JOIN resource ON resource.id = value.resource_id
-WHERE resource.resource_type IN ($resourceTypes)
-AND value.type IN ($dataTypes)
-AND value.value NOT LIKE "SRID%"
-ORDER BY value.id ASC;
+INSERT INTO `$table` (`resource_id`, `property_id`, `value`)
+SELECT `resource_id`, `property_id`, GeomFromText(`value`, $srid)
+FROM `value`
+INNER JOIN `resource` ON `resource`.`id` = `value`.`resource_id`
+WHERE `resource`.`resource_type` IN ($resourceTypes)
+AND `value`.`type` IN ($dataTypes)
+AND `value`.`value` NOT LIKE "SRID%"
+ORDER BY `value`.`id` ASC;
 SQL;
             $connection->exec($sql);
             $sql = <<<SQL
-INSERT INTO `$table` (resource_id, property_id, value)
-SELECT resource_id, property_id, GeomFromText(TRIM(SUBSTRING_INDEX(value, ';', -1)), SUBSTRING_INDEX(SUBSTRING_INDEX(value, ';', 1), '=', -1))
-FROM value
-INNER JOIN resource ON resource.id = value.resource_id
-WHERE resource.resource_type IN ($resourceTypes)
-AND value.type IN ($dataTypes)
-AND value.value LIKE "SRID%"
-ORDER BY value.id ASC;
+INSERT INTO `$table` (`resource_id`, `property_id`, `value`)
+SELECT `resource_id`, `property_id`, GeomFromText(TRIM(SUBSTRING_INDEX(`value`, ';', -1)), SUBSTRING_INDEX(SUBSTRING_INDEX(`value`, ';', 1), '=', -1))
+FROM `value`
+INNER JOIN `resource` ON `resource`.`id` = `value`.`resource_id`
+WHERE `resource`.`resource_type` IN ($resourceTypes)
+AND `value`.`type` IN ($dataTypes)
+AND `value`.`value` LIKE "SRID%"
+ORDER BY `value`.`id` ASC;
 SQL;
             $connection->exec($sql);
         }

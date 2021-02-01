@@ -31,7 +31,7 @@ abstract class AbstractDataType extends BaseAbstractDataType implements DataType
 
     public function hydrate(array $valueObject, Value $value, AbstractEntityAdapter $adapter): void
     {
-        $string = strtoupper(str_replace('  ', ' ', (trim($valueObject['@value']))));
+        $string = strtoupper(str_replace('  ', ' ', (trim((string) $valueObject['@value']))));
         $value->setValue($string);
         $value->setLang(null);
         $value->setUri(null);
@@ -84,7 +84,7 @@ abstract class AbstractDataType extends BaseAbstractDataType implements DataType
      */
     public function parseGeometry($value)
     {
-        $value = strtoupper($value);
+        $value = strtoupper((string) $value);
         try {
             $geometry = new GeoWktParser($value);
             $geometry = $geometry->parse();

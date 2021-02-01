@@ -421,6 +421,7 @@ class Module extends AbstractModule
                 }
 
                 // Set the default srid when needed for geographic geometries.
+                // TODO Add method setEntityValues.
                 $geometry = $dataType->getGeometryFromValue($value->getValue());
                 if ($srid
                     && $dataTypeName === 'geometry:geography'

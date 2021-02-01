@@ -68,7 +68,7 @@ class Geography extends AbstractDataType
             throw new \InvalidArgumentException('Empty geography.'); // @translate
         }
         if (is_string($value)) {
-            $value = strtoupper($value);
+            $value = strtoupper((string) $value);
         }
         try {
             return (new GenericGeography($value))->getGeometry();

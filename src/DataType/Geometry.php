@@ -46,7 +46,7 @@ class Geometry extends AbstractDataType
             throw new \InvalidArgumentException('Empty geometry.'); // @translate
         }
         if (is_string($value)) {
-            $value = strtoupper($value);
+            $value = strtoupper((string) $value);
         }
         try {
             return (new GenericGeometry($value))->getGeometry();
