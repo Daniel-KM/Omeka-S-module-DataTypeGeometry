@@ -14,6 +14,8 @@
 
     /**
      * Append the configured datatypes to a list of element.
+     *
+     * @todo This is deprecated. To be removed.
      */
     var appendGeometryDatatypes = function(selector) {
         if (geometryDatatypes.indexOf('geometry:geometry') !== -1) {

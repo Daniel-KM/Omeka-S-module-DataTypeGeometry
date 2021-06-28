@@ -12,14 +12,14 @@ class DataTypeGeometry extends \DataTypeGeometry\Entity\DataTypeGeometry impleme
      *      three parameters, being respectively the proxy object to be initialized, the method that triggered the
      *      initialization process and an array of ordered parameters that were passed to that method.
      *
-     * @see \Doctrine\Common\Persistence\Proxy::__setInitializer
+     * @see \Doctrine\Common\Proxy\Proxy::__setInitializer
      */
     public $__initializer__;
 
     /**
      * @var \Closure the callback responsible of loading properties that need to be copied in the cloned object
      *
-     * @see \Doctrine\Common\Persistence\Proxy::__setCloner
+     * @see \Doctrine\Common\Proxy\Proxy::__setCloner
      */
     public $__cloner__;
 
@@ -31,20 +31,22 @@ class DataTypeGeometry extends \DataTypeGeometry\Entity\DataTypeGeometry impleme
     public $__isInitialized__ = false;
 
     /**
-     * @var array properties to be lazy loaded, with keys being the property
-     *            names and values being their default values
-     *
-     * @see \Doctrine\Common\Persistence\Proxy::__getLazyProperties
+     * @var array<string, null> properties to be lazy loaded, indexed by property name
      */
-    public static $lazyPropertiesDefaults = [];
-
-
+    public static $lazyPropertiesNames = array (
+);
 
     /**
-     * @param \Closure $initializer
-     * @param \Closure $cloner
+     * @var array<string, mixed> default values of properties to be lazy loaded, with keys being the property names
+     *
+     * @see \Doctrine\Common\Proxy\Proxy::__getLazyProperties
      */
-    public function __construct($initializer = null, $cloner = null)
+    public static $lazyPropertiesDefaults = array (
+);
+
+
+
+    public function __construct(?\Closure $initializer = null, ?\Closure $cloner = null)
     {
 
         $this->__initializer__ = $initializer;
@@ -82,7 +84,7 @@ class DataTypeGeometry extends \DataTypeGeometry\Entity\DataTypeGeometry impleme
 
                 $existingProperties = get_object_vars($proxy);
 
-                foreach ($proxy->__getLazyProperties() as $property => $defaultValue) {
+                foreach ($proxy::$lazyPropertiesDefaults as $property => $defaultValue) {
                     if ( ! array_key_exists($property, $existingProperties)) {
                         $proxy->$property = $defaultValue;
                     }
@@ -165,6 +167,7 @@ class DataTypeGeometry extends \DataTypeGeometry\Entity\DataTypeGeometry impleme
     /**
      * {@inheritDoc}
      * @internal generated method: use only when explicitly handling proxy specific loading logic
+     * @deprecated no longer in use - generated code now relies on internal components rather than generated public API
      * @static
      */
     public function __getLazyProperties()
@@ -191,7 +194,7 @@ class DataTypeGeometry extends \DataTypeGeometry\Entity\DataTypeGeometry impleme
     /**
      * {@inheritDoc}
      */
-    public function setResource(\Omeka\Entity\Resource $resource)
+    public function setResource(\Omeka\Entity\Resource $resource): \DataTypeGeometry\Entity\DataTypeGeometry
     {
 
         $this->__initializer__ && $this->__initializer__->__invoke($this, 'setResource', [$resource]);
@@ -202,7 +205,7 @@ class DataTypeGeometry extends \DataTypeGeometry\Entity\DataTypeGeometry impleme
     /**
      * {@inheritDoc}
      */
-    public function getResource()
+    public function getResource(): \Omeka\Entity\Resource
     {
 
         $this->__initializer__ && $this->__initializer__->__invoke($this, 'getResource', []);
@@ -213,7 +216,7 @@ class DataTypeGeometry extends \DataTypeGeometry\Entity\DataTypeGeometry impleme
     /**
      * {@inheritDoc}
      */
-    public function setProperty(\Omeka\Entity\Property $property)
+    public function setProperty(\Omeka\Entity\Property $property): \DataTypeGeometry\Entity\DataTypeGeometry
     {
 
         $this->__initializer__ && $this->__initializer__->__invoke($this, 'setProperty', [$property]);
@@ -224,7 +227,7 @@ class DataTypeGeometry extends \DataTypeGeometry\Entity\DataTypeGeometry impleme
     /**
      * {@inheritDoc}
      */
-    public function getProperty()
+    public function getProperty(): \Omeka\Entity\Property
     {
 
         $this->__initializer__ && $this->__initializer__->__invoke($this, 'getProperty', []);
@@ -235,7 +238,7 @@ class DataTypeGeometry extends \DataTypeGeometry\Entity\DataTypeGeometry impleme
     /**
      * {@inheritDoc}
      */
-    public function setValue(\CrEOF\Spatial\PHP\Types\Geometry\GeometryInterface $value)
+    public function setValue(\CrEOF\Spatial\PHP\Types\Geometry\GeometryInterface $value): \DataTypeGeometry\Entity\DataTypeGeometry
     {
 
         $this->__initializer__ && $this->__initializer__->__invoke($this, 'setValue', [$value]);
@@ -246,7 +249,7 @@ class DataTypeGeometry extends \DataTypeGeometry\Entity\DataTypeGeometry impleme
     /**
      * {@inheritDoc}
      */
-    public function getValue()
+    public function getValue(): \CrEOF\Spatial\PHP\Types\Geometry\GeometryInterface
     {
 
         $this->__initializer__ && $this->__initializer__->__invoke($this, 'getValue', []);

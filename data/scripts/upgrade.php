@@ -9,16 +9,17 @@ namespace DataTypeGeometry;
  *
  * @var \Doctrine\DBAL\Connection $connection
  * @var \Doctrine\ORM\EntityManager $entityManager
+ * @var \Omeka\Settings\Settings $settings
  * @var \Omeka\Api\Manager $api
  */
 $services = $serviceLocator;
 $settings = $services->get('Omeka\Settings');
-$config = require dirname(__DIR__, 2) . '/config/module.config.php';
+// $config = require dirname(__DIR__, 2) . '/config/module.config.php';
 $connection = $services->get('Omeka\Connection');
 $entityManager = $services->get('Omeka\EntityManager');
 $plugins = $services->get('ControllerPluginManager');
 $api = $plugins->get('api');
-$space = strtolower(__NAMESPACE__);
+// $space = strtolower(__NAMESPACE__);
 
 if (version_compare($oldVersion, '3.0.1', '<')) {
     // This is a full reinstall.
@@ -33,4 +34,14 @@ SQL;
 
     $messenger = new \Omeka\Mvc\Controller\Plugin\Messenger();
     $messenger->addWarning('You should reindex your geometries in the config of this module.'); // @translate
+}
+
+if (version_compare($oldVersion, '3.3.1.6', '<')) {
+    $sql = <<<SQL
+DROP INDEX `idx_value` ON `data_type_geography`;
+CREATE SPATIAL INDEX `idx_value` ON `data_type_geography` (`value`);
+DROP INDEX `idx_value` ON `data_type_geometry`;
+CREATE SPATIAL INDEX `idx_value` ON `data_type_geometry` (`value`);
+SQL;
+    $connection->exec($sql);
 }

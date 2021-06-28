@@ -1,4 +1,5 @@
 <?php declare(strict_types=1);
+
 namespace DataTypeGeometry\DataType;
 
 use DataTypeGeometry\Doctrine\PHP\Types\Geography\Geography as GenericGeography;
@@ -32,13 +33,13 @@ class Geography extends AbstractDataType
         $element->setAttributes([
             'class' => 'value to-require geography',
             'data-value-key' => '@value',
-            'placeholder' => 'POINT (2.294497 48.858252)',
+            // 'placeholder' => 'POINT (2.294497 48.858252)',
         ]);
         return $view->formTextarea($element);
     }
 
     /**
-     * @toto Check if the numbers inside the wkt are true latitude and longitude.
+     * @todo Check if the numbers inside the wkt are true latitude and longitude.
      *
      * {@inheritDoc}
      * @see \DataTypeGeometry\DataType\AbstractDataType::isValid()
@@ -56,13 +57,12 @@ class Geography extends AbstractDataType
     }
 
     /**
-     * Convert a string into a geometry representation.
+     * Convert a string into a geography representation.
      *
      * @param string $value Accept AbstractGeometry and geometry array too.
      * @throws \InvalidArgumentException
-     * @return \CrEOF\Spatial\PHP\Types\Geography\GeographyInterface
      */
-    public function getGeometryFromValue($value)
+    public function getGeometryFromValue($value): \CrEOF\Spatial\PHP\Types\Geography\GeographyInterface
     {
         if (empty($value)) {
             throw new \InvalidArgumentException('Empty geography.'); // @translate

@@ -1,4 +1,5 @@
 <?php declare(strict_types=1);
+
 namespace DataTypeGeometry\Job;
 
 use Omeka\Job\AbstractJob;
@@ -363,10 +364,8 @@ SQL;
 
     /**
      * Check before a process.
-     *
-     * @param array $options
      */
-    protected function checkBefore(array $options)
+    protected function checkBefore(array $options): bool
     {
         $success = $this->check($options);
         if (!$success) {
@@ -378,12 +377,9 @@ SQL;
     }
 
     /**
-     * Check if geo values are not well-formed.
-     *
-     * @param array $options
-     * @return bool True if ok, false if error.
+     * Check if geo values are well-formed.
      */
-    protected function check(array $options)
+    protected function check(array $options): bool
     {
         $logger = $this->logger;
         $api = $this->api;

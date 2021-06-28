@@ -1,4 +1,5 @@
 <?php declare(strict_types=1);
+
 namespace DataTypeGeometry\Entity;
 
 use CrEOF\Spatial\PHP\Types\Geometry\GeometryInterface;
@@ -18,6 +19,7 @@ class DataTypeGeometry extends AbstractEntity
 {
     /**
      * @var int
+     *
      * @Id
      * @Column(type="integer")
      * @GeneratedValue
@@ -26,6 +28,7 @@ class DataTypeGeometry extends AbstractEntity
 
     /**
      * @var \Omeka\Entity\Resource
+     *
      * @ManyToOne(
      *     targetEntity="Omeka\Entity\Resource"
      * )
@@ -38,6 +41,7 @@ class DataTypeGeometry extends AbstractEntity
 
     /**
      * @var \Omeka\Entity\Property
+     *
      * @ManyToOne(
      *     targetEntity="Omeka\Entity\Property"
      * )
@@ -50,10 +54,12 @@ class DataTypeGeometry extends AbstractEntity
 
     /**
      * @var GeometryInterface
+     *
      * @Column(
      *     type="geometry:geometry",
      *     nullable=false
      * )
+     *
      * InnoDb requires a geometry to be a non-null value. Anyway, it's a value.
      */
     protected $value;
@@ -63,56 +69,35 @@ class DataTypeGeometry extends AbstractEntity
         return $this->id;
     }
 
-    /**
-     * @param Resource $resource
-     * @return self
-     */
-    public function setResource(Resource $resource)
+    public function setResource(Resource $resource): self
     {
         $this->resource = $resource;
         return $this;
     }
 
-    /**
-     * @return \Omeka\Entity\Resource
-     */
-    public function getResource()
+    public function getResource(): \Omeka\Entity\Resource
     {
         return $this->resource;
     }
 
-    /**
-     * @param Property $property
-     * @return self
-     */
-    public function setProperty(Property $property)
+    public function setProperty(Property $property): self
     {
         $this->property = $property;
         return $this;
     }
 
-    /**
-     * @return \Omeka\Entity\Property
-     */
-    public function getProperty()
+    public function getProperty(): \Omeka\Entity\Property
     {
         return $this->property;
     }
 
-    /**
-     * @param GeometryInterface $value
-     * @return self
-     */
-    public function setValue(GeometryInterface $value)
+    public function setValue(GeometryInterface $value): self
     {
         $this->value = $value;
         return $this;
     }
 
-    /**
-     * @return \CrEOF\Spatial\PHP\Types\Geometry\GeometryInterface
-     */
-    public function getValue()
+    public function getValue(): \CrEOF\Spatial\PHP\Types\Geometry\GeometryInterface
     {
         return $this->value;
     }

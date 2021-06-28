@@ -1,4 +1,5 @@
 <?php declare(strict_types=1);
+
 namespace DataTypeGeometry\DataType;
 
 use DataTypeGeometry\Doctrine\PHP\Types\Geometry\Geometry as GenericGeometry;
@@ -23,7 +24,7 @@ class Geometry extends AbstractDataType
         $element->setAttributes([
             'class' => 'value to-require geometry',
             'data-value-key' => '@value',
-            'placeholder' => 'POINT (2.294497 48.858252)',
+            // 'placeholder' => 'POINT (2.294497 48.858252)',
         ]);
         return $view->formTextarea($element);
     }
@@ -38,9 +39,8 @@ class Geometry extends AbstractDataType
      *
      * @param string $value Accept AbstractGeometry and geometry array too.
      * @throws \InvalidArgumentException
-     * @return \CrEOF\Spatial\PHP\Types\Geometry\GeometryInterface
      */
-    public function getGeometryFromValue($value)
+    public function getGeometryFromValue($value): \CrEOF\Spatial\PHP\Types\Geometry\GeometryInterface
     {
         if (empty($value)) {
             throw new \InvalidArgumentException('Empty geometry.'); // @translate

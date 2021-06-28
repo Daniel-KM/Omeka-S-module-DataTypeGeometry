@@ -1,4 +1,5 @@
 <?php declare(strict_types=1);
+
 namespace DataTypeGeometry;
 
 if (!class_exists(\Generic\AbstractModule::class)) {

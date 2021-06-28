@@ -1,4 +1,5 @@
 <?php declare(strict_types=1);
+
 namespace DataTypeGeometry\DataType;
 
 use CrEOF\Geo\WKT\Parser as GeoWktParser;
@@ -19,14 +20,17 @@ abstract class AbstractDataType extends BaseAbstractDataType implements DataType
 
     public function prepareForm(PhpRenderer $view): void
     {
-        $view->headLink()->appendStylesheet($view->assetUrl('css/data-type-geometry.css', 'DataTypeGeometry'));
-        $view->headScript()->appendFile($view->assetUrl('js/data-type-geometry.js', 'DataTypeGeometry'), 'text/javascript', ['defer' => 'defer']);
+        $view->headLink()
+            ->appendStylesheet($view->assetUrl('css/data-type-geometry.css', 'DataTypeGeometry'));
+        $view->headScript()
+            ->appendFile($view->assetUrl('js/data-type-geometry.js', 'DataTypeGeometry'), 'text/javascript', ['defer' => 'defer']);
     }
 
     public function isValid(array $valueObject)
     {
-        $result = $this->parseGeometry($valueObject['@value']);
-        return !empty($result);
+        return !empty($valueObject)
+            && !empty($valueObject['@value'])
+            && !empty($this->parseGeometry($valueObject['@value']));
     }
 
     public function hydrate(array $valueObject, Value $value, AbstractEntityAdapter $adapter): void
@@ -41,6 +45,11 @@ abstract class AbstractDataType extends BaseAbstractDataType implements DataType
     public function render(PhpRenderer $view, ValueRepresentation $value)
     {
         return (string) $value->value();
+    }
+
+    public function getFulltextText(PhpRenderer $view, ValueRepresentation $value)
+    {
+        return null;
     }
 
     /**
@@ -66,10 +75,10 @@ abstract class AbstractDataType extends BaseAbstractDataType implements DataType
             $string = trim(substr($string, strpos(';') + 1));
         }
         $result = [];
-        $result['@value'] = $string;
         // Deprecated.
         // $result['@type'] = 'http://geovocab.org/geometry#asWKT';
         $result['@type'] = 'http://www.opengis.net/ont/geosparql#wktLiteral';
+        $result['@value'] = $string;
         if ($srid) {
             $result['srid'] = $srid;
         }
