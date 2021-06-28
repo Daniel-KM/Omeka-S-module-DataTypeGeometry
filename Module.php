@@ -373,7 +373,7 @@ class Module extends AbstractModule
                 // TODO Add method setEntityValues.
                 $geometry = $dataType->getGeometryFromValue($value->getValue());
                 if ($srid
-                    && $dataTypeName === 'geometry:geography'
+                    && in_array($dataTypeName, ['geometry:geography', 'geometry:geography:coordinates'])
                     && empty($geometry->getSrid())
                 ) {
                     $geometry->setSrid($srid);
@@ -404,6 +404,7 @@ class Module extends AbstractModule
     {
         $dataTypes = $this->getServiceLocator()->get('Omeka\DataTypeManager');
         return [
+            'geometry:geography:coordinates' => $dataTypes->get('geometry:geography:coordinates'),
             'geometry:geography' => $dataTypes->get('geometry:geography'),
             'geometry:geometry' => $dataTypes->get('geometry:geometry'),
         ];

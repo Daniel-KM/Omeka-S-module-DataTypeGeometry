@@ -53,6 +53,10 @@ SQL;
 
     $messenger = new Messenger();
     $message = new Message(
+        'A new datatype has been added to manage geographic coordinates (latitude/longitude). It can manage be used as a source for the markers for the module Mapping too. A batch edit process is added to convert them.' // @translate
+    );
+    $messenger->addSuccess($message);
+    $message = new Message(
         'The data types of this module are no longer automatically appended to resource forms. They should be added to selected properties via a template.' // @translate
     );
     $messenger->addWarning($message);

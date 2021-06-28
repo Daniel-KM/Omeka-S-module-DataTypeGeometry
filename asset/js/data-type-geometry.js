@@ -1,19 +1,23 @@
 (function($) {
 
+    const regexLatitudeLongitude = /^\s*(?<latitude>[+-]?(?:[1-8]?\d(?:\.\d+)?|90(?:\.0+)?))\s*,\s*(?<longitude>[+-]?(?:180(?:\.0+)?|(?:(?:1[0-7]\d)|(?:[1-9]?\d))(?:\.\d+)?))\s*$/;
+
     /**
      * Check user input geometry.
      *
      * @param object element
      * @param string datatype
+     * @return bool
      */
     var geometryCheck = function(element, datatype) {
         var primitive, message;
         var val = element.value.trim().toUpperCase();
-        if (datatype === 'geometry:geometry') {
-            try {
-                primitive = Terraformer.WKT.parse(val);
-            } catch (err) {
-                message = 'Please enter a valid wkt for the geometry.';
+        if (datatype === 'geometry:geography:coordinates') {
+            if (val.match(regexLatitudeLongitude)) {
+                primitive = true;
+            } else {
+                var invalidValue = $(element).closest('.input-body').find('.invalid-value');
+                message = invalidValue.data('customValidity');
             }
         } else if (datatype === 'geometry:geography') {
             try {
@@ -32,14 +36,21 @@
                     message = 'Please enter a valid wkt for the geography.';
                 }
             }
-
             // TODO Check all x and y, that should be below 180 and 90.
+        } else if (datatype === 'geometry:geometry') {
+            try {
+                primitive = Terraformer.WKT.parse(val);
+            } catch (err) {
+                message = 'Please enter a valid wkt for the geometry.';
+            }
         }
 
         if (val === '' || primitive) {
             element.setCustomValidity('');
+            return true;
         } else {
             element.setCustomValidity(Omeka.jsTranslate(message));
+            return false;
         }
     }
 
@@ -128,13 +139,29 @@
 
     $(document).ready(function() {
 
-        $('textarea.value.geometry').on('keyup', function(e) {
+        // Resource form.
+
+        $('.geography-coordinates').on('keyup, change', function(e) {
+            var div = $(this).closest('.input-body');
+            var latitude = div.find('.geography-coordinates-latitude').val().trim();
+            var longitude = div.find('.geography-coordinates-longitude').val().trim();
+            var element = div.find('.value.to-require');
+            element.val(latitude + ',' + longitude);
+            if (!geometryCheck(element[0], 'geometry:geography:coordinates')) {
+                element.val('');
+                // TODO Display error on the invalid part.
+            }
+        });
+
+        $('textarea.value.geography').on('keyup, change', function(e) {
+            geometryCheck(this, 'geometry:geography');
+        });
+
+        $('textarea.value.geometry').on('keyup, change', function(e) {
             geometryCheck(this, 'geometry:geometry');
         });
 
-        $('textarea.value.geography').on('keyup', function(e) {
-            geometryCheck(this, 'geometry:geography');
-        });
+        // Search form.
 
         // The form uses geography only, because to query non-georeferenced
         // geometries has no meaning.
@@ -155,6 +182,27 @@
             radiusCheck($('input.query-geo-around-radius')[0]);
         });
 
+    });
+
+    $(document).on('o:prepare-value', function(e, dataType, value, valueObj) {
+        if (dataType === 'geometry:geography:coordinates' && valueObj) {
+            // The value is an object that cannot be set by resource-fom.js.
+            $(value).find('.value.to-require').val('');
+            var coordinates = valueObj['@value'];
+            if (!coordinates) {
+                return;
+            }
+            if (typeof coordinates === 'object') {
+                coordinates = coordinates.latitude + ',' + coordinates.longitude;
+            }
+            var coords = coordinates.match(regexLatitudeLongitude);
+            if (!coords) {
+                return;
+            }
+            $(value).find('.geography-coordinates-latitude').val(coords.groups.latitude);
+            $(value).find('.geography-coordinates-longitude').val(coords.groups.longitude);
+            $(value).find('.value.to-require').val(coords.groups.latitude + ',' + coords.groups.longitude);
+        }
     });
 
 })(jQuery);

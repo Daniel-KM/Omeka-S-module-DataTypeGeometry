@@ -153,6 +153,7 @@ return [
     ],
     'data_types' => [
         'invokables' => [
+            'geometry:geography:coordinates' => DataType\GeographyCoordinates::class,
             'geometry:geography' => DataType\Geography::class,
             'geometry:geometry' => DataType\Geometry::class,
         ],
@@ -185,6 +186,7 @@ return [
         ],
     ],
     'js_translate_strings' => [
+        'Geographic coordinates', // @translate
         'Geography', // @translate
         'Geometry', // @translate
         'Please enter a latitude.', // @translate

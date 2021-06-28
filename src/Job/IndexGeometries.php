@@ -187,6 +187,7 @@ SQL;
         }
 
         $tables = [
+            // 'geometry:geography:coordinates' => 'data_type_geography' ,
             'geometry:geography' => 'data_type_geography' ,
             'geometry:geometry' => 'data_type_geometry' ,
         ];
