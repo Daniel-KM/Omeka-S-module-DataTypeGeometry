@@ -4,6 +4,7 @@ namespace DataTypeGeometry\Form;
 
 use Laminas\Form\Element;
 use Laminas\Form\Fieldset;
+use Omeka\Form\Element\PropertySelect;
 
 class BatchEditFieldset extends Fieldset
 {
@@ -27,15 +28,56 @@ class BatchEditFieldset extends Fieldset
                 'options' => [
                     'label' => 'Manage geographic coordinates', // @translate
                     'value_options' => [
-                        // 'sync' => 'Synchronize coordinates and mapping markers', // @translate
+                        'sync' => 'Synchronize coordinates and mapping markers', // @translate
                         'coordinates_to_markers' => 'Copy coordinates to mapping markers', // @translate
-                        // 'markers_to_coordinates' => 'Copy mapping markers to coordinates', // @translate
+                        'markers_to_coordinates' => 'Copy mapping markers to coordinates', // @translate
                     ],
                     'empty_option' => '[No change]' // @translate
                 ],
                 'attributes' => [
                     'id' => 'manage_coordinates_markers',
                     'class' => 'chosen-select',
+                    // This attribute is required to make "batch edit all" working.
+                    'data-collection-action' => 'replace',
+                ],
+            ])
+            ->add([
+                'name' => 'from_properties',
+                'type' => PropertySelect::class,
+                'options' => [
+                    'label' => 'Source properties to create markers', // @translate
+                    'term_as_value' => true,
+                    'prepend_value_options' => [
+                        'all' => '[All properties]', // @translate
+                    ],
+                    'empty_option' => '',
+                    'used_terms' => true,
+                ],
+                'attributes' => [
+                    'id' => 'from_property',
+                    'class' => 'chosen-select',
+                    'multiple' => true,
+                    'required' => false,
+                    'data-placeholder' => 'Select properties…', // @translate
+                    // This attribute is required to make "batch edit all" working.
+                    'data-collection-action' => 'replace',
+                ],
+            ])
+            ->add([
+                'name' => 'to_property',
+                'type' => PropertySelect::class,
+                'options' => [
+                    'label' => 'Property where to copy markers', // @translate
+                    'term_as_value' => true,
+                    'empty_option' => '',
+                    'used_terms' => true,
+                ],
+                'attributes' => [
+                    'id' => 'to_property',
+                    'class' => 'chosen-select',
+                    'multiple' => false,
+                    'required' => false,
+                    'data-placeholder' => 'Select property…', // @translate
                     // This attribute is required to make "batch edit all" working.
                     'data-collection-action' => 'replace',
                 ],

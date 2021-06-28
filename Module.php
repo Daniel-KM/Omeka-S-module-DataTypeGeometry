@@ -349,6 +349,14 @@ class Module extends AbstractModule
             ->add([
                 'name' => 'manage_coordinates_markers',
                 'required' => false,
+            ])
+            ->add([
+                'name' => 'from_properties',
+                'required' => false,
+            ])
+            ->add([
+                'name' => 'to_property',
+                'required' => false,
             ]);
     }
 
@@ -361,7 +369,36 @@ class Module extends AbstractModule
         if (empty($post['geometry']['manage_coordinates_markers'])) {
             $data['geometry'] = null;
         } else {
+            $manage = $post['geometry']['manage_coordinates_markers'];
+            if (!in_array($manage, ['sync', 'coordinates_to_markers', 'markers_to_coordinates'])) {
+                return;
+            }
+            $properties = $this->getPropertyIds();
+            if (empty($post['geometry']['from_properties']) || $post['geometry']['from_properties'] === 'all') {
+                $from = null;
+            } else {
+                $from = array_intersect_key($properties, array_flip($post['geometry']['from_properties']));
+                if (!$from) {
+                    return;
+                }
+            }
+            if (empty($post['geometry']['to_property'])) {
+                $to = null;
+            } else {
+                $to = $properties[$post['geometry']['to_property']] ?? null;
+                if (!$to) {
+                    return;
+                }
+            }
+            if (in_array($manage, ['sync', 'markers_to_coordinates']) && !$to) {
+                return;
+            }
             $data['geometry'] = $post['geometry'];
+            $data['geometry']['from_properties_ids'] = $from;
+            $data['geometry']['to_property_id'] = $to;
+
+            $data['geometry']['srid'] = $this->getServiceLocator()->get('Omeka\Settings')
+                ->get('datatypegeometry_locate_srid', 4326);
         }
         $event->setParam('data', $data);
     }
@@ -387,16 +424,44 @@ class Module extends AbstractModule
 
         // TODO Use the adapter to update values/mapping markers.
         // $adapter = $event->getTarget();
-        /** @var \Doctrine\DBAL\Connection $connection */
-        $connection = $this->getServiceLocator()->get('Omeka\Connection');
 
-        // TODO Use the adapter.
-        switch ($data['geometry']['manage_coordinates_markers']) {
+        $manage = $data['geometry']['manage_coordinates_markers'];
+        switch ($manage) {
             default:
                 return;
 
+            case 'sync':
+                $this->copyCoordinatesToMarkers($ids, $data);
+                $this->copyMarkersToCoordinates($ids, $data);
+                break;
+
             case 'coordinates_to_markers':
-                $sql = <<<SQL
+                $this->copyCoordinatesToMarkers($ids, $data);
+                break;
+
+            case 'markers_to_coordinates':
+                $this->copyMarkersToCoordinates($ids, $data);
+                break;
+        }
+    }
+
+    protected function copyCoordinatesToMarkers(array $ids, array $data): void
+    {
+        /** @var \Doctrine\DBAL\Connection $connection */
+        $connection = $this->getServiceLocator()->get('Omeka\Connection');
+
+        $bind = ['resource_ids' => $ids];
+        $types = ['resource_ids' => $connection::PARAM_INT_ARRAY];
+        $from = $data['geometry']['from_properties_ids'] ?? null;
+        if ($from) {
+            $sqlWhere = 'AND `value`.`property_id` IN (:property_ids)';
+            $bind['property_ids'] = array_map('intval', $from);
+            $types['property_ids'] = $connection::PARAM_INT_ARRAY;
+        } else {
+            $sqlWhere = '';
+        }
+
+        $sql = <<<SQL
 INSERT INTO `mapping_marker`
     (`item_id`, `media_id`, `lat`, `lng`, `label`)
 SELECT DISTINCT
@@ -413,19 +478,65 @@ WHERE
     `value`.`resource_id` IN (:resource_ids)
     AND `value`.`type` = "geometry:geography:coordinates"
     AND `mapping_marker`.`id` IS NULL
+    $sqlWhere
 ;
 SQL;
-                $bind = ['resource_ids' => $ids];
-                $types = ['resource_ids' => $connection::PARAM_INT_ARRAY];
-                $connection->executeUpdate($sql, $bind, $types);
-                break;
+        $connection->executeUpdate($sql, $bind, $types);
+    }
 
-            case 'markers_to_coordinates':
-                break;
+    protected function copyMarkersToCoordinates(array $ids, array $data): void
+    {
+        /** @var \Doctrine\DBAL\Connection $connection */
+        $connection = $this->getServiceLocator()->get('Omeka\Connection');
 
-            case 'sync':
-                break;
-        }
+        $srid = $data['geometry']['srid'] ?? 4326;
+
+        $bind = [
+            'resource_ids' => $ids,
+            'property_id' => (int) $data['geometry']['to_property_id'],
+        ];
+        $types = ['resource_ids' => $connection::PARAM_INT_ARRAY];
+
+        $fromSql = <<<SQL
+FROM `mapping_marker`
+LEFT JOIN `value`
+    ON `value`.`resource_id` = `mapping_marker`.`item_id`
+        AND `value`.`value` = CONCAT(`mapping_marker`.`lat`, ",", `mapping_marker`.`lng`)
+        AND `value`.`type` = "geometry:geography:coordinates"
+WHERE
+    `mapping_marker`.`item_id` IN (:resource_ids)
+    AND `value`.`id` IS NULL
+;
+SQL;
+
+        // The update of the table `data_type_geometry` should be done first in
+        // order to keep same results from the database.
+        $sql = <<<SQL
+INSERT INTO `data_type_geography`
+    (`resource_id`, `property_id`, `value`)
+SELECT DISTINCT
+    `mapping_marker`.`item_id`,
+    :property_id,
+    ST_GeomFromText(CONCAT("POINT(", `mapping_marker`.`lng`, " ", `mapping_marker`.`lat`, ")"), $srid)
+$fromSql
+SQL;
+        $connection->executeUpdate($sql, $bind, $types);
+
+$sql = <<<SQL
+INSERT INTO `value`
+    (`resource_id`, `property_id`, `value_resource_id`, `type`, `lang`, `value`, `uri`, `is_public`)
+SELECT DISTINCT
+    `mapping_marker`.`item_id`,
+    :property_id,
+    NULL,
+    "geometry:geography:coordinates",
+    NULL,
+    CONCAT(`mapping_marker`.`lat`, ",", `mapping_marker`.`lng`),
+    NULL,
+    1
+$fromSql
+SQL;
+        $connection->executeUpdate($sql, $bind, $types);
     }
 
     /**
@@ -625,5 +736,42 @@ SQL;
         }
 
         return $result;
+    }
+
+    /**
+     * Get all property ids by term.
+     *
+     * @return array Associative array of ids by term.
+     */
+    public function getPropertyIds(): array
+    {
+        static $properties;
+
+        if (isset($properties)) {
+            return $properties;
+        }
+
+        $connection = $this->getServiceLocator()->get('Omeka\Connection');
+        $qb = $connection->createQueryBuilder();
+        $qb
+            ->select([
+                'DISTINCT property.id AS id',
+                'CONCAT(vocabulary.prefix, ":", property.local_name) AS term',
+                // Only the two first selects are needed, but some databases
+                // require "order by" or "group by" value to be in the select.
+                'vocabulary.id',
+                'property.id',
+            ])
+            ->from('property', 'property')
+            ->innerJoin('property', 'vocabulary', 'vocabulary', 'property.vocabulary_id = vocabulary.id')
+            ->orderBy('vocabulary.id', 'asc')
+            ->addOrderBy('property.id', 'asc')
+            ->addGroupBy('property.id')
+        ;
+        $stmt = $connection->executeQuery($qb);
+        // Fetch by key pair is not supported by doctrine 2.0.
+        $properties = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        $properties = array_map('intval', array_column($properties, 'id', 'term'));
+        return $properties;
     }
 }
