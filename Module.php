@@ -141,10 +141,32 @@ class Module extends AbstractModule
             [$this, 'addFormElementsAnnotateQuickSearch']
         );
 
+        // Add the css/js to any resource form (there may be geographic data
+        // without template).
+        $sharedEventManager->attach(
+            'Omeka\Controller\Admin\Item',
+            'view.layout',
+            [$this, 'addAdminResourceHeaders']
+        );
+        $sharedEventManager->attach(
+            'Omeka\Controller\Admin\ItemSet',
+            'view.layout',
+            [$this, 'addAdminResourceHeaders']
+        );
+        $sharedEventManager->attach(
+            'Omeka\Controller\Admin\Media',
+            'view.layout',
+            [$this, 'addAdminResourceHeaders']
+        );
+        $sharedEventManager->attach(
+            'Omeka\Controller\Admin\Annotation',
+            'view.layout',
+            [$this, 'addAdminResourceHeaders']
+        );
         $sharedEventManager->attach(
             '*',
             'view.batch_edit.before',
-            [$this, 'viewBatchEditBefore']
+            [$this, 'addAdminResourceHeaders']
         );
         $sharedEventManager->attach(
             \Omeka\Form\ResourceBatchUpdateForm::class,
@@ -333,7 +355,7 @@ class Module extends AbstractModule
         $event->setParam('filters', $filters);
     }
 
-    public function viewBatchEditBefore(Event $event): void
+    public function addAdminResourceHeaders(Event $event): void
     {
         $view = $event->getTarget();
         $assetUrl = $view->plugin('assetUrl');
