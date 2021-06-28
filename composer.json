@@ -1,17 +1,84 @@
 {
+    "name": "daniel-km/omeka-s-module-datatypegeometry",
+    "description": "Adds data types to store latitude, longitude, markers and area highlights of images and maps with wkt for modules Cartography and Mapping.",
+    "type": "library",
+    "license": "CECILL-2.1",
+    "authors": [
+        {
+            "name": "Daniel Berthereau",
+            "email": "Daniel.git@Berthereau.net"
+        }
+    ],
+    "homepage": "https://gitlab.com/Daniel-KM/Omeka-S-module-DataTypeGeometry",
+    "support": {
+        "issues": "https://gitlab.com/Daniel-KM/Omeka-S-module-DataTypeGeometry/-/issues",
+        "forum": "https://forum.omeka.org/"
+    },
+    "keywords": [
+        "Omeka S",
+        "Omeka S module",
+        "geographic coordinates",
+        "geography",
+        "geometry"
+    ],
+    "repositories": [
+        {
+            "type": "package",
+            "package": {
+                "name": "terraformer/terraformer",
+                "type": "omeka-addon-asset",
+                "version": "1.0.12",
+                "dist": {
+                    "type": "file",
+                    "url": "https://github.com/Esri/terraformer/releases/download/v1.0.12/terraformer-1.0.12.min.js",
+                    "reference": ""
+                }
+            }
+        },
+        {
+            "type": "package",
+            "package": {
+                "name": "terraformer/terraformer-arcgis-parser",
+                "type": "omeka-addon-asset",
+                "version": "1.1.0",
+                "dist": {
+                    "type": "file",
+                    "url": "https://github.com/Esri/terraformer-arcgis-parser/releases/download/v1.1.0/terraformer-arcgis-parser-1.1.0.min.js",
+                    "reference": ""
+                }
+            }
+        },
+        {
+            "type": "package",
+            "package": {
+                "name": "terraformer/terraformer-wkt-parser",
+                "type": "omeka-addon-asset",
+                "version": "1.2.1",
+                "dist": {
+                    "type": "file",
+                    "url": "https://github.com/Esri/terraformer-wkt-parser/releases/download/v1.2.1/terraformer-wkt-parser-1.2.1.min.js",
+                    "reference": ""
+                }
+            }
+        }
+    ],
     "require": {
-        "creof/doctrine2-spatial": "^1.2"
+        "oomphinc/composer-installers-extender": "^2.0",
+        "creof/doctrine2-spatial": "^1.2",
+        "terraformer/terraformer": "1.0.12",
+        "terraformer/terraformer-arcgis-parser": "1.1.0",
+        "terraformer/terraformer-wkt-parser": "1.2.1"
     },
     "replace": {
         "doctrine/lexer": "*",
         "doctrine/orm": "*"
     },
-    "require-dev": {
-        "biblibre/omeka-s-test-helper": "dev-master"
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "DataTypeGeometryTest\\": "test/DataTypeGeometryTest/"
+    "extra": {
+        "installer-types": ["omeka-addon-asset"],
+        "installer-paths": {
+            "asset/vendor/{$name}/": [
+                "type:omeka-addon-asset"
+            ]
         }
     }
 }
