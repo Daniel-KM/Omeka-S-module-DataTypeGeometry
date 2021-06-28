@@ -23,6 +23,18 @@ class BatchEditFieldset extends Fieldset
             ]);
         $this
             ->add([
+                'name' => 'convert_literal_to_coordinates',
+                'type' => Element\Checkbox::class,
+                'options' => [
+                    'label' => 'Convert literal values to coordinates', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'geometry_convert_literal_to_coordinates',
+                    // This attribute is required to make "batch edit all" working.
+                    'data-collection-action' => 'replace',
+                ],
+            ])
+            ->add([
                 'name' => 'manage_coordinates_markers',
                 'type' => Element\Select::class,
                 'options' => [
@@ -35,20 +47,8 @@ class BatchEditFieldset extends Fieldset
                     'empty_option' => '[No change]' // @translate
                 ],
                 'attributes' => [
-                    'id' => 'manage_coordinates_markers',
+                    'id' => 'geometry_manage_coordinates_markers',
                     'class' => 'chosen-select',
-                    // This attribute is required to make "batch edit all" working.
-                    'data-collection-action' => 'replace',
-                ],
-            ])
-            ->add([
-                'name' => 'convert_literal_to_coordinates',
-                'type' => Element\Checkbox::class,
-                'options' => [
-                    'label' => 'Convert literal values to coordinates first', // @translate
-                ],
-                'attributes' => [
-                    'id' => 'convert_literal_to_coordinates',
                     // This attribute is required to make "batch edit all" working.
                     'data-collection-action' => 'replace',
                 ],
@@ -66,7 +66,7 @@ class BatchEditFieldset extends Fieldset
                     'used_terms' => true,
                 ],
                 'attributes' => [
-                    'id' => 'from_property',
+                    'id' => 'geometry_from_property',
                     'class' => 'chosen-select',
                     'multiple' => true,
                     'required' => false,
@@ -85,7 +85,7 @@ class BatchEditFieldset extends Fieldset
                     'used_terms' => true,
                 ],
                 'attributes' => [
-                    'id' => 'to_property',
+                    'id' => 'geometry_to_property',
                     'class' => 'chosen-select',
                     'multiple' => false,
                     'required' => false,

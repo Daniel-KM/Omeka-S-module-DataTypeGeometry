@@ -142,6 +142,11 @@ class Module extends AbstractModule
         );
 
         $sharedEventManager->attach(
+            '*',
+            'view.batch_edit.before',
+            [$this, 'viewBatchEditBefore']
+        );
+        $sharedEventManager->attach(
             \Omeka\Form\ResourceBatchUpdateForm::class,
             'form.add_elements',
             [$this, 'formAddElementsResourceBatchUpdateForm']
@@ -326,6 +331,16 @@ class Module extends AbstractModule
         }
 
         $event->setParam('filters', $filters);
+    }
+
+    public function viewBatchEditBefore(Event $event): void
+    {
+        $view = $event->getTarget();
+        $assetUrl = $view->plugin('assetUrl');
+        $view->headLink()
+            ->appendStylesheet($assetUrl('css/data-type-geometry.css', 'DataTypeGeometry'));
+        $view->headScript()
+            ->appendFile($assetUrl('js/data-type-geometry.js', 'DataTypeGeometry'), 'text/javascript', ['defer' => 'defer']);
     }
 
     public function formAddElementsResourceBatchUpdateForm(Event $event): void
