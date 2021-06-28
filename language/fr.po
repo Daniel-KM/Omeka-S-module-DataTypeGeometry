@@ -3,19 +3,19 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-06-28 00:00+0000\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
+"PO-Revision-Date: 2021-06-28 00:00+0000\n"
+"Language: fr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Last-Translator: Daniel Berthereau <Daniel.fr@Berthereau.net>\n"
+"Language-Team: \n"
+"X-Generator: Poedit 3.0\n"
 
 #: Module.php:198
 msgid ""
@@ -34,64 +34,64 @@ msgstr ""
 
 #: Module.php:226
 msgid "Process"
-msgstr ""
+msgstr "Traitement"
 
 #: Module.php:324
 msgid "Geographic coordinates"
-msgstr ""
+msgstr "Coordonnées géographiques"
 
 #: Module.php:326
 #, php-format
 msgid "Within %1$s %2$s of point %3$s %4$s"
-msgstr ""
+msgstr "Dans %1$s %2$s du point %3$s %4$s"
 
 #: Module.php:330
 msgid "Geometric coordinates"
-msgstr ""
+msgstr "Coordonnées géométriques"
 
 #: Module.php:332
 #, php-format
 msgid "Within %1$s pixels of point x: %2$s, y: %3$s)"
-msgstr ""
+msgstr "Dans %1$s pixels du point x : %2$s, y : %3$s)"
 
 #: Module.php:336
 msgid "Map box"
-msgstr ""
+msgstr "Boîte"
 
 #: Module.php:338 Module.php:344
 #, php-format
 msgid "Within box %1$s,%2$s/%3$s,%4$s"
-msgstr ""
+msgstr "Dans la boîte %1$s,%2$s/%3$s,%4$s"
 
 #: Module.php:342
 msgid "Box"
-msgstr ""
+msgstr "Boîte"
 
 #: Module.php:348
 msgid "Within area"
-msgstr ""
+msgstr "Dans une zone"
 
 #: Module.php:351
 msgid "Within zone"
-msgstr ""
+msgstr "Dans la zone"
 
 #: src/DataType/GeographyCoordinates.php:59
 msgid "Value must be valid coordinates (latitude and longitude)"
-msgstr ""
+msgstr "Les valeurs doivent re des coordonnées valides (latitude et longitude)"
 
 #: src/Generic/AbstractModule.php:66
 #, php-format
 msgid "This module requires the module \"%s\"."
-msgstr ""
+msgstr "Ce module requiert le module \"%s\"."
 
 #: src/Generic/AbstractModule.php:73
 #, php-format
 msgid "This module requires modules \"%s\"."
-msgstr ""
+msgstr "Ce module requiert les modules \"%s\"."
 
 #: src/Generic/AbstractModule.php:80
 msgid "This module has resources that cannot be installed."
-msgstr ""
+msgstr "Ce module a des ressources qui ne peuvent pas être installées."
 
 #: src/Generic/AbstractModule.php:707
 #, php-format
@@ -99,6 +99,8 @@ msgid ""
 "The module \"%s\" was automatically deactivated because the dependencies are "
 "unavailable."
 msgstr ""
+"Le module \"%s\" a été automatiquement désactivé car ses dépendances ne sont "
+"plus disponibles."
 
 #: data/scripts/upgrade.php:40
 msgid "You should reindex your geometries in the config of this module."
@@ -131,7 +133,7 @@ msgstr ""
 
 #: Module.php:227
 msgid "No job launched."
-msgstr ""
+msgstr "Aucune tâche lancée."
 
 #: Module.php:238
 #, php-format
@@ -140,27 +142,27 @@ msgstr ""
 
 #: src/Form/BatchEditFieldset.php:16
 msgid "Geometry and geography"
-msgstr ""
+msgstr "Géométrie et géographie"
 
 #: src/Form/BatchEditFieldset.php:29
 msgid "Convert literal values to coordinates"
-msgstr ""
+msgstr "Convertir des valeurs texte en coordonnées"
 
 #: src/Form/BatchEditFieldset.php:41
 msgid "Manage geographic coordinates"
-msgstr ""
+msgstr "Gérer les coordonnées géographiques"
 
 #: src/Form/BatchEditFieldset.php:43
 msgid "Synchronize coordinates and mapping markers"
-msgstr ""
+msgstr "Synchronizer les coordonnées et les points de la carte"
 
 #: src/Form/BatchEditFieldset.php:44
 msgid "Copy coordinates to mapping markers"
-msgstr ""
+msgstr "Copier les coordonnées en points dans la carte"
 
 #: src/Form/BatchEditFieldset.php:45
 msgid "Copy mapping markers to coordinates"
-msgstr ""
+msgstr "Copier les points de la carte en coordonnées"
 
 #: src/Form/BatchEditFieldset.php:60
 msgid "Source properties to create markers or to convert from literal"
@@ -168,11 +170,11 @@ msgstr ""
 
 #: src/Form/BatchEditFieldset.php:63
 msgid "[All properties]"
-msgstr ""
+msgstr "[Toutes les propriétés]"
 
 #: src/Form/BatchEditFieldset.php:73
 msgid "Select properties…"
-msgstr ""
+msgstr "Choisir des propriétés…"
 
 #: src/Form/BatchEditFieldset.php:82
 msgid "Property where to copy markers"
@@ -180,7 +182,7 @@ msgstr ""
 
 #: src/Form/SettingsFieldset.php:10
 msgid "Data Type Geometry"
-msgstr ""
+msgstr "Type de données Géométrie"
 
 #: src/Form/SettingsFieldset.php:18
 msgid "Buttons for resource forms"
@@ -189,12 +191,12 @@ msgstr ""
 #: src/Form/SettingsFieldset.php:22 src/DataType/Geography.php:27
 #: config/module.config.php:191
 msgid "Geography"
-msgstr ""
+msgstr "Géographie"
 
 #: src/Form/SettingsFieldset.php:23 src/DataType/Geometry.php:18
 #: config/module.config.php:192
 msgid "Geometry"
-msgstr ""
+msgstr "Géométrie"
 
 #: src/Form/ConfigForm.php:16
 msgid "Spatial reference id (Srid) for Locate"
@@ -265,37 +267,37 @@ msgstr ""
 
 #: src/Form/ConfigForm.php:64
 msgid "Run in background"
-msgstr ""
+msgstr "Lancer en arrière-plan"
 
 #: src/Form/SearchFieldset.php:23
 msgid "Around a point"
-msgstr ""
+msgstr "Autour d’un point"
 
 #: src/Form/SearchFieldset.php:32 src/Form/SearchFieldset.php:40
 msgid "Latitude"
-msgstr ""
+msgstr "Latitude"
 
 #: src/Form/SearchFieldset.php:49 src/Form/SearchFieldset.php:57
 #: src/Form/SearchFieldset.php:58
 msgid "Longitude"
-msgstr ""
+msgstr "Longitude"
 
 #: src/Form/SearchFieldset.php:66 src/Form/SearchFieldset.php:74
 #: src/Form/SearchFieldset.php:75
 msgid "Radius"
-msgstr ""
+msgstr "Rayon"
 
 #: src/Form/SearchFieldset.php:83 src/Form/SearchFieldset.php:92
 msgid "Unit"
-msgstr ""
+msgstr "Unité"
 
 #: src/Form/SearchFieldset.php:85
 msgid "kilometres"
-msgstr ""
+msgstr "kilomètres"
 
 #: src/Form/SearchFieldset.php:86
 msgid "metres"
-msgstr ""
+msgstr "mètres"
 
 #: src/Form/SearchFieldset.php:93
 msgid "Unit of the radius for geographic point"
@@ -303,7 +305,7 @@ msgstr ""
 
 #: src/Form/SearchFieldset.php:101
 msgid "Inside a box"
-msgstr ""
+msgstr "Dans une boîte"
 
 #: src/Form/SearchFieldset.php:106
 msgid "Top left latitude longitude Bottom right latitude longitude"
@@ -311,53 +313,53 @@ msgstr ""
 
 #: src/Form/SearchFieldset.php:107
 msgid "Rectangle box with two opposite geo-coordinates"
-msgstr ""
+msgstr "Boîte rectangulaire avec les coordonnées de deux angles opposés"
 
 #: src/Form/SearchFieldset.php:115
 msgid "Within an area"
-msgstr ""
+msgstr "Dans une zone"
 
 #: src/Form/SearchFieldset.php:121
 msgid "WKT (well-known text that represents a geometry)"
-msgstr ""
+msgstr "WKT (Well-Known Text représentant une géométrie"
 
 #: src/DataType/Geometry.php:46
 #: src/Doctrine/PHP/Types/Geometry/Geometry.php:187
 #: src/Doctrine/PHP/Types/Geography/Geography.php:177
 msgid "Empty geometry."
-msgstr ""
+msgstr "Géométrie vide."
 
 #: src/DataType/Geometry.php:55
 #, php-format
 msgid "Invalid geometry: %s"
-msgstr ""
+msgstr "Géométrie invalide : %s"
 
 #: src/DataType/Geography.php:68
 msgid "Empty geography."
-msgstr ""
+msgstr "Géographie vide."
 
 #: src/DataType/Geography.php:77
 #, php-format
 msgid "Invalid geography: %s"
-msgstr ""
+msgstr "Géographie invalide : %s"
 
 #: src/DataType/GeographyCoordinates.php:132
 msgid "Empty geographic coordinates."
-msgstr ""
+msgstr "Coordonnées géographiques vides."
 
 #: src/DataType/GeographyCoordinates.php:144
 #, php-format
 msgid "Invalid geographic coordinates: %s"
-msgstr ""
+msgstr "Coordonnées géographiques invalides : %s"
 
 #: src/DataType/AbstractDataType.php:18
 msgid "Geography / geometry"
-msgstr ""
+msgstr "Géographie / géometrie"
 
 #: src/Doctrine/PHP/Types/Geometry/Geometry.php:73
 #: src/Doctrine/PHP/Types/Geography/Geography.php:71
 msgid "Invalid geometry."
-msgstr ""
+msgstr "Géométrie invalide."
 
 #: src/Job/IndexGeometries.php:51
 msgid "Indexing geometries stopped: no mode selected."
