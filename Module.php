@@ -151,6 +151,7 @@ class Module extends AbstractModule
             'form.add_input_filters',
             [$this, 'formAddInputFiltersResourceBatchUpdateForm']
         );
+        // TODO The conversion to coordinates can be done for other resources.
         $sharedEventManager->attach(
             'Omeka\Api\Adapter\ItemAdapter',
             'api.preprocess_batch_update',
@@ -163,14 +164,17 @@ class Module extends AbstractModule
         );
     }
 
-    public function getConfigForm(PhpRenderer $renderer)
+    public function getConfigForm(PhpRenderer $view)
     {
-        $html = parent::getConfigForm($renderer);
-        $html = '<p>'
-            . $renderer->translate('Reindex geometries or resources and annotations as geometry or geography.') // @translate
+        $html = parent::getConfigForm($view);
+        return '<p>'
+            . $view->translate('Use "Batch edit items" to convert coordinates to/from mapping markers (require module Mapping).') // @translate
             . '</p>'
-            . $html;
-        return $html;
+            . '<p>'
+            . $view->translate('The jobs below are useless without module Cartography.') // @translate
+            . '<br/>'
+            . $view->translate('Reindex geometries or resources and annotations as geometry or geography.') // @translate
+            . '</p>' . $html;
     }
 
     public function handleConfigForm(AbstractController $controller)
@@ -366,18 +370,20 @@ class Module extends AbstractModule
         $request = $event->getParam('request');
         $post = $request->getContent();
         $data = $event->getParam('data');
-        if (empty($post['geometry']['manage_coordinates_markers'])) {
+
+        if (empty($post['geometry']['convert_literal_to_coordinates'])
+            && empty($post['geometry']['manage_coordinates_markers'])
+        ) {
             $data['geometry'] = null;
         } else {
             $manage = $post['geometry']['manage_coordinates_markers'];
             if (!in_array($manage, ['sync', 'coordinates_to_markers', 'markers_to_coordinates'])) {
                 return;
             }
-            $properties = $this->getPropertyIds();
             if (empty($post['geometry']['from_properties']) || $post['geometry']['from_properties'] === 'all') {
                 $from = null;
             } else {
-                $from = array_intersect_key($properties, array_flip($post['geometry']['from_properties']));
+                $from = $this->getPropertyIds($post['geometry']['from_properties']);
                 if (!$from) {
                     return;
                 }
@@ -385,7 +391,7 @@ class Module extends AbstractModule
             if (empty($post['geometry']['to_property'])) {
                 $to = null;
             } else {
-                $to = $properties[$post['geometry']['to_property']] ?? null;
+                $to = $this->getPropertyId($post['geometry']['to_property']);
                 if (!$to) {
                     return;
                 }
@@ -394,6 +400,7 @@ class Module extends AbstractModule
                 return;
             }
             $data['geometry'] = $post['geometry'];
+            $data['geometry']['convert_literal_to_coordinates'] = !empty($data['geometry']['convert_literal_to_coordinates']);
             $data['geometry']['from_properties_ids'] = $from;
             $data['geometry']['to_property_id'] = $to;
 
@@ -408,7 +415,11 @@ class Module extends AbstractModule
         /** @var \Omeka\Api\Request $request */
         $request = $event->getParam('request');
         $data = $request->getContent();
-        if (empty($data['geometry']['manage_coordinates_markers'])) {
+        if (empty($data['geometry'])
+            || (empty($data['geometry']['convert_literal_to_coordinates'])
+                && empty($data['geometry']['manage_coordinates_markers'])
+            )
+        ) {
             return;
         }
 
@@ -416,6 +427,18 @@ class Module extends AbstractModule
         $ids = array_filter(array_map('intval', $ids));
         if (empty($ids)) {
             return;
+        }
+
+        if (!array_key_exists('srid', $data['geometry'])) {
+            $data['geometry']['convert_literal_to_coordinates'] = !empty($data['geometry']['convert_literal_to_coordinates']);
+            $data['geometry']['from_properties_ids'] = $this->getPropertyIds($data['geometry']['from_properties']);
+            $data['geometry']['to_property_id'] = $this->getPropertyId($data['geometry']['to_property']);
+            $data['geometry']['srid'] = $this->getServiceLocator()->get('Omeka\Settings')
+                ->get('datatypegeometry_locate_srid', 4326);
+        }
+
+        if (!empty($data['geometry']['convert_literal_to_coordinates'])) {
+            $this->convertLiteralToCoordinates($ids, $data);
         }
 
         if (!$this->isModuleActive('Mapping')) {
@@ -443,6 +466,66 @@ class Module extends AbstractModule
                 $this->copyMarkersToCoordinates($ids, $data);
                 break;
         }
+    }
+
+    protected function convertLiteralToCoordinates(array $ids, array $data): void
+    {
+        /** @var \Doctrine\DBAL\Connection $connection */
+        $connection = $this->getServiceLocator()->get('Omeka\Connection');
+
+        $srid = $data['geometry']['srid'] ?? 4326;
+
+        $bind = ['resource_ids' => $ids];
+        $types = ['resource_ids' => $connection::PARAM_INT_ARRAY];
+
+        $from = $data['geometry']['from_properties_ids'] ?? null;
+        if ($from) {
+            $sqlWhere = 'AND `value`.`property_id` IN (:property_ids)';
+            $bind['property_ids'] = array_map('intval', $from);
+            $types['property_ids'] = $connection::PARAM_INT_ARRAY;
+        } else {
+            $sqlWhere = '';
+        }
+
+        // The single quote simplifies escaping of regex.
+        $whereSql = <<<'SQL'
+WHERE
+    `value`.`resource_id` IN (:resource_ids)
+    AND `value`.`type` = "literal"
+    AND `value`.`value` REGEXP '^\\s*(?<latitude>[+-]?(?:[1-8]?\\d(?:\\.\\d+)?|90(?:\\.0+)?))\\s*,\\s*(?<longitude>[+-]?(?:180(?:\\.0+)?|(?:(?:1[0-7]\\d)|(?:[1-9]?\\d))(?:\\.\\d+)?))\\s*$'
+SQL;
+        $whereSql .= '    ' . $sqlWhere;
+
+        // The update of the table `data_type_geometry` should be done first in
+        // order to keep same results from the database.
+        $sql = <<<SQL
+INSERT INTO `data_type_geography`
+    (`resource_id`, `property_id`, `value`)
+SELECT DISTINCT
+    `value`.`resource_id`,
+    `value`.`property_id`,
+    ST_GeomFromText(CONCAT(
+        "POINT(",
+        TRIM(SUBSTRING_INDEX(TRIM(`value`.`value`), ",", -1)),
+        " ",
+        TRIM(SUBSTRING_INDEX(TRIM(`value`.`value`), ",", 1)),
+        ")"
+    ), $srid)
+FROM `value`
+$whereSql
+ON DUPLICATE KEY UPDATE
+    `data_type_geography`.`id` = `data_type_geography`.`id`
+;
+SQL;
+        $connection->executeUpdate($sql, $bind, $types);
+
+$sql = <<<SQL
+UPDATE `value`
+SET
+    `value`.`type` = "geometry:geography:coordinates"
+$whereSql
+SQL;
+        $connection->executeUpdate($sql, $bind, $types);
     }
 
     protected function copyCoordinatesToMarkers(array $ids, array $data): void
@@ -739,39 +822,52 @@ SQL;
     }
 
     /**
-     * Get all property ids by term.
-     *
-     * @return array Associative array of ids by term.
+     * Get a property id by term.
      */
-    public function getPropertyIds(): array
+    protected function getPropertyId(?string $id): ?int
+    {
+        if (!$id) {
+            return null;
+        }
+        $result = $this->getPropertyIds([$id]);
+        return $result ? reset($result) : null;
+    }
+
+    /**
+     * Get all property ids by term, or the specified ones.
+     *
+     * @return array Filtered associative array of ids by term.
+     */
+    protected function getPropertyIds(?array $ids = null): array
     {
         static $properties;
 
-        if (isset($properties)) {
-            return $properties;
+        if (is_null($properties)) {
+            $connection = $this->getServiceLocator()->get('Omeka\Connection');
+            $qb = $connection->createQueryBuilder();
+            $qb
+                ->select([
+                    'DISTINCT property.id AS id',
+                    'CONCAT(vocabulary.prefix, ":", property.local_name) AS term',
+                    // Only the two first selects are needed, but some databases
+                    // require "order by" or "group by" value to be in the select.
+                    'vocabulary.id',
+                    'property.id',
+                ])
+                ->from('property', 'property')
+                ->innerJoin('property', 'vocabulary', 'vocabulary', 'property.vocabulary_id = vocabulary.id')
+                ->orderBy('vocabulary.id', 'asc')
+                ->addOrderBy('property.id', 'asc')
+                ->addGroupBy('property.id')
+            ;
+            $stmt = $connection->executeQuery($qb);
+            // Fetch by key pair is not supported by doctrine 2.0.
+            $properties = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            $properties = array_map('intval', array_column($properties, 'id', 'term'));
         }
 
-        $connection = $this->getServiceLocator()->get('Omeka\Connection');
-        $qb = $connection->createQueryBuilder();
-        $qb
-            ->select([
-                'DISTINCT property.id AS id',
-                'CONCAT(vocabulary.prefix, ":", property.local_name) AS term',
-                // Only the two first selects are needed, but some databases
-                // require "order by" or "group by" value to be in the select.
-                'vocabulary.id',
-                'property.id',
-            ])
-            ->from('property', 'property')
-            ->innerJoin('property', 'vocabulary', 'vocabulary', 'property.vocabulary_id = vocabulary.id')
-            ->orderBy('vocabulary.id', 'asc')
-            ->addOrderBy('property.id', 'asc')
-            ->addGroupBy('property.id')
-        ;
-        $stmt = $connection->executeQuery($qb);
-        // Fetch by key pair is not supported by doctrine 2.0.
-        $properties = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-        $properties = array_map('intval', array_column($properties, 'id', 'term'));
-        return $properties;
+        return $ids
+            ? array_intersect_key($properties, array_flip($ids))
+            : $properties;
     }
 }

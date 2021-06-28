@@ -42,10 +42,22 @@ class BatchEditFieldset extends Fieldset
                 ],
             ])
             ->add([
+                'name' => 'convert_literal_to_coordinates',
+                'type' => Element\Checkbox::class,
+                'options' => [
+                    'label' => 'Convert literal values to coordinates first', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'convert_literal_to_coordinates',
+                    // This attribute is required to make "batch edit all" working.
+                    'data-collection-action' => 'replace',
+                ],
+            ])
+            ->add([
                 'name' => 'from_properties',
                 'type' => PropertySelect::class,
                 'options' => [
-                    'label' => 'Source properties to create markers', // @translate
+                    'label' => 'Source properties to create markers or to convert from literal', // @translate
                     'term_as_value' => true,
                     'prepend_value_options' => [
                         'all' => '[All properties]', // @translate
