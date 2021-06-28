@@ -556,7 +556,7 @@ ON DUPLICATE KEY UPDATE
 SQL;
         $connection->executeUpdate($sql, $bind, $types);
 
-$sql = <<<SQL
+        $sql = <<<SQL
 UPDATE `value`
 SET
     `value`.`type` = "geometry:geography:coordinates"
@@ -642,7 +642,7 @@ $fromSql
 SQL;
         $connection->executeUpdate($sql, $bind, $types);
 
-$sql = <<<SQL
+        $sql = <<<SQL
 INSERT INTO `value`
     (`resource_id`, `property_id`, `value_resource_id`, `type`, `lang`, `value`, `uri`, `is_public`)
 SELECT DISTINCT

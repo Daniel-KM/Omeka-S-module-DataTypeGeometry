@@ -44,7 +44,7 @@ class BatchEditFieldset extends Fieldset
                         'coordinates_to_markers' => 'Copy coordinates to mapping markers', // @translate
                         'markers_to_coordinates' => 'Copy mapping markers to coordinates', // @translate
                     ],
-                    'empty_option' => '[No change]' // @translate
+                    'empty_option' => '[No change]', // @translate
                 ],
                 'attributes' => [
                     'id' => 'geometry_manage_coordinates_markers',
