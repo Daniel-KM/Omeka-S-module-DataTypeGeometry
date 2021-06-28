@@ -171,6 +171,7 @@ return [
     ],
     'form_elements' => [
         'invokables' => [
+            Form\BatchEditFieldset::class => Form\BatchEditFieldset::class,
             Form\ConfigForm::class => Form\ConfigForm::class,
             Form\SearchFieldset::class => Form\SearchFieldset::class,
         ],

@@ -8,6 +8,7 @@ if (!class_exists(\Generic\AbstractModule::class)) {
         : __DIR__ . '/src/Generic/AbstractModule.php';
 }
 
+use DataTypeGeometry\Form\BatchEditFieldset;
 use DataTypeGeometry\Form\ConfigForm;
 use DataTypeGeometry\Form\SearchFieldset;
 use DataTypeGeometry\Job\IndexGeometries;
@@ -138,6 +139,27 @@ class Module extends AbstractModule
             \Annotate\Form\QuickSearchForm::class,
             'form.add_elements',
             [$this, 'addFormElementsAnnotateQuickSearch']
+        );
+
+        $sharedEventManager->attach(
+            \Omeka\Form\ResourceBatchUpdateForm::class,
+            'form.add_elements',
+            [$this, 'formAddElementsResourceBatchUpdateForm']
+        );
+        $sharedEventManager->attach(
+            \Omeka\Form\ResourceBatchUpdateForm::class,
+            'form.add_input_filters',
+            [$this, 'formAddInputFiltersResourceBatchUpdateForm']
+        );
+        $sharedEventManager->attach(
+            'Omeka\Api\Adapter\ItemAdapter',
+            'api.preprocess_batch_update',
+            [$this, 'batchUpdatePreprocess']
+        );
+        $sharedEventManager->attach(
+            'Omeka\Api\Adapter\ItemAdapter',
+            'api.batch_update.post',
+            [$this, 'batchUpdatePost']
         );
     }
 
@@ -300,6 +322,110 @@ class Module extends AbstractModule
         }
 
         $event->setParam('filters', $filters);
+    }
+
+    public function formAddElementsResourceBatchUpdateForm(Event $event): void
+    {
+        if (!$this->isModuleActive('Mapping')) {
+            return;
+        }
+
+        /** @var \Omeka\Form\ResourceBatchUpdateForm $form */
+        $form = $event->getTarget();
+        $fieldset = $this->getServiceLocator()->get('FormElementManager')
+            ->get(BatchEditFieldset::class);
+        $form->add($fieldset);
+    }
+
+    public function formAddInputFiltersResourceBatchUpdateForm(Event $event): void
+    {
+        if (!$this->isModuleActive('Mapping')) {
+            return;
+        }
+
+        /** @var \Laminas\InputFilter\InputFilterInterface $inputFilter */
+        $inputFilter = $event->getParam('inputFilter');
+        $inputFilter->get('geometry')
+            ->add([
+                'name' => 'manage_coordinates_markers',
+                'required' => false,
+            ]);
+    }
+
+    public function batchUpdatePreprocess(Event $event): void
+    {
+        /** @var \Omeka\Api\Request $request */
+        $request = $event->getParam('request');
+        $post = $request->getContent();
+        $data = $event->getParam('data');
+        if (empty($post['geometry']['manage_coordinates_markers'])) {
+            $data['geometry'] = null;
+        } else {
+            $data['geometry'] = $post['geometry'];
+        }
+        $event->setParam('data', $data);
+    }
+
+    public function batchUpdatePost(Event $event): void
+    {
+        /** @var \Omeka\Api\Request $request */
+        $request = $event->getParam('request');
+        $data = $request->getContent();
+        if (empty($data['geometry']['manage_coordinates_markers'])) {
+            return;
+        }
+
+        $ids = (array) $request->getIds();
+        $ids = array_filter(array_map('intval', $ids));
+        if (empty($ids)) {
+            return;
+        }
+
+        if (!$this->isModuleActive('Mapping')) {
+            return;
+        }
+
+        // TODO Use the adapter to update values/mapping markers.
+        // $adapter = $event->getTarget();
+        /** @var \Doctrine\DBAL\Connection $connection */
+        $connection = $this->getServiceLocator()->get('Omeka\Connection');
+
+        // TODO Use the adapter.
+        switch ($data['geometry']['manage_coordinates_markers']) {
+            default:
+                return;
+
+            case 'coordinates_to_markers':
+                $sql = <<<SQL
+INSERT INTO `mapping_marker`
+    (`item_id`, `media_id`, `lat`, `lng`, `label`)
+SELECT DISTINCT
+    `value`.`resource_id`,
+    NULL,
+    SUBSTRING_INDEX(`value`.`value`, ",", 1),
+    SUBSTRING_INDEX(`value`.`value`, ",", -1),
+    NULL
+FROM `value`
+LEFT JOIN `mapping_marker`
+    ON `mapping_marker`.`item_id` = `value`.`resource_id`
+        AND CONCAT(`mapping_marker`.`lat`, ",", `mapping_marker`.`lng`) = `value`.`value`
+WHERE
+    `value`.`resource_id` IN (:resource_ids)
+    AND `value`.`type` = "geometry:geography:coordinates"
+    AND `mapping_marker`.`id` IS NULL
+;
+SQL;
+                $bind = ['resource_ids' => $ids];
+                $types = ['resource_ids' => $connection::PARAM_INT_ARRAY];
+                $connection->executeUpdate($sql, $bind, $types);
+                break;
+
+            case 'markers_to_coordinates':
+                break;
+
+            case 'sync':
+                break;
+        }
     }
 
     /**
