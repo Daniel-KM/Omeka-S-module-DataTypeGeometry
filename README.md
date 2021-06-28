@@ -5,12 +5,22 @@ Data type Geometry (module for Omeka S)
 > are available on [GitLab], which seems to respect users and privacy better
 > than the previous repository.__
 
-[Data type Geometry] is a module for [Omeka S] that adds two new data types for
-the properties: `geometry` and `geography`. It allows to manage points and areas
-on images and maps. It uses the [WKT] format and can use an external database.
+[Data type Geometry] is a module for [Omeka S] that adds three new data types for
+the properties: `coordinate`, `geometry` and `geography`. It allows to manage
+points and areas on images and maps.
+
+The datatype "Coordinates" uses the standard latitude/longitude, that is called
+nowadays "GPS" or even "Google coofdinates". The two other data types are
+managed with the standard [WKT] format.
 
 It is used by the module [Annotate Cartography], that allows to point markers
 and to highlight images and maps. This module can be used independantly too.
+
+It can be used with the module [Mapping]: a batch edit is added to convert
+literal data into geographical coordinates and vice-versa, so you can store
+markers as standard rdf data.
+
+It can use an external database for performance.
 
 
 Installation
@@ -25,7 +35,7 @@ See general end user documentation for [installing a module].
 
 * From the zip
 
-Download the last release [`DataTypeGeometry.zip`] from the list of releases
+Download the last release [DataTypeGeometry.zip] from the list of releases
 (the master does not contain the dependency), and uncompress it in the `modules`
 directory.
 
@@ -34,10 +44,8 @@ directory.
 If the module was installed from the source, rename the name of the folder of
 the module to `DataTypeGeometry`, go to the root of the module, and run:
 
-```
-    npm install
+```sh
 composer install --no-dev
-    gulp
 ```
 
 ### Omeka database or external database [work in progress]
@@ -70,8 +78,12 @@ mysql functions.
 The support for MariaDB, mySql and PostgreSql is provided though [doctrine2-spatial].
 
 
-Configuration
--------------
+Usage
+-----
+
+To use the new data types, select them for some template properties.
+To convert existing literal coordinates into geographic coordinates, use the
+"batch edit" process and select the appropriate options.
 
 ### Geometry
 
@@ -105,6 +117,22 @@ recommended to set it when it is the default one.
 multipoint, multiline and multipolygon). In that case, it’s recommended to use
 collections.
 
+### Geographic coordinates
+
+A geographic point is the latitude and longitude coordinates: `48.858252,2.294497`.
+In the user interface, this value is composed with two decimal values (`xsd:decimal`),
+separated by a `,`. In the database, it is stored the same and as a geographic
+WKT point. In the api, the value is an object with the two keys (see below),
+that can be used with the w3c geolocation api. The values are presented as
+strings to avoid issues with json implementations of clients.
+
+***Important***: Unlike the data type Geography, the order of values is latitude
+then longitude. WKT uses `Point(x y)`, so the representation of a geographic
+point is `Point(longitude latitude)`. The geographic point data type uses
+`latitude, longitude`, much more common for end users, in particular in
+historical data, in "coordinates GPS", in OpenStreetMap coordinates or in "Google
+map".
+
 ### JSON-LD and GeoJSON
 
 According to the [discussion] on the working group of JSON-LD and GeoJSON, the
@@ -114,8 +142,20 @@ The deprecated datatype `http://geovocab.org/geometry#asWKT` is no more used.
 
 ```json
 {
-    "@value": "POINT (2.294497 48.858252)",
-    "@type": "http://www.opengis.net/ont/geosparql#wktLiteral"
+    "dcterms:spatial": [
+        {
+            "@type": "http://www.opengis.net/ont/geosparql#wktLiteral",
+            "@value": "POINT (2.294497 48.858252)",
+
+        },
+        {
+            "@type": "geometry:geography:coordinates",
+            "@value": {
+                "latitude": "48.858252",
+                "longitude": "2.294497"
+            }
+        }
+    ]
 }
 ```
 
@@ -123,10 +163,10 @@ The deprecated datatype `http://geovocab.org/geometry#asWKT` is no more used.
 TODO
 ----
 
-- Remove doctrine:lexer from composer vendor.
-- Use the sub-types of geometries and use them eventually in a specific table
-  (the database engine can manage the generic geometry or each particular type).
-- Add a js to convert wkt into svg icon (via geojson/d3 or directly).
+- [ ] Remove doctrine:lexer from composer vendor.
+- [ ] Add a checkbox in resource form to append marker to map of module Mapping or a main option?
+- [ ] Add a button "select on map" in resource form to specify coordinates directly.
+- [ ] Add a js to convert wkt into svg icon (via geojson/d3 or directly).
 
 
 Warning
@@ -183,11 +223,12 @@ Copyright
 ---------
 
 * See `asset/vendor/` and `vendor/` for the copyright of the libraries.
-* Some portions are adapterd from the modules [Numeric data types] and [Neatline].
-* Copyright Daniel Berthereau, 2018, (see [Daniel-KM] on GitLab)
+* Some portions are adapted from the modules [Numeric data types] and [Neatline].
+* Copyright Daniel Berthereau, 2018-2021, (see [Daniel-KM] on GitLab)
 
 This module was built first for the French École des hautes études en sciences
-sociales [EHESS].
+sociales [EHESS]. The improvements were developed for the future digital library
+of the [Campus Condorcet].
 
 
 [Data type Geometry]: https://gitlab.com/Daniel-KM/Omeka-S-module-DataTypeGeometry
@@ -202,11 +243,13 @@ sociales [EHESS].
 [mySql 5.6.1]: https://dev.mysql.com/doc/relnotes/mysql/5.6/en/news-5-6-1.html
 [MariaDB 5.3.3]: https://mariadb.com/kb/en/library/mariadb-533-release-notes/
 [spatial support matrix]: https://mariadb.com/kb/en/library/mysqlmariadb-spatial-support-matrix/
-[`data_type_geometry`]: https://gitlab.com/Daniel-KM/Omeka-S-module-DataTypeGeometry/-/tree/master/data/install/schema.sql
-[`DataTypeGeometry.zip`]: https://gitlab.com/Daniel-KM/Omeka-S-module-DataTypeGeometry/-/releases
+[`data_type_geometry`]: https://gitlab.com/Daniel-KM/Omeka-S-module-DataTypeGeometry/-/blob/master/data/install/schema.sql#L1-10
+[`data_type_geography`]: https://gitlab.com/Daniel-KM/Omeka-S-module-DataTypeGeometry/-/blob/master/data/install/schema.sql#L11-20
+[DataTypeGeometry.zip]: https://gitlab.com/Daniel-KM/Omeka-S-module-DataTypeGeometry/-/releases
 [doctrine2-spatial]: https://github.com/creof/doctrine2-spatial/blob/HEAD/doc/index.md
 [`4326`]: https://epsg.io/4326
-[OGC standard]: http://www.opengeospatial.org/standards/geosparql
+[discussion]: https://github.com/json-ld/json-ld.org/issues/397
+[OGC standard]: https://www.ogc.org/standards/geosparql
 [module issues]: https://gitlab.com/Daniel-KM/Omeka-S-module-DataTypeGeometry/-/issues
 [CeCILL v2.1]: https://www.cecill.info/licences/Licence_CeCILL_V2.1-en.html
 [GNU/GPL]: https://www.gnu.org/licenses/gpl-3.0.html
@@ -215,5 +258,6 @@ sociales [EHESS].
 [Numeric data types]: https://github.com/omeka-s-modules/NumericDataTypes
 [Neatline]: https://github.com/performant-software/neatline-omeka-s
 [EHESS]: https://www.ehess.fr
+[Campus Condorcet]: https://campus-condorcet.fr
 [GitLab]: https://gitlab.com/Daniel-KM
 [Daniel-KM]: https://gitlab.com/Daniel-KM "Daniel Berthereau"
