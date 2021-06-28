@@ -1,38 +1,6 @@
 (function($) {
 
     /**
-     * Prepare the geometry datatypes for the main resource template.
-     *
-     * There is no event in resource-form.js and common/resource-form-templates.phtml,
-     * except the generic view.add.after and view.edit.after, so the default
-     * form is completed dynamically during the initial load.
-     */
-    var initGeometryDatatypes = function() {
-        var defaultSelectorAndFields = $('.resource-values.field.template .add-values.default-selector, #properties .resource-values div.default-selector');
-        appendGeometryDatatypes(defaultSelectorAndFields);
-    }
-
-    /**
-     * Append the configured datatypes to a list of element.
-     *
-     * @todo This is deprecated. To be removed.
-     */
-    var appendGeometryDatatypes = function(selector) {
-        if (geometryDatatypes.indexOf('geometry:geometry') !== -1) {
-            $('<a>', {'class': 'add-value button o-icon-geometry', 'href': '#', 'data-type': 'geometry:geometry'})
-                .text(Omeka.jsTranslate('Geometry'))
-                .appendTo(selector);
-            selector.append("\n");
-        }
-        if (geometryDatatypes.indexOf('geometry:geography') !== -1) {
-            $('<a>', {'class': 'add-value button o-icon-geography', 'href': '#', 'data-type': 'geometry:geography'})
-                .text(Omeka.jsTranslate('Geography'))
-                .appendTo(selector);
-            selector.append("\n");
-        }
-    };
-
-    /**
      * Check user input geometry.
      *
      * @param object element
@@ -186,9 +154,6 @@
         $('input.query-geo-around-unit').on('click', function(e) {
             radiusCheck($('input.query-geo-around-radius')[0]);
         });
-
-        // Initial load.
-        initGeometryDatatypes();
 
     });
 

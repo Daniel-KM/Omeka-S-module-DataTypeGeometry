@@ -82,8 +82,6 @@ class Module extends AbstractModule
             ? $this->modulePath() . '/data/install/schema-myisam.sql'
             :  $this->modulePath() . '/data/install/schema.sql';
         $this->execSqlFromFile($filepath);
-
-        $this->manageMainSettings('install');
     }
 
     public function attachListeners(SharedEventManagerInterface $sharedEventManager): void
@@ -93,25 +91,11 @@ class Module extends AbstractModule
             'Omeka\Controller\Admin\ItemSet',
             'Omeka\Controller\Admin\Media',
             \Annotate\Controller\Admin\AnnotationController::class,
+            'Omeka\Controller\Site\Item',
+            'Omeka\Controller\Site\ItemSet',
+            'Omeka\Controller\Site\Media',
+            \Annotate\Controller\Site\AnnotationController::class,
         ];
-        foreach ($controllers as $controller) {
-            // Manage the geometry data type.
-            $sharedEventManager->attach(
-                $controller,
-                'view.add.after',
-                [$this, 'prepareResourceForm']
-            );
-            $sharedEventManager->attach(
-                $controller,
-                'view.edit.after',
-                [$this, 'prepareResourceForm']
-            );
-        }
-
-        $controllers[] = 'Omeka\Controller\Site\Item';
-        $controllers[] = 'Omeka\Controller\Site\ItemSet';
-        $controllers[] = 'Omeka\Controller\Site\Media';
-        $controllers[] = \Annotate\Controller\Site\AnnotationController::class;
         foreach ($controllers as $controller) {
             // Display and filter the search for the advanced search pages.
             $sharedEventManager->attach(
@@ -151,25 +135,9 @@ class Module extends AbstractModule
         }
 
         $sharedEventManager->attach(
-            \Annotate\Controller\Admin\AnnotationController::class,
-            'view.browse.before',
-            [$this, 'prepareResourceForm']
-        );
-        $sharedEventManager->attach(
             \Annotate\Form\QuickSearchForm::class,
             'form.add_elements',
             [$this, 'addFormElementsAnnotateQuickSearch']
-        );
-
-        $sharedEventManager->attach(
-            \Omeka\Form\SettingForm::class,
-            'form.add_elements',
-            [$this, 'handleMainSettings']
-        );
-        $sharedEventManager->attach(
-            \Omeka\Form\SettingForm::class,
-            'form.add_input_filters',
-            [$this, 'handleMainSettingsFilters']
         );
     }
 
@@ -225,15 +193,6 @@ class Module extends AbstractModule
         $controller->messenger()->addSuccess($message);
     }
 
-    public function handleMainSettingsFilters(Event $event): void
-    {
-        $inputFilter = $event->getParam('inputFilter');
-        $inputFilter->get('datatypegeometry')->add([
-            'name' => 'datatypegeometry_buttons',
-            'required' => false,
-        ]);
-    }
-
     public function addFormElementsAnnotateQuickSearch(Event $event): void
     {
         $services = $this->getServiceLocator();
@@ -272,8 +231,16 @@ class Module extends AbstractModule
      */
     public function displayAdvancedSearch(Event $event): void
     {
-        // Load js.
-        $this->prepareResourceForm($event);
+        $view = $event->getTarget();
+        $assetUrl = $view->plugin('assetUrl');
+        $view->headLink()
+            ->appendStylesheet($assetUrl('css/data-type-geometry.css', 'DataTypeGeometry'));
+        $view->headScript()
+            ->appendFile($assetUrl('vendor/terraformer/terraformer-1.0.12.min.js', 'DataTypeGeometry'), 'text/javascript', ['defer' => 'defer'])
+            ->appendFile($assetUrl('vendor/terraformer-arcgis-parser/terraformer-arcgis-parser-1.1.0.min.js', 'DataTypeGeometry'), 'text/javascript', ['defer' => 'defer'])
+            ->appendFile($assetUrl('vendor/terraformer-wkt-parser/terraformer-wkt-parser-1.2.1.min.js', 'DataTypeGeometry'), 'text/javascript', ['defer' => 'defer'])
+            ->appendFile($assetUrl('js/data-type-geometry.js', 'DataTypeGeometry'), 'text/javascript', ['defer' => 'defer']);
+
         // There is no advanced search form, only a list of partials.
         $partials = $event->getParam('partials', []);
         $partials[] = 'common/advanced-search/data-type-geography';
@@ -333,22 +300,6 @@ class Module extends AbstractModule
         }
 
         $event->setParam('filters', $filters);
-    }
-
-    /**
-     * Prepare resource forms for geometry data type.
-     *
-     * @param Event $event
-     */
-    public function prepareResourceForm(Event $event): void
-    {
-        $view = $event->getTarget();
-        $assetUrl = $view->plugin('assetUrl');
-        $view->headScript()
-            ->appendFile($assetUrl('vendor/terraformer/terraformer-1.0.12.min.js', 'DataTypeGeometry'), 'text/javascript', ['defer' => 'defer'])
-            ->appendFile($assetUrl('vendor/terraformer-arcgis-parser/terraformer-arcgis-parser-1.1.0.min.js', 'DataTypeGeometry'), 'text/javascript', ['defer' => 'defer'])
-            ->appendFile($assetUrl('vendor/terraformer-wkt-parser/terraformer-wkt-parser-1.2.1.min.js', 'DataTypeGeometry'), 'text/javascript', ['defer' => 'defer'])
-            ->appendFile($assetUrl('js/data-type-geometry.js', 'DataTypeGeometry'), 'text/javascript', ['defer' => 'defer']);
     }
 
     /**

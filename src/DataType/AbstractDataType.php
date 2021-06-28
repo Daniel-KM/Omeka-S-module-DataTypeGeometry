@@ -15,15 +15,19 @@ abstract class AbstractDataType extends BaseAbstractDataType implements DataType
 
     public function getOptgroupLabel()
     {
-        return 'Cartography'; // @translate
+        return 'Geography / geometry'; // @translate
     }
 
     public function prepareForm(PhpRenderer $view): void
     {
+        $assetUrl = $view->plugin('assetUrl');
         $view->headLink()
-            ->appendStylesheet($view->assetUrl('css/data-type-geometry.css', 'DataTypeGeometry'));
+            ->appendStylesheet($assetUrl('css/data-type-geometry.css', 'DataTypeGeometry'));
         $view->headScript()
-            ->appendFile($view->assetUrl('js/data-type-geometry.js', 'DataTypeGeometry'), 'text/javascript', ['defer' => 'defer']);
+            ->appendFile($assetUrl('vendor/terraformer/terraformer-1.0.12.min.js', 'DataTypeGeometry'), 'text/javascript', ['defer' => 'defer'])
+            ->appendFile($assetUrl('vendor/terraformer-arcgis-parser/terraformer-arcgis-parser-1.1.0.min.js', 'DataTypeGeometry'), 'text/javascript', ['defer' => 'defer'])
+            ->appendFile($assetUrl('vendor/terraformer-wkt-parser/terraformer-wkt-parser-1.2.1.min.js', 'DataTypeGeometry'), 'text/javascript', ['defer' => 'defer'])
+            ->appendFile($assetUrl('js/data-type-geometry.js', 'DataTypeGeometry'), 'text/javascript', ['defer' => 'defer']);
     }
 
     public function isValid(array $valueObject)

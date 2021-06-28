@@ -1,5 +1,9 @@
 <?php declare(strict_types=1);
+
 namespace DataTypeGeometry;
+
+use Omeka\Mvc\Controller\Plugin\Messenger;
+use Omeka\Stdlib\Message;
 
 /**
  * @var Module $this
@@ -44,4 +48,12 @@ DROP INDEX `idx_value` ON `data_type_geometry`;
 CREATE SPATIAL INDEX `idx_value` ON `data_type_geometry` (`value`);
 SQL;
     $connection->exec($sql);
+
+    $settings->delete('datatypegeometry_buttons');
+
+    $messenger = new Messenger();
+    $message = new Message(
+        'The data types of this module are no longer automatically appended to resource forms. They should be added to selected properties via a template.' // @translate
+    );
+    $messenger->addWarning($message);
 }

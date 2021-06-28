@@ -172,7 +172,6 @@ return [
         'invokables' => [
             Form\ConfigForm::class => Form\ConfigForm::class,
             Form\SearchFieldset::class => Form\SearchFieldset::class,
-            Form\SettingsFieldset::class => Form\SettingsFieldset::class,
         ],
     ],
     'translator' => [
@@ -201,12 +200,6 @@ return [
     'datatypegeometry' => [
         'config' => [
             'datatypegeometry_locate_srid' => 4326,
-        ],
-        'settings' => [
-            'datatypegeometry_buttons' => [
-                'geometry:geography',
-                'geometry:geometry',
-            ],
         ],
     ],
 ];
