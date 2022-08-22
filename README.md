@@ -45,7 +45,9 @@ If the module was installed from the source, rename the name of the folder of
 the module to `DataTypeGeometry`, go to the root of the module, and run:
 
 ```sh
+npm install
 composer install --no-dev
+gulp
 ```
 
 ### Omeka database or external database [work in progress]
