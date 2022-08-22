@@ -140,7 +140,7 @@ UPDATE `value`
 SET `type` = "geometry:geometry"
 WHERE `type` = "geometry";
 SQL;
-        $this->connection->exec($sql);
+        $this->connection->executeStatement($sql);
         $this->logger->info(
             'Old data type "geometry" has been converted into "geometry:geometry".' // @translate
         );
@@ -179,7 +179,7 @@ SET `type` = "$dataType", `lang` = NULL, `value_resource_id` = NULL, `uri` = NUL
 WHERE `resource`.`resource_type` IN ($resourceTypes)
 AND `value`.`type` IN ("geometry:geometry", "geometry:geography");
 SQL;
-            $connection->exec($sql);
+            $connection->executeStatement($sql);
             $logger->info(new Message(
                 'All geometric values for %s have now the data type "%s".', // @translate
                 $resourceType, $dataType
@@ -205,7 +205,7 @@ WHERE EXISTS (
     AND `resource`.`resource_type` IN ($resourceTypes)
 );
 SQL;
-            $connection->exec($sql);
+            $connection->executeStatement($sql);
         }
 
         // When the values are forced to a data type, all data types are indexed
@@ -235,7 +235,7 @@ AND `value`.`type` IN ($dataTypes)
 AND `value`.`value` NOT LIKE "SRID%"
 ORDER BY `value`.`id` ASC;
 SQL;
-            $connection->exec($sql);
+            $connection->executeStatement($sql);
             $sql = <<<SQL
 INSERT INTO `$table` (`resource_id`, `property_id`, `value`)
 SELECT `resource_id`, `property_id`, GeomFromText(TRIM(SUBSTRING_INDEX(`value`, ';', -1)), SUBSTRING_INDEX(SUBSTRING_INDEX(`value`, ';', 1), '=', -1))
@@ -246,7 +246,7 @@ AND `value`.`type` IN ($dataTypes)
 AND `value`.`value` LIKE "SRID%"
 ORDER BY `value`.`id` ASC;
 SQL;
-            $connection->exec($sql);
+            $connection->executeStatement($sql);
         }
 
         $logger->info(new Message(
@@ -281,7 +281,7 @@ AND value.type IN ("geometry:geometry", "geometry:geography")
 AND value.property_id = $rdfValue;
 SQL;
 
-        $connection->exec($sql);
+        $connection->executeStatement($sql);
         // Set all media targets (via oa:hasSelector) wkt a geometry (only for
         // "rdf:value").
         $sql = <<<SQL
@@ -302,7 +302,7 @@ AND value.resource_id IN (
   ) AS w
 );
 SQL;
-        $connection->exec($sql);
+        $connection->executeStatement($sql);
         $logger->info(new Message(
             'All geometric values for cartographic annotation targets were updated according to their type (describe or locate).' // @translate
         ));
@@ -326,7 +326,7 @@ WHERE EXISTS (
     AND $table.property_id = $rdfValue
 );
 SQL;
-            $connection->exec($sql);
+            $connection->executeStatement($sql);
 
             // Index annotation targets.
             // Keep the existing srid in all cases, even for geometries.
@@ -342,7 +342,7 @@ AND value.property_id = $rdfValue
 AND value.value NOT LIKE "SRID%"
 ORDER BY value.id ASC;
 SQL;
-            $connection->exec($sql);
+            $connection->executeStatement($sql);
             $sql = <<<SQL
 INSERT INTO `$table` (resource_id, property_id, value)
 SELECT resource_id, property_id, GeomFromText(TRIM(SUBSTRING_INDEX(value, ';', -1)), SUBSTRING_INDEX(SUBSTRING_INDEX(value, ';', 1), '=', -1))
@@ -355,7 +355,7 @@ AND value.property_id = $rdfValue
 AND value.value LIKE "SRID%"
 ORDER BY value.id ASC;
 SQL;
-            $connection->exec($sql);
+            $connection->executeStatement($sql);
         }
 
         $logger->info(new Message(
@@ -414,8 +414,7 @@ AND (
 ORDER BY value.id ASC;
 SQL;
 
-            $stmt = $connection->query($sql);
-            $total = $stmt->fetchColumn();
+            $total = $connection->executeQuery($sql)->fetchOne();
 
             if (!$total) {
                 $logger->notice(new Message(

@@ -63,7 +63,7 @@ class Module extends AbstractModule
         $connection = $serviceLocator->get('Omeka\Connection');
         $sql = 'SHOW tables LIKE "data_type_geometry";';
         $stmt = $connection->query($sql);
-        $table = $stmt->fetchColumn();
+        $table = $stmt->fetchOne();
         if ($table) {
             $this->execSqlFromFile($this->modulePath() . '/data/install/uninstall-cartography.sql');
         }
@@ -525,6 +525,7 @@ class Module extends AbstractModule
         }
 
         // The single quote simplifies escaping of regex.
+        // TODO Don't use (?:xxx|yyy) for compatibility with mysql 5.6.
         $whereSql = <<<'SQL'
 WHERE
     `value`.`resource_id` IN (:resource_ids)
@@ -554,7 +555,7 @@ ON DUPLICATE KEY UPDATE
     `data_type_geography`.`id` = `data_type_geography`.`id`
 ;
 SQL;
-        $connection->executeUpdate($sql, $bind, $types);
+        $connection->executeStatement($sql, $bind, $types);
 
         $sql = <<<SQL
 UPDATE `value`
@@ -562,7 +563,7 @@ SET
     `value`.`type` = "geometry:geography:coordinates"
 $whereSql
 SQL;
-        $connection->executeUpdate($sql, $bind, $types);
+        $connection->executeStatement($sql, $bind, $types);
     }
 
     protected function copyCoordinatesToMarkers(array $ids, array $data): void
@@ -601,7 +602,7 @@ WHERE
     $sqlWhere
 ;
 SQL;
-        $connection->executeUpdate($sql, $bind, $types);
+        $connection->executeStatement($sql, $bind, $types);
     }
 
     protected function copyMarkersToCoordinates(array $ids, array $data): void
@@ -640,7 +641,7 @@ SELECT DISTINCT
     ST_GeomFromText(CONCAT("POINT(", `mapping_marker`.`lng`, " ", `mapping_marker`.`lat`, ")"), $srid)
 $fromSql
 SQL;
-        $connection->executeUpdate($sql, $bind, $types);
+        $connection->executeStatement($sql, $bind, $types);
 
         $sql = <<<SQL
 INSERT INTO `value`
@@ -656,7 +657,7 @@ SELECT DISTINCT
     1
 $fromSql
 SQL;
-        $connection->executeUpdate($sql, $bind, $types);
+        $connection->executeStatement($sql, $bind, $types);
     }
 
     /**
@@ -875,7 +876,7 @@ SQL;
      *
      * @return array Filtered associative array of ids by term.
      */
-    protected function getPropertyIds(?array $ids = null): array
+    protected function getPropertyIds(?array $terms = null): array
     {
         static $properties;
 
@@ -884,12 +885,8 @@ SQL;
             $qb = $connection->createQueryBuilder();
             $qb
                 ->select([
-                    'DISTINCT property.id AS id',
                     'CONCAT(vocabulary.prefix, ":", property.local_name) AS term',
-                    // Only the two first selects are needed, but some databases
-                    // require "order by" or "group by" value to be in the select.
-                    'vocabulary.id',
-                    'property.id',
+                    'property.id AS id'
                 ])
                 ->from('property', 'property')
                 ->innerJoin('property', 'vocabulary', 'vocabulary', 'property.vocabulary_id = vocabulary.id')
@@ -897,14 +894,11 @@ SQL;
                 ->addOrderBy('property.id', 'asc')
                 ->addGroupBy('property.id')
             ;
-            $stmt = $connection->executeQuery($qb);
-            // Fetch by key pair is not supported by doctrine 2.0.
-            $properties = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-            $properties = array_map('intval', array_column($properties, 'id', 'term'));
+            $properties = array_map('intval', $connection->executeQuery($qb)->fetchAllKeyValue());
         }
 
-        return $ids
-            ? array_intersect_key($properties, array_flip($ids))
+        return $terms
+            ? array_intersect_key($properties, array_flip($terms))
             : $properties;
     }
 }
