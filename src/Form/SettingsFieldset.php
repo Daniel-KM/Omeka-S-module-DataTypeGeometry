@@ -11,21 +11,23 @@ class SettingsFieldset extends Fieldset
 
     public function init(): void
     {
-        $this->add([
-            'name' => 'datatypegeometry_buttons',
-            'type' => Element\MultiCheckbox::class,
-            'options' => [
-                'label' => 'Buttons for resource forms', // @translate
-                'value_options' => [
-                    '' => 'None', // @translate
-                    'geometry:geography:coordinates' => 'Geographic coordinates', // @translate
-                    'geometry:geography' => 'Geography', // @translate
-                    'geometry:geometry' => 'Geometry', // @translate
+        $this
+            ->setAttribute('id', 'data-type-geometry')
+            ->add([
+                'name' => 'datatypegeometry_buttons',
+                'type' => Element\MultiCheckbox::class,
+                'options' => [
+                    'label' => 'Buttons for resource forms', // @translate
+                    'value_options' => [
+                        '' => 'None', // @translate
+                        'geometry:geography:coordinates' => 'Geographic coordinates', // @translate
+                        'geometry:geography' => 'Geography', // @translate
+                        'geometry:geometry' => 'Geometry', // @translate
+                    ],
                 ],
-            ],
-            'attributes' => [
-                'id' => 'datatypegeometry_buttons',
-            ],
-        ]);
+                'attributes' => [
+                    'id' => 'datatypegeometry_buttons',
+                ],
+            ]);
     }
 }
