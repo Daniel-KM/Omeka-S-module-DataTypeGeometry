@@ -264,9 +264,25 @@ SQL;
         // "geometry:geometry", and other wkt targets are "geometry:geography".
 
         $property = 'rdf:value';
-        $rdfValue = $api->searchOne('properties', ['term' => $property])->getContent()->id();
+        $rdfValue = $api->searchOne('properties', ['term' => $property])->getContent();
+        if (!$rdfValue) {
+            $this->logger->err(new Message(
+                'The property "rdf:value" was not found. Resinstall vocabulary "rdf".' // @translate
+            ));
+            return;
+        }
+        $rdfValue = $rdfValue->id();
+
         $property = 'oa:hasSelector';
-        $oaHasSelector = $api->searchOne('properties', ['term' => $property])->getContent()->id();
+        $oaHasSelector = $api->searchOne('properties', ['term' => $property])->getContent();
+        if (!$oaHasSelector) {
+            $this->logger->err(new Message(
+                'The property "oa:hasSelector" was not found. Resinstall vocabulary "OpenAnnotation".' // @translate
+            ));
+            return;
+        }
+        $oaHasSelector = $oaHasSelector->id();
+
         $defaultSrid = $this->getServiceLocator()->get('Omeka\Settings')
             ->get('datatypegeometry_locate_srid', 4236);
 
