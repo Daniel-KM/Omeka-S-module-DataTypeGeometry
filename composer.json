@@ -25,6 +25,18 @@
         {
             "type": "package",
             "package": {
+                "name": "creof/doctrine2-spatial",
+                "version": "1.2.1",
+                "dist": {
+                    "type": "zip",
+                    "url": "https://github.com/lepermislibre/doctrine2-spatial/archive/refs/heads/mysql-80-support-with-st-functions.zip",
+                    "reference": ""
+                }
+            }
+        },
+        {
+            "type": "package",
+            "package": {
                 "name": "terraformer/terraformer",
                 "type": "omeka-addon-asset",
                 "version": "1.0.12",
@@ -64,7 +76,7 @@
     ],
     "require": {
         "oomphinc/composer-installers-extender": "^2.0",
-        "creof/doctrine2-spatial": "^1.2",
+        "creof/doctrine2-spatial": "^1.2.1",
         "terraformer/terraformer": "1.0.12",
         "terraformer/terraformer-arcgis-parser": "1.1.0",
         "terraformer/terraformer-wkt-parser": "1.2.1"
