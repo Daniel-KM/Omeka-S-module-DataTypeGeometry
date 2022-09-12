@@ -1,8 +1,9 @@
 <?php declare(strict_types=1);
+
 namespace DataTypeGeometry\DataType;
 
 use Doctrine\ORM\QueryBuilder;
-use Omeka\Api\Adapter\AdapterInterface;
+use Omeka\Api\Adapter\AbstractEntityAdapter;
 
 trait QueryGeometryTrait
 {
@@ -31,11 +32,11 @@ trait QueryGeometryTrait
      * - ST_Distance_Sphere = ST_DistanceSphere => specific alias
      * - No ST_SetSRID
      *
-     * @param AdapterInterface $adapter
+     * @param AbstractEntityAdapter $adapter
      * @param QueryBuilder $qb
      * @param array $query
      */
-    public function buildQuery(AdapterInterface $adapter, QueryBuilder $qb, array $query): void
+    public function buildQuery(AbstractEntityAdapter $adapter, QueryBuilder $qb, array $query): void
     {
         if (empty($query['geo'])) {
             return;
@@ -75,13 +76,13 @@ trait QueryGeometryTrait
     }
 
     /**
-     * @param AdapterInterface $adapter
+     * @param AbstractEntityAdapter $adapter
      * @param QueryBuilder $qb
      * @param array $around
      * @param int $srid
      * @param string|int|null $geometryAlias
      */
-    protected function searchXy(AdapterInterface $adapter, QueryBuilder $qb, array $around, $srid, $geometryAlias): void
+    protected function searchXy(AbstractEntityAdapter $adapter, QueryBuilder $qb, array $around, $srid, $geometryAlias): void
     {
         $xLong = $adapter->createNamedParameter($qb, $around['x']);
         $yLat = $adapter->createNamedParameter($qb, $around['y']);
@@ -94,13 +95,13 @@ trait QueryGeometryTrait
     }
 
     /**
-     * @param AdapterInterface $adapter
+     * @param AbstractEntityAdapter $adapter
      * @param QueryBuilder $qb
      * @param array $around
      * @param int $srid
      * @param string|int|null $geometryAlias
      */
-    protected function searchAround(AdapterInterface $adapter, QueryBuilder $qb, array $around, $srid, $geometryAlias): void
+    protected function searchAround(AbstractEntityAdapter $adapter, QueryBuilder $qb, array $around, $srid, $geometryAlias): void
     {
         // With srid 4326 (Mercator), the radius should be in metre.
         $radiusMetre = $around['unit'] === 'km' ? $around['radius'] * 1000 : $around['radius'];
@@ -149,13 +150,13 @@ trait QueryGeometryTrait
     }
 
     /**
-     * @param AdapterInterface $adapter
+     * @param AbstractEntityAdapter $adapter
      * @param QueryBuilder $qb
      * @param array $box
      * @param int $srid
      * @param string|int|null $geometryAlias
      */
-    protected function searchBox(AdapterInterface $adapter, QueryBuilder $qb, array $box, $srid, $geometryAlias): void
+    protected function searchBox(AbstractEntityAdapter $adapter, QueryBuilder $qb, array $box, $srid, $geometryAlias): void
     {
         $x1 = $adapter->createNamedParameter($qb, $box[0]);
         $y1 = $adapter->createNamedParameter($qb, $box[1]);
@@ -182,26 +183,26 @@ trait QueryGeometryTrait
     }
 
     /**
-     * @param AdapterInterface $adapter
+     * @param AbstractEntityAdapter $adapter
      * @param QueryBuilder $qb
      * @param array $mapbox
      * @param int $srid
      * @param string|int|null $geometryAlias
      */
-    protected function searchMapBox(AdapterInterface $adapter, QueryBuilder $qb, array $mapbox, $srid, $geometryAlias): void
+    protected function searchMapBox(AbstractEntityAdapter $adapter, QueryBuilder $qb, array $mapbox, $srid, $geometryAlias): void
     {
         $box = [$mapbox[1], $mapbox[0], $mapbox[3], $mapbox[2]];
         $this->searchBox($adapter, $qb, $box, $srid, $geometryAlias);
     }
 
     /**
-     * @param AdapterInterface $adapter
+     * @param AbstractEntityAdapter $adapter
      * @param QueryBuilder $qb
      * @param string $wkt
      * @param int $srid
      * @param string|int|null $geometryAlias
      */
-    protected function searchZone(AdapterInterface $adapter, QueryBuilder $qb, $wkt, $srid, $geometryAlias): void
+    protected function searchZone(AbstractEntityAdapter $adapter, QueryBuilder $qb, $wkt, $srid, $geometryAlias): void
     {
         $geometry = $adapter->createNamedParameter($qb, $wkt);
         $srid = $adapter->createNamedParameter($qb, $srid);
@@ -217,12 +218,12 @@ trait QueryGeometryTrait
     /**
      * Join the geometry table.
      *
-     * @param AdapterInterface $adapter
+     * @param AbstractEntityAdapter $adapter
      * @param QueryBuilder $qb
      * @param array $query
      * @return string Alias used for the geometry table.
      */
-    protected function joinGeometry(AdapterInterface $adapter, QueryBuilder $qb, $query)
+    protected function joinGeometry(AbstractEntityAdapter $adapter, QueryBuilder $qb, $query)
     {
         $dataTypeClass = \DataTypeGeometry\Entity\DataTypeGeometry::class;
         return $this->joinGeo($adapter, $qb, $query, $dataTypeClass);
@@ -231,12 +232,12 @@ trait QueryGeometryTrait
     /**
      * Join the geography table.
      *
-     * @param AdapterInterface $adapter
+     * @param AbstractEntityAdapter $adapter
      * @param QueryBuilder $qb
      * @param array $query
      * @return string Alias used for the geography table.
      */
-    protected function joinGeography(AdapterInterface $adapter, QueryBuilder $qb, $query)
+    protected function joinGeography(AbstractEntityAdapter $adapter, QueryBuilder $qb, $query)
     {
         $dataTypeClass = \DataTypeGeometry\Entity\DataTypeGeography::class;
         return $this->joinGeo($adapter, $qb, $query, $dataTypeClass);
@@ -245,13 +246,13 @@ trait QueryGeometryTrait
     /**
      * Join the geography table.
      *
-     * @param AdapterInterface $adapter
+     * @param AbstractEntityAdapter $adapter
      * @param QueryBuilder $qb
      * @param array $query
      * @param string $dataTypeClass
      * @return string Alias used for the geography table.
      */
-    protected function joinGeo(AdapterInterface $adapter, QueryBuilder $qb, $query, $dataTypeClass)
+    protected function joinGeo(AbstractEntityAdapter $adapter, QueryBuilder $qb, $query, $dataTypeClass)
     {
         $alias = $adapter->createAlias();
         $property = $query['geo'][0]['property'] ?? null;
@@ -281,11 +282,11 @@ trait QueryGeometryTrait
     /**
      * Get a property id from a property term or an integer.
      *
-     * @param AdapterInterface $adapter
+     * @param AbstractEntityAdapter $adapter
      * @param string|int property
      * @return int
      */
-    protected function getPropertyId(AdapterInterface $adapter, $property)
+    protected function getPropertyId(AbstractEntityAdapter $adapter, $property)
     {
         if (empty($property)) {
             return 0;
