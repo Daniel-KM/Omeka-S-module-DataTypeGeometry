@@ -45,9 +45,7 @@ If the module was installed from the source, rename the name of the folder of
 the module to `DataTypeGeometry`, go to the root of the module, and run:
 
 ```sh
-npm install
 composer install --no-dev
-gulp
 ```
 
 ### Omeka database or external database [work in progress]
@@ -84,8 +82,17 @@ Usage
 -----
 
 To use the new data types, select them for some template properties.
+
+### Batch edit
+
 To convert existing literal coordinates into geographic coordinates, use the
 "batch edit" process and select the appropriate options.
+
+The literal value must be formatted with a dot `.` as decimal separator and a
+comma `,` to separate the latitude and the longitude. Spaces are ignored.
+
+So the value must be formatted `latitude, longitude` with latitude between
+-90 and +90 and the longitude between -180 and +180.
 
 ### Geometry
 
@@ -141,6 +148,7 @@ According to the [discussion] on the working group of JSON-LD and GeoJSON, the
 GeoJson cannot be used in all cases inside a JSON-LD. So the representation uses
 the data type `http://www.opengis.net/ont/geosparql#wktLiteral` of the [OGC standard].
 The deprecated datatype `http://geovocab.org/geometry#asWKT` is no more used.
+For coordinates, the data type is the api one, `geometry:geography:coordinates`.
 
 ```json
 {
@@ -165,10 +173,12 @@ The deprecated datatype `http://geovocab.org/geometry#asWKT` is no more used.
 TODO
 ----
 
-- [ ] Remove doctrine:lexer from composer vendor.
+- [x] Remove doctrine:lexer from composer vendor.
 - [ ] Add a checkbox in resource form to append marker to map of module Mapping or a main option?
 - [ ] Add a button "select on map" in resource form to specify coordinates directly.
 - [ ] Add a js to convert wkt into svg icon (via geojson/d3 or directly).
+- [ ] Upgrade terraformer to terraformer.js (need a precompiled js).
+- [ ] Rename api keys to "geometry", "geography", "geography:coordinates" for Omeka S v4?
 
 
 Warning
