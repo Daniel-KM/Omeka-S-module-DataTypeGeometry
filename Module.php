@@ -8,6 +8,7 @@ if (!class_exists(\Generic\AbstractModule::class)) {
         : __DIR__ . '/src/Generic/AbstractModule.php';
 }
 
+use DataTypeGeometry\DataType\Geography;
 use DataTypeGeometry\Form\BatchEditFieldset;
 use DataTypeGeometry\Form\ConfigForm;
 use DataTypeGeometry\Form\SearchFieldset;
@@ -442,7 +443,7 @@ class Module extends AbstractModule
             $data['geometry']['to_property_id'] = $to;
 
             $data['geometry']['srid'] = $this->getServiceLocator()->get('Omeka\Settings')
-                ->get('datatypegeometry_locate_srid', 4326);
+                ->get('datatypegeometry_locate_srid', Geography::DEFAULT_SRID);
         }
         $event->setParam('data', $data);
     }
@@ -471,7 +472,7 @@ class Module extends AbstractModule
             $data['geometry']['from_properties_ids'] = $this->getPropertyIds($data['geometry']['from_properties']);
             $data['geometry']['to_property_id'] = $this->getPropertyId($data['geometry']['to_property']);
             $data['geometry']['srid'] = $this->getServiceLocator()->get('Omeka\Settings')
-                ->get('datatypegeometry_locate_srid', 4326);
+                ->get('datatypegeometry_locate_srid', Geography::DEFAULT_SRID);
         }
 
         if (!empty($data['geometry']['convert_literal_to_coordinates'])) {
@@ -510,7 +511,7 @@ class Module extends AbstractModule
         /** @var \Doctrine\DBAL\Connection $connection */
         $connection = $this->getServiceLocator()->get('Omeka\Connection');
 
-        $srid = $data['geometry']['srid'] ?? 4326;
+        $srid = $data['geometry']['srid'] ?? Geography::DEFAULT_SRID;
 
         $bind = ['resource_ids' => $ids];
         $types = ['resource_ids' => $connection::PARAM_INT_ARRAY];
@@ -610,7 +611,7 @@ SQL;
         /** @var \Doctrine\DBAL\Connection $connection */
         $connection = $this->getServiceLocator()->get('Omeka\Connection');
 
-        $srid = $data['geometry']['srid'] ?? 4326;
+        $srid = $data['geometry']['srid'] ?? Geography::DEFAULT_SRID;
 
         $bind = [
             'resource_ids' => $ids,
@@ -685,7 +686,7 @@ SQL;
         $services = $this->getServiceLocator();
         $entityManager = $services->get('Omeka\EntityManager');
         $srid = $services->get('Omeka\Settings')
-            ->get('datatypegeometry_locate_srid', 4326);
+            ->get('datatypegeometry_locate_srid', Geography::DEFAULT_SRID);
 
         foreach ($this->getGeometryDataTypes() as $dataTypeName => $dataType) {
             // TODO Improve criteria when the types are mixed in a property.

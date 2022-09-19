@@ -2,6 +2,7 @@
 
 namespace DataTypeGeometry\Form;
 
+use DataTypeGeometry\DataType\Geography;
 use Laminas\Form\Element;
 use Laminas\Form\Form;
 
@@ -23,7 +24,7 @@ It is displayed in the json-ld output.', // @translate
                 'min' => 0,
                 'max' => 99999,
                 'step' => 1,
-                'placeholder' => 4326,
+                'placeholder' => Geography::DEFAULT_SRID,
             ],
         ]);
 

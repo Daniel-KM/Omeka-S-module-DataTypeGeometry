@@ -10,6 +10,7 @@ class Geography extends AbstractDataType
 {
     /**
      * The default srid.
+     *
      * @link http://www.opengis.net/def/crs/OGC/1.3/CRS84
      * @link https://epsg.io/4326
      *

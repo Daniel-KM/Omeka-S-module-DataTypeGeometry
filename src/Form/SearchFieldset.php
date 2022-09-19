@@ -2,6 +2,7 @@
 
 namespace DataTypeGeometry\Form;
 
+use DataTypeGeometry\DataType\Geography;
 use Laminas\Form\Element;
 use Laminas\Form\Fieldset;
 
@@ -127,7 +128,7 @@ class SearchFieldset extends Fieldset
             'type' => Element\Hidden::class,
             'attributes' => [
                 'id' => 'geo-srid',
-                'value' => 4326,
+                'value' => Geography::DEFAULT_SRID,
             ],
         ]);
     }
