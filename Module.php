@@ -183,12 +183,12 @@ class Module extends AbstractModule
         $sharedEventManager->attach(
             'Omeka\Api\Adapter\ItemAdapter',
             'api.preprocess_batch_update',
-            [$this, 'batchUpdatePreprocess']
+            [$this, 'handleResourceBatchUpdatePreprocess']
         );
         $sharedEventManager->attach(
             'Omeka\Api\Adapter\ItemAdapter',
             'api.batch_update.post',
-            [$this, 'batchUpdatePost']
+            [$this, 'handleResourceBatchUpdatePost']
         );
     }
 
@@ -402,7 +402,10 @@ class Module extends AbstractModule
             ]);
     }
 
-    public function batchUpdatePreprocess(Event $event): void
+    /**
+     * Clean params for batch update.
+     */
+    public function handleResourceBatchUpdatePreprocess(Event $event): void
     {
         /** @var \Omeka\Api\Request $request */
         $request = $event->getParam('request');
@@ -448,7 +451,15 @@ class Module extends AbstractModule
         $event->setParam('data', $data);
     }
 
-    public function batchUpdatePost(Event $event): void
+    /**
+     * Process action on batch update (all or partial) via direct sql.
+     *
+     * Data may need to be reindexed if a module like Search is used, even if
+     * the results are probably the same with a simple trimming.
+     *
+     * @param Event $event
+     */
+    public function handleResourceBatchUpdatePost(Event $event): void
     {
         /** @var \Omeka\Api\Request $request */
         $request = $event->getParam('request');
@@ -486,7 +497,7 @@ class Module extends AbstractModule
         // TODO Use the adapter to update values/mapping markers.
         // $adapter = $event->getTarget();
 
-        $manage = $data['geometry']['manage_coordinates_markers'];
+        $manage = $data['geometry']['manage_coordinates_markers'] ?? null;
         switch ($manage) {
             default:
                 return;
