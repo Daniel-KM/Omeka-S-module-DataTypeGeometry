@@ -223,10 +223,9 @@ trait QueryGeometryTrait
      * @param array $query
      * @return string Alias used for the geometry table.
      */
-    protected function joinGeometry(AbstractEntityAdapter $adapter, QueryBuilder $qb, $query)
+    protected function joinGeometry(AbstractEntityAdapter $adapter, QueryBuilder $qb, $query): string
     {
-        $dataTypeClass = \DataTypeGeometry\Entity\DataTypeGeometry::class;
-        return $this->joinGeo($adapter, $qb, $query, $dataTypeClass);
+        return $this->joinGeo($adapter, $qb, $query, \DataTypeGeometry\Entity\DataTypeGeometry::class);
     }
 
     /**
@@ -237,10 +236,9 @@ trait QueryGeometryTrait
      * @param array $query
      * @return string Alias used for the geography table.
      */
-    protected function joinGeography(AbstractEntityAdapter $adapter, QueryBuilder $qb, $query)
+    protected function joinGeography(AbstractEntityAdapter $adapter, QueryBuilder $qb, $query): string
     {
-        $dataTypeClass = \DataTypeGeometry\Entity\DataTypeGeography::class;
-        return $this->joinGeo($adapter, $qb, $query, $dataTypeClass);
+        return $this->joinGeo($adapter, $qb, $query, \DataTypeGeometry\Entity\DataTypeGeography::class);
     }
 
     /**
@@ -252,7 +250,7 @@ trait QueryGeometryTrait
      * @param string $dataTypeClass
      * @return string Alias used for the geography table.
      */
-    protected function joinGeo(AbstractEntityAdapter $adapter, QueryBuilder $qb, $query, $dataTypeClass)
+    protected function joinGeo(AbstractEntityAdapter $adapter, QueryBuilder $qb, $query, $dataTypeClass): string
     {
         $alias = $adapter->createAlias();
         $property = $query['geo'][0]['property'] ?? null;
@@ -286,7 +284,7 @@ trait QueryGeometryTrait
      * @param string|int property
      * @return int
      */
-    protected function getPropertyId(AbstractEntityAdapter $adapter, $property)
+    protected function getPropertyId(AbstractEntityAdapter $adapter, $property): int
     {
         if (empty($property)) {
             return 0;

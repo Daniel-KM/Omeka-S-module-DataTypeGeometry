@@ -52,7 +52,7 @@ class Geography extends AbstractDataType
     //         : false;
     // }
 
-    public function getEntityClass()
+    public function getEntityClass(): string
     {
         return \DataTypeGeometry\Entity\DataTypeGeography::class;
     }

@@ -29,7 +29,7 @@ class Geometry extends AbstractDataType
         return $view->formTextarea($element);
     }
 
-    public function getEntityClass()
+    public function getEntityClass(): string
     {
         return \DataTypeGeometry\Entity\DataTypeGeometry::class;
     }

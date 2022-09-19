@@ -164,6 +164,8 @@ class Module extends AbstractModule
             'view.layout',
             [$this, 'addAdminResourceHeaders']
         );
+
+        // Extend the batch edit form via js.
         $sharedEventManager->attach(
             '*',
             'view.batch_edit.before',
@@ -179,7 +181,8 @@ class Module extends AbstractModule
             'form.add_input_filters',
             [$this, 'formAddInputFiltersResourceBatchUpdateForm']
         );
-        // TODO The conversion to coordinates can be done for other resources.
+
+        // TODO The conversion to coordinates can be done for other resources but the module Mapping doesn't manage them.
         $sharedEventManager->attach(
             'Omeka\Api\Adapter\ItemAdapter',
             'api.preprocess_batch_update',

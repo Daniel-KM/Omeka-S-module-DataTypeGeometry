@@ -95,7 +95,7 @@ abstract class AbstractDataType extends BaseAbstractDataType implements DataType
      * @param string $value
      * @return array|null
      */
-    public function parseGeometry($value)
+    public function parseGeometry($value): ?array
     {
         $value = strtoupper((string) $value);
         try {
@@ -107,7 +107,7 @@ abstract class AbstractDataType extends BaseAbstractDataType implements DataType
         return $geometry;
     }
 
-    abstract public function getEntityClass();
+    abstract public function getEntityClass(): string;
 
     abstract public function getGeometryFromValue($value);
 }
