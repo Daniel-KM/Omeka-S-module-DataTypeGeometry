@@ -7,71 +7,71 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-06-28 00:00+0000\n"
-"PO-Revision-Date: 2021-06-28 00:00+0000\n"
+"POT-Creation-Date: 2022-12-26 00:00+0000\n"
+"PO-Revision-Date: 2023-01-02 10:37+0100\n"
+"Last-Translator: Daniel Berthereau <Daniel.fr@Berthereau.net>\n"
+"Language-Team: \n"
 "Language: fr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Last-Translator: Daniel Berthereau <Daniel.fr@Berthereau.net>\n"
-"Language-Team: \n"
-"X-Generator: Poedit 3.0\n"
+"X-Generator: Poedit 2.4.2\n"
 
-#: Module.php:198
+#: Module.php:201
 msgid ""
 "Use \"Batch edit items\" to convert coordinates to/from mapping markers "
 "(require module Mapping)."
 msgstr ""
 
-#: Module.php:201
+#: Module.php:204
 msgid "The jobs below are useless without module Cartography."
 msgstr ""
 
-#: Module.php:203
+#: Module.php:206
 msgid ""
 "Reindex geometries or resources and annotations as geometry or geography."
 msgstr ""
 
-#: Module.php:226
+#: Module.php:229
 msgid "Process"
 msgstr "Traitement"
 
-#: Module.php:324
+#: Module.php:327
 msgid "Geographic coordinates"
 msgstr "Coordonnées géographiques"
 
-#: Module.php:326
+#: Module.php:329
 #, php-format
 msgid "Within %1$s %2$s of point %3$s %4$s"
 msgstr "Dans %1$s %2$s du point %3$s %4$s"
 
-#: Module.php:330
+#: Module.php:333
 msgid "Geometric coordinates"
 msgstr "Coordonnées géométriques"
 
-#: Module.php:332
+#: Module.php:335
 #, php-format
 msgid "Within %1$s pixels of point x: %2$s, y: %3$s)"
 msgstr "Dans %1$s pixels du point x : %2$s, y : %3$s)"
 
-#: Module.php:336
+#: Module.php:339
 msgid "Map box"
 msgstr "Boîte"
 
-#: Module.php:338 Module.php:344
+#: Module.php:341 Module.php:347
 #, php-format
 msgid "Within box %1$s,%2$s/%3$s,%4$s"
 msgstr "Dans la boîte %1$s,%2$s/%3$s,%4$s"
 
-#: Module.php:342
+#: Module.php:345
 msgid "Box"
 msgstr "Boîte"
 
-#: Module.php:348
+#: Module.php:351
 msgid "Within area"
 msgstr "Dans une zone"
 
-#: Module.php:351
+#: Module.php:354
 msgid "Within zone"
 msgstr "Dans la zone"
 
@@ -79,21 +79,40 @@ msgstr "Dans la zone"
 msgid "Value must be valid coordinates (latitude and longitude)"
 msgstr "Les valeurs doivent re des coordonnées valides (latitude et longitude)"
 
-#: src/Generic/AbstractModule.php:66
+#: src/Generic/AbstractModule.php:80 src/Generic/AbstractModule.php:774
 #, php-format
 msgid "This module requires the module \"%s\"."
 msgstr "Ce module requiert le module \"%s\"."
 
-#: src/Generic/AbstractModule.php:73
+#: src/Generic/AbstractModule.php:87
 #, php-format
 msgid "This module requires modules \"%s\"."
 msgstr "Ce module requiert les modules \"%s\"."
 
-#: src/Generic/AbstractModule.php:80
+#: src/Generic/AbstractModule.php:94
 msgid "This module has resources that cannot be installed."
 msgstr "Ce module a des ressources qui ne peuvent pas être installées."
 
-#: src/Generic/AbstractModule.php:707
+#: src/Generic/AbstractModule.php:101
+msgid ""
+"This module cannot install its tables, because they exist already. Try to "
+"remove them first."
+msgstr ""
+"Ce module ne peut pas installer ses tables car elles existent déjà. Essayez "
+"de les supprimer manuellement."
+
+#: src/Generic/AbstractModule.php:362
+#, php-format
+msgid "The module removed tables \"%s\" from a previous broken install."
+msgstr ""
+"Le module a supprimé les tables « %s » depuis une installation échouée."
+
+#: src/Generic/AbstractModule.php:769
+#, php-format
+msgid "This module requires the module \"%1$s\", version %2$s or above."
+msgstr "Ce module requiert le module « %1$s », version %2$s ou supérieure."
+
+#: src/Generic/AbstractModule.php:866
 #, php-format
 msgid ""
 "The module \"%s\" was automatically deactivated because the dependencies are "
@@ -102,24 +121,24 @@ msgstr ""
 "Le module \"%s\" a été automatiquement désactivé car ses dépendances ne sont "
 "plus disponibles."
 
-#: data/scripts/upgrade.php:40
+#: data/scripts/upgrade.php:38
 msgid "You should reindex your geometries in the config of this module."
 msgstr ""
 
-#: data/scripts/upgrade.php:56
+#: data/scripts/upgrade.php:55
 msgid ""
 "A new datatype has been added to manage geographic coordinates (latitude/"
 "longitude). It can manage be used as a source for the markers for the module "
 "Mapping too. A batch edit process is added to convert them."
 msgstr ""
 
-#: data/scripts/upgrade.php:60
+#: data/scripts/upgrade.php:59
 msgid ""
 "The data types of this module are no longer automatically appended to "
 "resource forms. They should be added to selected properties via a template."
 msgstr ""
 
-#: Module.php:73
+#: Module.php:74
 msgid ""
 "Your database does not support advanced spatial search. See the minimum "
 "requirements in readme."
@@ -131,14 +150,165 @@ msgid ""
 "common cases. See the minimum requirements in readme."
 msgstr ""
 
-#: Module.php:227
+#: Module.php:230
 msgid "No job launched."
 msgstr "Aucune tâche lancée."
 
-#: Module.php:238
+#: Module.php:241
 #, php-format
 msgid "Processing in the background (%sjob #%d%s)"
 msgstr ""
+
+#: src/Job/IndexGeometries.php:51
+msgid "Indexing geometries stopped: no mode selected."
+msgstr ""
+
+#: src/Job/IndexGeometries.php:132
+msgid ""
+"Tables \"data_type_geometry\" and \"data_type_geography\" were truncated."
+msgstr ""
+
+#: src/Job/IndexGeometries.php:145
+msgid ""
+"Old data type \"geometry\" has been converted into \"geometry:geometry\"."
+msgstr ""
+
+#: src/Job/IndexGeometries.php:184
+#, php-format
+msgid "All geometric values for %s have now the data type \"%s\"."
+msgstr ""
+
+#: src/Job/IndexGeometries.php:253
+msgid "Geometries were indexed."
+msgstr ""
+
+#: src/Job/IndexGeometries.php:270
+msgid ""
+"The property \"rdf:value\" was not found. Resinstall vocabulary \"rdf\"."
+msgstr ""
+
+#: src/Job/IndexGeometries.php:280
+msgid ""
+"The property \"oa:hasSelector\" was not found. Resinstall vocabulary "
+"\"OpenAnnotation\"."
+msgstr ""
+
+#: src/Job/IndexGeometries.php:323
+msgid ""
+"All geometric values for cartographic annotation targets were updated "
+"according to their type (describe or locate)."
+msgstr ""
+
+#: src/Job/IndexGeometries.php:378
+msgid "Geometries were indexed for annotation targets."
+msgstr ""
+
+#: src/Job/IndexGeometries.php:390
+msgid ""
+"Cannot process: there are errors in your original values. Try to fix them "
+"first."
+msgstr ""
+
+#: src/Job/IndexGeometries.php:437
+#, php-format
+msgid "There seems no issues in %s."
+msgstr ""
+
+#: src/Job/IndexGeometries.php:468
+#, php-format
+msgid "These %d %s have issues."
+msgstr ""
+
+#: src/Job/IndexGeometries.php:504
+#, php-format
+msgid "%d bad \"linestring()\" were replaced by \"point()\"."
+msgstr ""
+
+#: src/Job/IndexGeometries.php:509
+msgid "No bad \"linestring()\" found."
+msgstr ""
+
+#: src/Doctrine/PHP/Types/Geometry/Geometry.php:73
+#: src/Doctrine/PHP/Types/Geography/Geography.php:71
+msgid "Invalid geometry."
+msgstr "Géométrie invalide."
+
+#: src/Doctrine/PHP/Types/Geometry/Geometry.php:187
+#: src/Doctrine/PHP/Types/Geography/Geography.php:177
+#: src/DataType/Geometry.php:46
+msgid "Empty geometry."
+msgstr "Géométrie vide."
+
+#: src/Form/ConfigForm.php:17
+msgid "Spatial reference id (Srid) for Locate"
+msgstr ""
+
+#: src/Form/ConfigForm.php:18
+msgid ""
+"The Srid allows to take the curvature of the Earth into account for map.\n"
+"Recommended: 0 or 4326.\n"
+"It is displayed in the json-ld output."
+msgstr ""
+
+#: src/Form/ConfigForm.php:35
+msgid "Process job in background"
+msgstr ""
+
+#: src/Form/ConfigForm.php:38
+msgid "Reindex resources without update of values"
+msgstr ""
+
+#: src/Form/ConfigForm.php:39
+msgid "Set resources as geometry"
+msgstr ""
+
+#: src/Form/ConfigForm.php:40
+msgid "Set resources as geography"
+msgstr ""
+
+#: src/Form/ConfigForm.php:41
+msgid "Reindex annotations without update of values"
+msgstr ""
+
+#: src/Form/ConfigForm.php:42
+msgid "Set annotations as geometry"
+msgstr ""
+
+#: src/Form/ConfigForm.php:43
+msgid "Set annotations as geography"
+msgstr ""
+
+#: src/Form/ConfigForm.php:44
+msgid "Annotation targets (geometry if image, geography if map)"
+msgstr ""
+
+#: src/Form/ConfigForm.php:45
+msgid "Basic check any geo value well-formedness"
+msgstr ""
+
+#: src/Form/ConfigForm.php:46
+msgid "Basic check geometries well-formedness"
+msgstr ""
+
+#: src/Form/ConfigForm.php:47
+msgid "Basic check geographies well-formedness"
+msgstr ""
+
+#: src/Form/ConfigForm.php:48
+msgid "Replace bad linestrings by points"
+msgstr ""
+
+#: src/Form/ConfigForm.php:49
+msgid "Remove all indexes"
+msgstr ""
+
+#: src/Form/ConfigForm.php:50
+msgid "Upgrade old base"
+msgstr ""
+
+#: src/Form/ConfigForm.php:65
+msgid "Run in background"
+msgstr "Lancer en arrière-plan"
 
 #: src/Form/BatchEditFieldset.php:16
 msgid "Geometry and geography"
@@ -180,168 +350,59 @@ msgstr "Choisir des propriétés…"
 msgid "Property where to copy markers"
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:10
-msgid "Data Type Geometry"
-msgstr "Type de données Géométrie"
-
-#: src/Form/SettingsFieldset.php:18
-msgid "Buttons for resource forms"
-msgstr ""
-
-#: src/Form/SettingsFieldset.php:22 src/DataType/Geography.php:27
-#: config/module.config.php:191
-msgid "Geography"
-msgstr "Géographie"
-
-#: src/Form/SettingsFieldset.php:23 src/DataType/Geometry.php:18
-#: config/module.config.php:192
-msgid "Geometry"
-msgstr "Géométrie"
-
-#: src/Form/ConfigForm.php:16
-msgid "Spatial reference id (Srid) for Locate"
-msgstr ""
-
-#: src/Form/ConfigForm.php:17
-msgid ""
-"The Srid allows to take the curvature of the Earth into account for map.\n"
-"Recommended: 0 or 4326.\n"
-"It is displayed in the json-ld output."
-msgstr ""
-
-#: src/Form/ConfigForm.php:34
-msgid "Process job in background"
-msgstr ""
-
-#: src/Form/ConfigForm.php:37
-msgid "Reindex resources without update of values"
-msgstr ""
-
-#: src/Form/ConfigForm.php:38
-msgid "Set resources as geometry"
-msgstr ""
-
-#: src/Form/ConfigForm.php:39
-msgid "Set resources as geography"
-msgstr ""
-
-#: src/Form/ConfigForm.php:40
-msgid "Reindex annotations without update of values"
-msgstr ""
-
-#: src/Form/ConfigForm.php:41
-msgid "Set annotations as geometry"
-msgstr ""
-
-#: src/Form/ConfigForm.php:42
-msgid "Set annotations as geography"
-msgstr ""
-
-#: src/Form/ConfigForm.php:43
-msgid "Annotation targets (geometry if image, geography if map)"
-msgstr ""
-
-#: src/Form/ConfigForm.php:44
-msgid "Basic check any geo value well-formedness"
-msgstr ""
-
-#: src/Form/ConfigForm.php:45
-msgid "Basic check geometries well-formedness"
-msgstr ""
-
-#: src/Form/ConfigForm.php:46
-msgid "Basic check geographies well-formedness"
-msgstr ""
-
-#: src/Form/ConfigForm.php:47
-msgid "Replace bad linestrings by points"
-msgstr ""
-
-#: src/Form/ConfigForm.php:48
-msgid "Remove all indexes"
-msgstr ""
-
-#: src/Form/ConfigForm.php:49
-msgid "Upgrade old base"
-msgstr ""
-
-#: src/Form/ConfigForm.php:64
-msgid "Run in background"
-msgstr "Lancer en arrière-plan"
-
-#: src/Form/SearchFieldset.php:23
+#: src/Form/SearchFieldset.php:24
 msgid "Around a point"
 msgstr "Autour d’un point"
 
-#: src/Form/SearchFieldset.php:32 src/Form/SearchFieldset.php:40
+#: src/Form/SearchFieldset.php:33 src/Form/SearchFieldset.php:41
 msgid "Latitude"
 msgstr "Latitude"
 
-#: src/Form/SearchFieldset.php:49 src/Form/SearchFieldset.php:57
-#: src/Form/SearchFieldset.php:58
+#: src/Form/SearchFieldset.php:50 src/Form/SearchFieldset.php:58
+#: src/Form/SearchFieldset.php:59
 msgid "Longitude"
 msgstr "Longitude"
 
-#: src/Form/SearchFieldset.php:66 src/Form/SearchFieldset.php:74
-#: src/Form/SearchFieldset.php:75
+#: src/Form/SearchFieldset.php:67 src/Form/SearchFieldset.php:75
+#: src/Form/SearchFieldset.php:76
 msgid "Radius"
 msgstr "Rayon"
 
-#: src/Form/SearchFieldset.php:83 src/Form/SearchFieldset.php:92
+#: src/Form/SearchFieldset.php:84 src/Form/SearchFieldset.php:93
 msgid "Unit"
 msgstr "Unité"
 
-#: src/Form/SearchFieldset.php:85
+#: src/Form/SearchFieldset.php:86
 msgid "kilometres"
 msgstr "kilomètres"
 
-#: src/Form/SearchFieldset.php:86
+#: src/Form/SearchFieldset.php:87
 msgid "metres"
 msgstr "mètres"
 
-#: src/Form/SearchFieldset.php:93
+#: src/Form/SearchFieldset.php:94
 msgid "Unit of the radius for geographic point"
 msgstr ""
 
-#: src/Form/SearchFieldset.php:101
+#: src/Form/SearchFieldset.php:102
 msgid "Inside a box"
 msgstr "Dans une boîte"
 
-#: src/Form/SearchFieldset.php:106
+#: src/Form/SearchFieldset.php:107
 msgid "Top left latitude longitude Bottom right latitude longitude"
 msgstr ""
 
-#: src/Form/SearchFieldset.php:107
+#: src/Form/SearchFieldset.php:108
 msgid "Rectangle box with two opposite geo-coordinates"
 msgstr "Boîte rectangulaire avec les coordonnées de deux angles opposés"
 
-#: src/Form/SearchFieldset.php:115
+#: src/Form/SearchFieldset.php:116
 msgid "Within an area"
 msgstr "Dans une zone"
 
-#: src/Form/SearchFieldset.php:121
+#: src/Form/SearchFieldset.php:122
 msgid "WKT (well-known text that represents a geometry)"
 msgstr "WKT (Well-Known Text représentant une géométrie"
-
-#: src/DataType/Geometry.php:46
-#: src/Doctrine/PHP/Types/Geometry/Geometry.php:187
-#: src/Doctrine/PHP/Types/Geography/Geography.php:177
-msgid "Empty geometry."
-msgstr "Géométrie vide."
-
-#: src/DataType/Geometry.php:55
-#, php-format
-msgid "Invalid geometry: %s"
-msgstr "Géométrie invalide : %s"
-
-#: src/DataType/Geography.php:68
-msgid "Empty geography."
-msgstr "Géographie vide."
-
-#: src/DataType/Geography.php:77
-#, php-format
-msgid "Invalid geography: %s"
-msgstr "Géographie invalide : %s"
 
 #: src/DataType/GeographyCoordinates.php:132
 msgid "Empty geographic coordinates."
@@ -352,72 +413,31 @@ msgstr "Coordonnées géographiques vides."
 msgid "Invalid geographic coordinates: %s"
 msgstr "Coordonnées géographiques invalides : %s"
 
+#: src/DataType/Geography.php:28 config/module.config.php:191
+msgid "Geography"
+msgstr "Géographie"
+
+#: src/DataType/Geography.php:69
+msgid "Empty geography."
+msgstr "Géographie vide."
+
+#: src/DataType/Geography.php:78
+#, php-format
+msgid "Invalid geography: %s"
+msgstr "Géographie invalide : %s"
+
 #: src/DataType/AbstractDataType.php:18
 msgid "Geography / geometry"
 msgstr "Géographie / géometrie"
 
-#: src/Doctrine/PHP/Types/Geometry/Geometry.php:73
-#: src/Doctrine/PHP/Types/Geography/Geography.php:71
-msgid "Invalid geometry."
-msgstr "Géométrie invalide."
+#: src/DataType/Geometry.php:18 config/module.config.php:192
+msgid "Geometry"
+msgstr "Géométrie"
 
-#: src/Job/IndexGeometries.php:51
-msgid "Indexing geometries stopped: no mode selected."
-msgstr ""
-
-#: src/Job/IndexGeometries.php:132
-msgid ""
-"Tables \"data_type_geometry\" and \"data_type_geography\" were truncated."
-msgstr ""
-
-#: src/Job/IndexGeometries.php:145
-msgid ""
-"Old data type \"geometry\" has been converted into \"geometry:geometry\"."
-msgstr ""
-
-#: src/Job/IndexGeometries.php:184
+#: src/DataType/Geometry.php:55
 #, php-format
-msgid "All geometric values for %s have now the data type \"%s\"."
-msgstr ""
-
-#: src/Job/IndexGeometries.php:253
-msgid "Geometries were indexed."
-msgstr ""
-
-#: src/Job/IndexGeometries.php:307
-msgid ""
-"All geometric values for cartographic annotation targets were updated "
-"according to their type (describe or locate)."
-msgstr ""
-
-#: src/Job/IndexGeometries.php:362
-msgid "Geometries were indexed for annotation targets."
-msgstr ""
-
-#: src/Job/IndexGeometries.php:374
-msgid ""
-"Cannot process: there are errors in your original values. Try to fix them "
-"first."
-msgstr ""
-
-#: src/Job/IndexGeometries.php:422
-#, php-format
-msgid "There seems no issues in %s."
-msgstr ""
-
-#: src/Job/IndexGeometries.php:453
-#, php-format
-msgid "These %d %s have issues."
-msgstr ""
-
-#: src/Job/IndexGeometries.php:489
-#, php-format
-msgid "%d bad \"linestring()\" were replaced by \"point()\"."
-msgstr ""
-
-#: src/Job/IndexGeometries.php:494
-msgid "No bad \"linestring()\" found."
-msgstr ""
+msgid "Invalid geometry: %s"
+msgstr "Géométrie invalide : %s"
 
 #: config/module.config.php:193
 msgid "Please enter a latitude."
@@ -454,3 +474,6 @@ msgstr ""
 #: config/module.config.php:201
 msgid "Please enter a valid wkt for the geometry."
 msgstr ""
+
+#~ msgid "Data Type Geometry"
+#~ msgstr "Type de données Géométrie"
