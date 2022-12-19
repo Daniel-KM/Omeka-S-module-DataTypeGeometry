@@ -127,7 +127,7 @@ TRUNCATE TABLE `data_type_geography`;
 TRUNCATE TABLE `data_type_geometry`;
 SET foreign_key_checks = 1;
 SQL;
-        $this->connection->exec($sql);
+        $this->connection->executeStatement($sql);
         $this->logger->info(
             'Tables "data_type_geometry" and "data_type_geography" were truncated.' // @translate
         );
@@ -498,7 +498,7 @@ WHERE
     value.value LIKE "LINESTRING%" AND value.value NOT LIKE "%,%"
 SQL;
 
-                    $total = $connection->exec($sql);
+                    $total = $connection->executeStatement($sql);
                     if ($total) {
                         $logger->notice(new Message(
                             '%d bad "linestring()" were replaced by "point()".', // @translate

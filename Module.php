@@ -54,14 +54,15 @@ class Module extends AbstractModule
         );
     }
 
-    public function install(ServiceLocatorInterface $serviceLocator): void
+    public function install(ServiceLocatorInterface $services): void
     {
-        $this->setServiceLocator($serviceLocator);
+        $this->setServiceLocator($services);
+        $messenger = $services->get('ControllerPluginManager')->get('messenger');
 
         // In case of upgrade of a recent version of Cartography, the database
         // may exist.
         /** @var \Doctrine\DBAL\Connection $connection */
-        $connection = $serviceLocator->get('Omeka\Connection');
+        $connection = $services->get('Omeka\Connection');
         $sql = 'SHOW tables LIKE "data_type_geometry";';
         $stmt = $connection->query($sql);
         $table = $stmt->fetchOne();
@@ -70,13 +71,11 @@ class Module extends AbstractModule
         }
 
         if (!$this->supportSpatialSearch()) {
-            $messenger = new \Omeka\Mvc\Controller\Plugin\Messenger();
             $messenger->addWarning(sprintf('Your database does not support advanced spatial search. See the minimum requirements in readme.')); // @translate
         }
 
         $useMyIsam = $this->requireMyIsamToSupportGeometry();
         if ($useMyIsam) {
-            $messenger = new \Omeka\Mvc\Controller\Plugin\Messenger();
             $messenger->addWarning(sprintf('Your database does not support modern spatial indexing. It has no impact in common cases. See the minimum requirements in readme.')); // @translate
         }
 
@@ -415,7 +414,7 @@ class Module extends AbstractModule
         $post = $request->getContent();
         $data = $event->getParam('data');
 
-        if (empty($data['geometry'])) {
+        if (empty($data['geometry']) || !array_filter($data['geometry'])) {
             unset($data['geometry']);
             $event->setParam('data', $data);
             return;
@@ -488,6 +487,7 @@ class Module extends AbstractModule
         $request = $event->getParam('request');
         $data = $request->getContent();
         if (empty($data['geometry'])
+            || !array_filter($data['geometry'])
             || (empty($data['geometry']['convert_literal_to_coordinates'])
                 && empty($data['geometry']['manage_coordinates_markers'])
             )
@@ -862,8 +862,7 @@ SQL;
         $connection = $this->getServiceLocator()->get('Omeka\Connection');
 
         $sql = 'SHOW VARIABLES LIKE "version";';
-        $stmt = $connection->query($sql);
-        $version = $stmt->fetchAll(\PDO::FETCH_KEY_PAIR);
+        $version = $connection->executeQuery($sql)->fetchAllKeyValue();
         $version = reset($version);
 
         $isMySql = stripos($version, 'mysql') !== false;
@@ -881,8 +880,7 @@ SQL;
         }
 
         $sql = 'SHOW VARIABLES LIKE "innodb_version";';
-        $stmt = $connection->query($sql);
-        $version = $stmt->fetchAll(\PDO::FETCH_KEY_PAIR);
+        $version = $connection->executeQuery($sql)->fetchAllKeyValue();
         $version = reset($version);
         $isInnoDb = !empty($version);
         if ($isInnoDb) {
@@ -919,15 +917,16 @@ SQL;
             $connection = $this->getServiceLocator()->get('Omeka\Connection');
             $qb = $connection->createQueryBuilder();
             $qb
-                ->select([
-                    'CONCAT(vocabulary.prefix, ":", property.local_name) AS term',
-                    'property.id AS id'
-                ])
+                ->select(
+                    'DISTINCT CONCAT(vocabulary.prefix, ":", property.local_name) AS term',
+                    'property.id AS id',
+                    // Required with only_full_group_by.
+                    'vocabulary.id'
+                )
                 ->from('property', 'property')
                 ->innerJoin('property', 'vocabulary', 'vocabulary', 'property.vocabulary_id = vocabulary.id')
                 ->orderBy('vocabulary.id', 'asc')
                 ->addOrderBy('property.id', 'asc')
-                ->addGroupBy('property.id')
             ;
             $properties = array_map('intval', $connection->executeQuery($qb)->fetchAllKeyValue());
         }
