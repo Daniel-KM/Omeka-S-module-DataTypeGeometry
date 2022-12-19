@@ -415,42 +415,62 @@ class Module extends AbstractModule
         $post = $request->getContent();
         $data = $event->getParam('data');
 
+        if (empty($data['geometry'])) {
+            unset($data['geometry']);
+            $event->setParam('data', $data);
+            return;
+        }
+
         if (empty($post['geometry']['convert_literal_to_coordinates'])
             && empty($post['geometry']['manage_coordinates_markers'])
         ) {
-            $data['geometry'] = null;
-        } else {
-            $manage = $post['geometry']['manage_coordinates_markers'];
-            if (!in_array($manage, ['sync', 'coordinates_to_markers', 'markers_to_coordinates'])) {
-                return;
-            }
-            if (empty($post['geometry']['from_properties']) || $post['geometry']['from_properties'] === 'all') {
-                $from = null;
-            } else {
-                $from = $this->getPropertyIds($post['geometry']['from_properties']);
-                if (!$from) {
-                    return;
-                }
-            }
-            if (empty($post['geometry']['to_property'])) {
-                $to = null;
-            } else {
-                $to = $this->getPropertyId($post['geometry']['to_property']);
-                if (!$to) {
-                    return;
-                }
-            }
-            if (in_array($manage, ['sync', 'markers_to_coordinates']) && !$to) {
-                return;
-            }
-            $data['geometry'] = $post['geometry'];
-            $data['geometry']['convert_literal_to_coordinates'] = !empty($data['geometry']['convert_literal_to_coordinates']);
-            $data['geometry']['from_properties_ids'] = $from;
-            $data['geometry']['to_property_id'] = $to;
-
-            $data['geometry']['srid'] = $this->getServiceLocator()->get('Omeka\Settings')
-                ->get('datatypegeometry_locate_srid', Geography::DEFAULT_SRID);
+            unset($data['geometry']);
+            $event->setParam('data', $data);
+            return;
         }
+
+        $manage = $post['geometry']['manage_coordinates_markers'];
+        if (!in_array($manage, ['sync', 'coordinates_to_markers', 'markers_to_coordinates'])) {
+            unset($data['geometry']);
+            $event->setParam('data', $data);
+            return;
+        }
+
+        if (empty($post['geometry']['from_properties']) || $post['geometry']['from_properties'] === 'all') {
+            $from = null;
+        } else {
+            $from = $this->getPropertyIds($post['geometry']['from_properties']);
+            if (!$from) {
+                unset($data['geometry']);
+                $event->setParam('data', $data);
+                return;
+            }
+        }
+
+        if (empty($post['geometry']['to_property'])) {
+            $to = null;
+        } else {
+            $to = $this->getPropertyId($post['geometry']['to_property']);
+            if (!$to) {
+                unset($data['geometry']);
+                $event->setParam('data', $data);
+                return;
+            }
+        }
+
+        if (in_array($manage, ['sync', 'markers_to_coordinates']) && !$to) {
+            unset($data['geometry']);
+            $event->setParam('data', $data);
+            return;
+        }
+
+        $data['geometry'] = $post['geometry'];
+        $data['geometry']['convert_literal_to_coordinates'] = !empty($data['geometry']['convert_literal_to_coordinates']);
+        $data['geometry']['from_properties_ids'] = $from;
+        $data['geometry']['to_property_id'] = $to;
+        $data['geometry']['srid'] = $this->getServiceLocator()->get('Omeka\Settings')
+            ->get('datatypegeometry_locate_srid', Geography::DEFAULT_SRID);
+
         $event->setParam('data', $data);
     }
 
