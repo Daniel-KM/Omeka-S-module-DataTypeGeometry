@@ -136,6 +136,17 @@ class Module extends AbstractModule
                 'api.hydrate.post',
                 [$this, 'saveGeometryData']
             );
+            // TODO Fix spatial storage with srid.
+            $sharedEventManager->attach(
+                $adapter,
+                'api.create.post',
+                [$this, 'fixSridInDatabase']
+            );
+            $sharedEventManager->attach(
+                $adapter,
+                'api.update.post',
+                [$this, 'fixSridInDatabase']
+            );
         }
 
         $sharedEventManager->attach(
@@ -815,6 +826,23 @@ SQL;
             }
         }
         unset($existingDataValues);
+    }
+
+    /**
+     * @todo Remove the fix of srid in geographic table after save (check dependency?).
+     */
+    public function fixSridInDatabase(Event $event)
+    {
+        $services = $this->getServiceLocator();
+        /** @var \Doctrine\DBAL\Connection $connection */
+        $connection = $services->get('Omeka\Connection');
+        $srid = (int) $services->get('Omeka\Settings')->get('datatypegeometry_locate_srid', Geography::DEFAULT_SRID);
+        $sql = <<<SQL
+UPDATE `data_type_geography`
+SET `value` = ST_SRID(`value`, $srid)
+WHERE ST_SRID(`value`) != $srid;
+SQL;
+        $connection->executeStatement($sql);
     }
 
     /**
