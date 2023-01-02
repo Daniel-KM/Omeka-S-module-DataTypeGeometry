@@ -717,6 +717,8 @@ SQL;
      *
      * @see \NumericDataTypes\Module::saveNumericData()
      *
+     * Unlike NumericDataTypes, the same table is used for multiple types.
+     *
      * @param Event $event
      */
     public function saveGeometryData(Event $event): void
@@ -727,13 +729,30 @@ SQL;
             return;
         }
 
-        $entityValues = $entity->getValues();
-
         $services = $this->getServiceLocator();
         $entityManager = $services->get('Omeka\EntityManager');
         $srid = $services->get('Omeka\Settings')
             ->get('datatypegeometry_locate_srid', Geography::DEFAULT_SRID);
 
+        // All rows in data_type_geometry and data_type_geography are removed,
+        // so get all ids one time.
+        $entityValues = $entity->getValues();
+
+        $entityDataTypeValues = [
+            'geography' => [],
+            'geometry' => [],
+        ];
+        if ($entity->getId()) {
+            foreach (array_keys($entityDataTypeValues) as $mainGeo) {
+                $mainGeoUpper = ucfirst($mainGeo);
+                $dql = "SELECT dtv FROM \DataTypeGeometry\Entity\DataType$mainGeoUpper dtv WHERE dtv.resource = :resource";
+                $query = $entityManager->createQuery($dql);
+                $query->setParameter('resource', $entity);
+                $entityDataTypeValues[$mainGeo] = $query->getResult();
+            }
+        }
+
+        /** @var \DataTypeGeometry\DataType\AbstractDataType $dataType */
         foreach ($this->getGeometryDataTypes() as $dataTypeName => $dataType) {
             // TODO Improve criteria when the types are mixed in a property.
             $criteria = Criteria::create()->where(Criteria::expr()->eq('type', $dataTypeName));
@@ -743,22 +762,19 @@ SQL;
                 continue;
             }
 
-            $dataTypeClass = $dataType->getEntityClass();
-            $currentSrid = in_array($dataTypeName, ['geography', 'geography:coordinates']) ? $srid : 0;
-
             // TODO Remove this persist, that is used only when a geometry is updated on the map.
             // Persist is required for annotation, since there is no cascade
             // persist between annotation and values.
-            $entityManager->persist($entity);
+            if ($entity instanceof \Annotate\Entity\Annotation) {
+                $entityManager->persist($entity);
+            }
+
+            $mainGeo = strtok($dataTypeName, ':');
+            $currentSrid = $mainGeo === 'geography' ? $srid : 0;
+            $dataTypeClass = $dataType->getEntityClass();
 
             /** @var \DataTypeGeometry\Entity\DataTypeGeometry[] $existingDataValues */
-            $existingDataValues = [];
-            if ($entity->getId()) {
-                $dql = sprintf('SELECT n FROM %s n WHERE n.resource = :resource', $dataTypeClass);
-                $query = $entityManager->createQuery($dql);
-                $query->setParameter('resource', $entity);
-                $existingDataValues = $query->getResult();
-            }
+            $existingDataValues = &$entityDataTypeValues[$mainGeo];
 
             foreach ($matchingValues as $value) {
                 // Avoid ID churn by reusing data rows.
@@ -787,19 +803,22 @@ SQL;
                 $dataValue->setValue($geometry);
             }
 
-            // Remove any data values that weren't reused.
+            unset($existingDataValues);
+        }
+
+        // Remove any data values that weren't reused.
+        foreach ($entityDataTypeValues as &$existingDataValues) {
             foreach ($existingDataValues as $existingDataValue) {
                 if ($existingDataValue !== null) {
                     $entityManager->remove($existingDataValue);
                 }
             }
         }
+        unset($existingDataValues);
     }
 
     /**
      * Get all data types added by this module.
-     *
-     * Note: this is compliant with Omeka 1.2.
      *
      * @return \Omeka\DataType\AbstractDataType[]
      */
