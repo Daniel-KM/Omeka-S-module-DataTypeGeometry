@@ -44,7 +44,6 @@ class IndexGeometries extends AbstractJob
             'check geography',
             'fix linestring',
             'truncate',
-            'upgrade geometry',
         ];
         if (!in_array($processMode, $processModes)) {
             $this->logger->info(new Message(
@@ -96,12 +95,6 @@ class IndexGeometries extends AbstractJob
             case 'truncate':
                 $this->truncate();
                 break;
-            case 'upgrade geometry':
-                $this->upgradeGeometry();
-                if (!$this->checkBefore([['isGeography' => null]])) {
-                    return;
-                }
-                // no break.
             case 'common':
                 $this->truncate();
                 $this->reindex([
@@ -130,19 +123,6 @@ SQL;
         $this->connection->executeStatement($sql);
         $this->logger->info(
             'Tables "data_type_geometry" and "data_type_geography" were truncated.' // @translate
-        );
-    }
-
-    protected function upgradeGeometry(): void
-    {
-        $sql = <<<SQL
-UPDATE `value`
-SET `type` = "geometry:geometry"
-WHERE `type` = "geometry";
-SQL;
-        $this->connection->executeStatement($sql);
-        $this->logger->info(
-            'Old data type "geometry" has been converted into "geometry:geometry".' // @translate
         );
     }
 
