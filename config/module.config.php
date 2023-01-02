@@ -156,6 +156,9 @@ return [
             'geography' => DataType\Geography::class,
             'geography:coordinates' => DataType\GeographyCoordinates::class,
             'geometry' => DataType\Geometry::class,
+            // This is a position, not coordinates: the 0 is the top left corner
+            // as used in image editor, iiif, alto, etc.
+            'geometry:position' => DataType\GeometryPosition::class,
         ],
     ],
     'view_manager' => [
@@ -189,6 +192,7 @@ return [
     'js_translate_strings' => [
         'Geographic coordinates', // @translate
         'Geography', // @translate
+        'Geometric position', // @translate
         'Geometry', // @translate
         'Please enter a latitude.', // @translate
         'Please enter a longitude.', // @translate

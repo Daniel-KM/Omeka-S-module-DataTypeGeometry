@@ -168,6 +168,7 @@ SQL;
 
         $tables = [
             // 'geography:coordinates' => 'data_type_geography' ,
+            // 'geometry:position' => 'data_type_geometry' ,
             'geography' => 'data_type_geography' ,
             'geometry' => 'data_type_geometry' ,
         ];
@@ -415,7 +416,7 @@ SQL;
             if (!$total) {
                 $logger->notice(new Message(
                     'There seems no issues in %s.', // @translate
-                    $dataType === 'geography' ? 'geographies' : 'geometries'
+                    in_array($dataType, ['geography', 'geography:coordinates']) ? 'geographies' : 'geometries'
                 ));
                 continue;
             }
@@ -446,7 +447,7 @@ SQL;
 
             $logger->warn(new Message(
                 'These %d %s have issues.', // @translate
-                $total, $dataType === 'geography' ? 'geographies' : 'geometries'
+                $total, in_array($dataType, ['geography', 'geography:coordinates']) ? 'geographies' : 'geometries'
             ));
 
             $stmt = $connection->query($sql);

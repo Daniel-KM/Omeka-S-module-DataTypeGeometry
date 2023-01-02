@@ -64,7 +64,7 @@ class Module extends AbstractModule
         /** @var \Doctrine\DBAL\Connection $connection */
         $connection = $services->get('Omeka\Connection');
         $sql = 'SHOW tables LIKE "data_type_geometry";';
-        $stmt = $connection->query($sql);
+        $stmt = $connection->executeQuery($sql);
         $table = $stmt->fetchOne();
         if ($table) {
             $this->execSqlFromFile($this->modulePath() . '/data/install/uninstall-cartography.sql');
@@ -795,9 +795,10 @@ SQL;
     {
         $dataTypes = $this->getServiceLocator()->get('Omeka\DataTypeManager');
         return [
-            'geography:coordinates' => $dataTypes->get('geography:coordinates'),
             'geography' => $dataTypes->get('geography'),
+            'geography:coordinates' => $dataTypes->get('geography:coordinates'),
             'geometry' => $dataTypes->get('geometry'),
+            'geometry:position' => $dataTypes->get('geometry:position'),
         ];
     }
 
@@ -806,9 +807,9 @@ SQL;
      *
      * @see readme.md.
      *
-     * @return bool
+     * This minimum versions are required by Omeka anyway (mysql 5.6.4 and mariadb 10.0.5).
      */
-    protected function supportSpatialSearch()
+    protected function supportSpatialSearch(): bool
     {
         $db = $this->databaseVersion();
         switch ($db['db']) {
@@ -829,7 +830,7 @@ SQL;
      * @return bool Return false by default: if a specific database is used,
      * it is presumably geometry compliant.
      */
-    protected function requireMyIsamToSupportGeometry()
+    protected function requireMyIsamToSupportGeometry(): bool
     {
         $db = $this->databaseVersion();
         switch ($db['db']) {

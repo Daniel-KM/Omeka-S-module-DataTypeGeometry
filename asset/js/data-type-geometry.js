@@ -1,5 +1,7 @@
 (function($) {
 
+    // Position from top left, so always positive.
+    const regexPosition = /^\s*(?<x>\d+)\s*,\s*(?<y>\d+)\s*$/;
     const regexLatitudeLongitude = /^\s*(?<latitude>[+-]?(?:[1-8]?\d(?:\.\d+)?|90(?:\.0+)?))\s*,\s*(?<longitude>[+-]?(?:180(?:\.0+)?|(?:(?:1[0-7]\d)|(?:[1-9]?\d))(?:\.\d+)?))\s*$/;
 
     /**
@@ -14,6 +16,13 @@
         var val = element.value.trim().toUpperCase();
         if (datatype === 'geography:coordinates') {
             if (val.match(regexLatitudeLongitude)) {
+                primitive = true;
+            } else {
+                var invalidValue = $(element).closest('.input-body').find('.invalid-value');
+                message = invalidValue.data('customValidity');
+            }
+        } else if (datatype === 'geometry:position') {
+            if (val.match(regexPosition)) {
                 primitive = true;
             } else {
                 var invalidValue = $(element).closest('.input-body').find('.invalid-value');
@@ -146,7 +155,7 @@
         $('#geometry')
             .prepend('<legend>' + Omeka.jsTranslate('Geographic coordinates') + '</legend>');
 
-        $('.geography-coordinates').on('keyup, change', function(e) {
+        $('.geography-coordinates').on('keyup change', function(e) {
             var div = $(this).closest('.input-body');
             var latitude = div.find('.geography-coordinates-latitude').val().trim();
             var longitude = div.find('.geography-coordinates-longitude').val().trim();
@@ -158,11 +167,23 @@
             }
         });
 
-        $('textarea.value.geography').on('keyup, change', function(e) {
+        $('.geometry-position').on('keyup change', function(e) {
+            var div = $(this).closest('.input-body');
+            var x = div.find('.geometry-position-x').val().trim();
+            var y = div.find('.geometry-position-y').val().trim();
+            var element = div.find('.value.to-require');
+            element.val(x + ',' + y);
+            if (!geometryCheck(element[0], 'geometry:position')) {
+                element.val('');
+                // TODO Display error on the invalid part.
+            }
+        });
+
+        $('textarea.value.geography').on('keyup change', function(e) {
             geometryCheck(this, 'geography');
         });
 
-        $('textarea.value.geometry').on('keyup, change', function(e) {
+        $('textarea.value.geometry').on('keyup change', function(e) {
             geometryCheck(this, 'geometry');
         });
 
@@ -207,6 +228,23 @@
             $(value).find('.geography-coordinates-latitude').val(coords.groups.latitude);
             $(value).find('.geography-coordinates-longitude').val(coords.groups.longitude);
             $(value).find('.value.to-require').val(coords.groups.latitude + ',' + coords.groups.longitude);
+        } else if (dataType === 'geometry:position' && valueObj) {
+            // The value is an object that cannot be set by resource-fom.js.
+            $(value).find('.value.to-require').val('');
+            var position = valueObj['@value'];
+            if (!position) {
+                return;
+            }
+            if (typeof position === 'object') {
+                position = position.x + ',' + position.y;
+            }
+            var pos = position.match(regexPosition);
+            if (!pos) {
+                return;
+            }
+            $(value).find('.geometry-position-x').val(pos.groups.x);
+            $(value).find('.geometry-position-y').val(pos.groups.y);
+            $(value).find('.value.to-require').val(pos.groups.x + ',' + pos.groups.y);
         }
     });
 

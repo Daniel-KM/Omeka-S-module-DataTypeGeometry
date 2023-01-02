@@ -6,6 +6,9 @@ use DataTypeGeometry\Doctrine\PHP\Types\Geometry\Geometry as GenericGeometry;
 use Laminas\Form\Element;
 use Laminas\View\Renderer\PhpRenderer;
 
+/**
+ * Geometry is a geography on a flat plane (srid = 0).
+ */
 class Geometry extends AbstractDataType
 {
     public function getName()

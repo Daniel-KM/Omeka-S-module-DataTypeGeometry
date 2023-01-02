@@ -7,6 +7,7 @@
     content: "\f3c5";
 }
 
+.resource-form #resource-values .inputs .values [data-data-type="geometry:position"] .input-body label,
 .resource-form #resource-values .inputs .values [data-data-type="geography:coordinates"] .input-body label {
     display: inline-block;
     width: 50%;
@@ -14,10 +15,12 @@
     padding-right: 6px;
     text-align: right;
 }
+.resource-form #resource-values .inputs .values [data-data-type="geometry:position"] .input-body .geometry-position,
 .resource-form #resource-values .inputs .values [data-data-type="geography:coordinates"] .input-body .geography-coordinates {
     width: 50%;
 }
 @media screen and (max-width:640px) {
+    .resource-form #resource-values .inputs .values [data-data-type="geometry:position"] .input-body label,
     .resource-form #resource-values .inputs .values [data-data-type="geography:coordinates"] .input-body label {
         text-align: initial;
     }
