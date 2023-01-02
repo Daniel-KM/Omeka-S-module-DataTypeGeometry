@@ -100,10 +100,9 @@ HTML;
         $latitude = $matches['latitude'];
         $longitude = $matches['longitude'];
         $result = [];
-        $result['@type'] = 'geography:coordinates';
         $result['@value'] = [
-            'latitude' => $latitude,
-            'longitude' => $longitude,
+            'latitude' => (float) $latitude,
+            'longitude' => (float) $longitude,
         ];
         return $result;
     }

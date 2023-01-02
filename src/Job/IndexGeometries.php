@@ -168,6 +168,7 @@ SQL;
 
         $tables = [
             // 'geography:coordinates' => 'data_type_geography' ,
+            // 'geometry:coordinates' => 'data_type_geometry' ,
             // 'geometry:position' => 'data_type_geometry' ,
             'geography' => 'data_type_geography' ,
             'geometry' => 'data_type_geometry' ,

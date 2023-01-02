@@ -798,6 +798,7 @@ SQL;
             'geography' => $dataTypes->get('geography'),
             'geography:coordinates' => $dataTypes->get('geography:coordinates'),
             'geometry' => $dataTypes->get('geometry'),
+            'geometry:coordinates' => $dataTypes->get('geometry:coordinates'),
             'geometry:position' => $dataTypes->get('geometry:position'),
         ];
     }

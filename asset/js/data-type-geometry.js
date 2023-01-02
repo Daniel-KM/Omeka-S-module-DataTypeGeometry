@@ -2,6 +2,7 @@
 
     // Position from top left, so always positive.
     const regexPosition = /^\s*(?<x>\d+)\s*,\s*(?<y>\d+)\s*$/;
+    const regexCoordinates = /^\s*(?<x>[+-]?(?:[0-9]+(?:[.][0-9]*)?|[.][0-9]+))\s*,\s*(?<y>[+-]?(?:[0-9]+(?:[.][0-9]*)?|[.][0-9]+))$/;
     const regexLatitudeLongitude = /^\s*(?<latitude>[+-]?(?:[1-8]?\d(?:\.\d+)?|90(?:\.0+)?))\s*,\s*(?<longitude>[+-]?(?:180(?:\.0+)?|(?:(?:1[0-7]\d)|(?:[1-9]?\d))(?:\.\d+)?))\s*$/;
 
     /**
@@ -16,6 +17,13 @@
         var val = element.value.trim().toUpperCase();
         if (datatype === 'geography:coordinates') {
             if (val.match(regexLatitudeLongitude)) {
+                primitive = true;
+            } else {
+                var invalidValue = $(element).closest('.input-body').find('.invalid-value');
+                message = invalidValue.data('customValidity');
+            }
+        } else if (datatype === 'geometry:coordinates') {
+            if (val.match(regexCoordinates)) {
                 primitive = true;
             } else {
                 var invalidValue = $(element).closest('.input-body').find('.invalid-value');
@@ -167,6 +175,18 @@
             }
         });
 
+        $('.geometry-coordinates').on('keyup change', function(e) {
+            var div = $(this).closest('.input-body');
+            var x = div.find('.geometry-coordinates-x').val().trim();
+            var y = div.find('.geometry-coordinates-y').val().trim();
+            var element = div.find('.value.to-require');
+            element.val(x + ',' + y);
+            if (!geometryCheck(element[0], 'geometry:coordinates')) {
+                element.val('');
+                // TODO Display error on the invalid part.
+            }
+        });
+
         $('.geometry-position').on('keyup change', function(e) {
             var div = $(this).closest('.input-body');
             var x = div.find('.geometry-position-x').val().trim();
@@ -228,6 +248,23 @@
             $(value).find('.geography-coordinates-latitude').val(coords.groups.latitude);
             $(value).find('.geography-coordinates-longitude').val(coords.groups.longitude);
             $(value).find('.value.to-require').val(coords.groups.latitude + ',' + coords.groups.longitude);
+        } else if (dataType === 'geometry:coordinates' && valueObj) {
+            // The value is an object that cannot be set by resource-fom.js.
+            $(value).find('.value.to-require').val('');
+            var coordinates = valueObj['@value'];
+            if (!coordinates) {
+                return;
+            }
+            if (typeof coordinates === 'object') {
+                coordinates = coordinates.x + ',' + coordinates.y;
+            }
+            var coords = coordinates.match(regexCoordinates);
+            if (!coords) {
+                return;
+            }
+            $(value).find('.geometry-coordinates-x').val(coords.groups.x);
+            $(value).find('.geometry-coordinates-y').val(coords.groups.y);
+            $(value).find('.value.to-require').val(coords.groups.x + ',' + coords.groups.y);
         } else if (dataType === 'geometry:position' && valueObj) {
             // The value is an object that cannot be set by resource-fom.js.
             $(value).find('.value.to-require').val('');
