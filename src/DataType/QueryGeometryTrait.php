@@ -105,6 +105,9 @@ trait QueryGeometryTrait
     }
 
     /**
+     * Disabled by default: General mysql error
+     * (3618): st_distance_sphere(POINT, POLYGON) has not been implemented for geographic spatial reference systems.
+     *
      * @param AbstractEntityAdapter $adapter
      * @param QueryBuilder $qb
      * @param array $around
@@ -117,7 +120,8 @@ trait QueryGeometryTrait
         $radiusMetre = $around['unit'] === 'km' ? $around['radius'] * 1000.0 : $around['radius'] * 1.0;
 
         $expr = $qb->expr();
-        if ($this->isPosgreSql) {
+        if ($this->isPosgreSql || $this->isMysqlRecent) {
+            $stDistanceSphere = $this->isPosgreSql ? 'ST_DistanceSphere' : 'ST_Distance_Sphere';
             $point = $adapter->createNamedParameter(
                 $qb,
                 'POINT(' . preg_replace('~[^\d.-]~', '', $around['longitude']) . ' ' . preg_replace('~[^\d.-]~', '', $around['latitude']) . ')'
@@ -125,18 +129,7 @@ trait QueryGeometryTrait
             $srid = $adapter->createNamedParameter($qb, $srid);
             $qb
                 ->andWhere($expr->lte(
-                    "ST_DistanceSphere(ST_GeomFromText($point, $srid), $geometryAlias.value)",
-                    $adapter->createNamedParameter($qb, $radiusMetre)
-                ));
-        } elseif ($this->isMysqlRecent) {
-            $point = $adapter->createNamedParameter(
-                $qb,
-                'POINT(' . preg_replace('~[^\d.-]~', '', $around['longitude']) . ' ' . preg_replace('~[^\d.-]~', '', $around['latitude']) . ')'
-            );
-            $srid = $adapter->createNamedParameter($qb, $srid);
-            $qb
-                ->andWhere($expr->lte(
-                    "ST_Distance_Sphere(ST_GeomFromText($point, $srid), $geometryAlias.value)",
+                    "$stDistanceSphere(ST_GeomFromText($point, $srid), $geometryAlias.value)",
                     $adapter->createNamedParameter($qb, $radiusMetre)
                 ));
         } else {

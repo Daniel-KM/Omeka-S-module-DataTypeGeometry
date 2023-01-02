@@ -201,11 +201,14 @@ class Module extends AbstractModule
     {
         $services = $this->getServiceLocator();
         $html = parent::getConfigForm($view);
+
+        /** @var \DataTypeGeometry\View\Helper\DatabaseVersion $databaseVersion */
         $databaseVersion = $services->get('ViewHelperManager')->get('databaseVersion');
-        if (!$databaseVersion->isDatabaseRecent()) {
+        if (!$databaseVersion->supportGeographicSearch() || !$databaseVersion->isDatabaseRecent()) {
             $messenger = $services->get('ControllerPluginManager')->get('messenger');
             $messenger->addWarning('Your database does not support full advanced spatial search. See the minimum requirements in readme.'); // @translate
         }
+
         return '<p>'
             . $view->translate('Use "Batch edit items" to convert coordinates to/from mapping markers (require module Mapping).') // @translate
             . '</p>'

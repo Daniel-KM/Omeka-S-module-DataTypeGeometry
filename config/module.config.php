@@ -184,8 +184,10 @@ return [
     'form_elements' => [
         'invokables' => [
             Form\BatchEditFieldset::class => Form\BatchEditFieldset::class,
-            Form\ConfigForm::class => Form\ConfigForm::class,
             Form\SearchFieldset::class => Form\SearchFieldset::class,
+        ],
+        'factories' => [
+            Form\ConfigForm::class => Service\Form\ConfigFormFactory::class,
         ],
     ],
     'translator' => [
@@ -243,6 +245,7 @@ return [
     'datatypegeometry' => [
         'config' => [
             'datatypegeometry_locate_srid' => 4326,
+            'datatypegeometry_support_geographic_search' => false,
         ],
     ],
 ];

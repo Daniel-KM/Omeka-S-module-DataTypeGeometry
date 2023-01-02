@@ -39,7 +39,7 @@ class DatabaseVersion extends AbstractHelper
      *
      * This minimum versions are required by Omeka anyway (mysql 5.6.4 and mariadb 10.0.5).
      */
-    public function supportSpatialSearch(): bool
+    public function supportGeometricSearch(): bool
     {
         switch ($this->db['db']) {
             case 'mysql':
@@ -47,7 +47,27 @@ class DatabaseVersion extends AbstractHelper
             case 'mariadb':
                 return version_compare($this->db['version'], '5.3.3', '>=');
             default:
-                return true;
+                return false;
+        }
+    }
+
+    /**
+     * Check if database has minimum requirements to search spatial geometries.
+     *
+     * @see readme.md.
+     *
+     * MariaDB does not support spatial search.
+     * @see https://mariadb.com/kb/en/st_srid
+     */
+    public function supportGeographicSearch(): bool
+    {
+        switch ($this->db['db']) {
+            case 'mysql':
+                return version_compare($this->db['version'], '5.6.1', '>=');
+            case 'mariadb':
+                return false;
+            default:
+                return false;
         }
     }
 
