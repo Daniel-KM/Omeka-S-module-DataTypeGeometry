@@ -27,9 +27,16 @@
     width: 50%;
 }
 
+.sidebar-content .field-geometry {
+    width: calc( 100% - 30px );
+}
 .sidebar-content .field-geometry label {
     display: initial;
     font-weight: normal;
+    text-align: right;
+}
+.sidebar-content .field-geometry .field-geometry-number {
+    display: flex;
 }
 .sidebar-content .field-geometry input.geometry-position {
     width: calc( 100% - 3em );

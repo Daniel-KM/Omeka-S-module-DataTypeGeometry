@@ -21,7 +21,8 @@ trait QueryGeometryTrait
      * Build query on geometry (coordinates, box, zone).
      *
      * The query should be normalized with the helper normalizeGeometryQuery().
-     * Only the first property and the first srid are used, if set.
+     *
+     * Only the first property is used, if set.
      * @see \DataTypeGeometry\View\Helper\NormalizeGeometryQuery
      *
      * @todo Manage another operator than within (intersect, outside…): use direct queries or a specialized database.
@@ -39,14 +40,16 @@ trait QueryGeometryTrait
     public function buildQuery(AbstractEntityAdapter $adapter, QueryBuilder $qb, array $query): void
     {
         static $isMysqlRecent = null;
+        static $defaultSrid = null;
 
         if (empty($query['geo'])) {
             return;
         }
 
         if (is_null($isMysqlRecent)) {
-            $isMysqlRecent = $adapter->getServiceLocator()->get('ViewHelperManager')
-                ->get('databaseVersion')->isDatabaseRecent();
+            $services = $adapter->getServiceLocator();
+            $isMysqlRecent = $services->get('ViewHelperManager')->get('databaseVersion')->isDatabaseRecent();
+            $defaultSrid = (int) $services->get('Omeka\Settings')->get('datatypegeometry_locate_srid', \DataTypeGeometry\DataType\Geography::DEFAULT_SRID);
         }
         $this->isMysqlRecent = $isMysqlRecent;
 
@@ -57,28 +60,38 @@ trait QueryGeometryTrait
             $geos = [$geos];
         }
 
-        $srid = empty($geos[0]['srid']) ? 0 : (int) $geos[0]['srid'];
-        $isGeography = $srid
+        $isGeography = (isset($geos[0]['mode']) && $geos[0]['mode'] === 'geography')
             || isset($geos[0]['around']['latitude'])
             || isset($geos[0]['mapbox'])
             || isset($geos[0]['area']);
+
+        $srid = $isGeography ? $defaultSrid : 0;
+
         $geometryAlias = $isGeography
             ? $this->joinGeography($adapter, $qb, $query)
             : $this->joinGeometry($adapter, $qb, $query);
 
         foreach ($geos as $geo) {
-            if (array_key_exists('around', $geo)) {
-                array_key_exists('latitude', $geo['around'])
-                    ? $this->searchAround($adapter, $qb, $geo['around'], $srid, $geometryAlias)
-                    : $this->searchXy($adapter, $qb, $geo['around'], $srid, $geometryAlias);
-            } elseif (array_key_exists('box', $geo)) {
-                $this->searchBox($adapter, $qb, $geo['box'], $srid, $geometryAlias);
-            } elseif (array_key_exists('mapbox', $geo)) {
-                $this->searchMapBox($adapter, $qb, $geo['mapbox'], $srid, $geometryAlias);
-            } elseif (array_key_exists('zone', $geo)) {
-                $this->searchZone($adapter, $qb, $geo['zone'], $srid, $geometryAlias);
-            } elseif (array_key_exists('area', $geo)) {
-                $this->searchZone($adapter, $qb, $geo['area'], $srid, $geometryAlias);
+            if ($isGeography) {
+                if (array_key_exists('around', $geo)) {
+                    if (array_key_exists('latitude', $geo['around'])) {
+                        $this->searchAround($adapter, $qb, $geo['around'], $srid, $geometryAlias);
+                    }
+                } elseif (array_key_exists('mapbox', $geo)) {
+                    $this->searchMapBox($adapter, $qb, $geo['mapbox'], $srid, $geometryAlias);
+                } elseif (array_key_exists('area', $geo)) {
+                    $this->searchZone($adapter, $qb, $geo['area'], $srid, $geometryAlias);
+                }
+            } else {
+                if (array_key_exists('around', $geo)) {
+                    if (array_key_exists('x', $geo['around'])) {
+                        $this->searchXy($adapter, $qb, $geo['around'], $srid, $geometryAlias);
+                    }
+                } elseif (array_key_exists('box', $geo)) {
+                    $this->searchBox($adapter, $qb, $geo['box'], $srid, $geometryAlias);
+                } elseif (array_key_exists('zone', $geo)) {
+                    $this->searchZone($adapter, $qb, $geo['zone'], $srid, $geometryAlias);
+                }
             }
         }
     }

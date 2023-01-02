@@ -184,6 +184,18 @@
         } else {
             element.setCustomValidity(Omeka.jsTranslate(message));
         }
+
+        var geometryOrGeographyFieldset = function() {
+            const mode = $('input[name="geo[mode]"]:checked').val();
+            if (mode === 'geography') {
+                $('[data-geo-mode=geometry]').closest('.field-geo').hide();
+                $('[data-geo-mode=geography]').closest('.field-geo').show();
+            } else {
+                $('[data-geo-mode=geometry]').closest('.field-geo').show();
+                $('[data-geo-mode=geography]').closest('.field-geo').hide();
+            }
+        }
+
     }
 
     $(document).ready(function() {
@@ -236,24 +248,28 @@
 
         // Search form.
 
-        // The form uses geography only, because to query non-georeferenced
-        // geometries has no meaning.
-        $('textarea.query-geo-area').on('keyup change', function(e) {
-            checkGeometry(this, 'geography');
+        $(document).on('click', 'input[name="geo[mode]"]', function(e) {
+            geometryOrGeographyFieldset();
         });
 
-        $('input.query-geo-around-latitude').on('keyup change', function(e) {
+        $(document).on('keyup change', 'input.query-geo-around-latitude', function(e) {
             latlongCheck(this, 'latitude');
         });
-        $('input.query-geo-around-longitude').on('keyup change', function(e) {
+        $(document).on('keyup change', 'input.query-geo-around-longitude', function(e) {
             latlongCheck(this, 'longitude');
         });
-        $('input.query-geo-around-radius').on('keyup change', function(e) {
+        $(document).on('keyup change', 'input.query-geo-around-radius', function(e) {
             radiusCheck(this);
         });
-        $('input.query-geo-around-unit').on('click', function(e) {
+        $(document).on('click', 'input.query-geo-around-unit', function(e) {
             radiusCheck($('input.query-geo-around-radius')[0]);
         });
+
+        $(document).on('keyup change', 'textarea.query-geo-zone, textarea.query-geo-area', function(e) {
+            checkGeometry(this, $(this).hasClass('query-geo-area') ? 'geography' : 'geometry');
+        });
+
+        geometryOrGeographyFieldset();
 
     });
 

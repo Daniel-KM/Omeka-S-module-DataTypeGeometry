@@ -53,11 +53,11 @@ class GeometryCoordinates extends Geometry
         return '<div class="field-geometry">'
             . '<div class="error invalid-value" data-custom-validity="' . $escapeAttr($translate($validity)) . '"></div>'
             . $view->formHidden($hiddenValue)
-            . '<div>'
+            . '<div class="field-geometry-number">'
             . $view->formLabel($xElement)
             . $view->formNumber($xElement)
             . '</div>'
-            . '<div>'
+            . '<div class="field-geometry-number">'
             . $view->formLabel($yElement)
             . $view->formNumber($yElement)
             . '</div>'

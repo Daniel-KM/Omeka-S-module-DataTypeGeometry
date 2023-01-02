@@ -11,50 +11,101 @@ if (!empty($query['geo'])) $fieldset->populateValues($query['geo']);
 // The collection is not used to improve the around part.
 // echo $this->formCollection($fieldset);
 
+$around = $fieldset->get('around');
+$hasGeographic = $around->has('latitude');
 ?>
-<?php $around = $fieldset->get('around'); ?>
+
+<?php $element = $fieldset->get('mode'); ?>
+<?php if ($hasGeographic): ?>
+    <div class="field">
+        <div class="field-meta">
+        </div>
+        <div class="inputs">
+            <?= $this->formRadio($element) ?>
+        </div>
+    </div>
+<?php else: ?>
+    <?= $this->formHidden($element) ?>
+<?php endif; ?>
+
 <div class="field">
     <div class="field-meta">
-        <?php echo $this->formLabel($around); ?>
+        <?= $this->formLabel($around) ?>
     </div>
     <div class="inputs">
-        <?php
-        $element = $around->get('latitude');
-        echo $this->formNumber($element);
-        $element = $around->get('longitude');
-        echo $this->formNumber($element);
-        $element = $around->get('radius');
-        echo $this->formNumber($element);
-        $element = $around->get('unit');
-        echo $this->formRadio($element);
-        ?>
+        <div class="field-geo">
+            <?php
+            $element = $around->get('x');
+            echo $this->formNumber($element);
+            $element = $around->get('y');
+            echo $this->formNumber($element);
+            ?>
+        </div>
+        <?php if ($hasGeographic): ?>
+            <div class="field-geo">
+                <?php
+                $element = $around->get('latitude');
+                echo $this->formNumber($element);
+                $element = $around->get('longitude');
+                echo $this->formNumber($element);
+                ?>
+            </div>
+        <?php endif; ?>
+        <div>
+            <?php
+            $element = $around->get('radius');
+            echo $this->formNumber($element);
+            ?>
+            <?php if ($hasGeographic): ?>
+            <span class="field-geo">
+                <?php
+                $element = $around->get('unit');
+                echo $this->formRadio($element);
+                ?>
+            </span>
+            <?php endif; ?>
+        </div>
     </div>
 </div>
 
-<?php $element = $fieldset->get('mapbox'); ?>
-<div class="field">
+<?php $element = $fieldset->get('box'); ?>
+<div class="field field-geo">
     <div class="field-meta">
-        <?php echo $this->formLabel($element); ?>
+        <?= $this->formLabel($element) ?>
     </div>
     <div class="inputs">
-        <?php
-        echo $this->formText($element);
-        ?>
+        <?= $this->formText($element) ?>
+    </div>
+</div>
+
+<?php $element = $fieldset->get('zone'); ?>
+<div class="field field-geo">
+    <div class="field-meta">
+        <?= $this->formLabel($element) ?>
+    </div>
+    <div class="inputs">
+        <?= $this->formTextarea($element) ?>
+    </div>
+</div>
+
+<?php if ($hasGeographic): ?>
+<?php $element = $fieldset->get('mapbox'); ?>
+<div class="field field-geo">
+    <div class="field-meta">
+        <?= $this->formLabel($element) ?>
+    </div>
+    <div class="inputs">
+        <?= $this->formText($element) ?>
     </div>
 </div>
 
 <?php $element = $fieldset->get('area'); ?>
-<div class="field">
+<div class="field field-geo">
     <div class="field-meta">
-        <?php echo $this->formLabel($element); ?>
+        <?= $this->formLabel($element) ?>
     </div>
     <div class="inputs">
-        <?php
-        echo $this->formTextarea($element);
-        ?>
+        <?= $this->formTextarea($element) ?>
     </div>
 </div>
-
-<?php
-$element = $fieldset->get('srid');
-echo $this->formHidden($element);
+<?php endif; ?>

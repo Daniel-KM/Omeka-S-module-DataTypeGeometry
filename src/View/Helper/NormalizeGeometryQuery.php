@@ -31,12 +31,14 @@ class NormalizeGeometryQuery extends AbstractHelper
      * The input can be single a single query or a list of query.
      * It can be used for front-end form or back-end api.
      *
+     * The distinction between geometry and geography uses:
+     * [geo][mode] = "geometry" or "geography".
+     *
      * Common for geometry and geography:
      * [geo][property] = 'dcterms:spatial' or another one (term or id)
-     * [geo][srid] = srid (Spatial Reference Identifier; default 0 for geometry,
-     * and 4326 for geography (the default map is a Mercator projection).
-     * When non empty with around, box, or zone, it is a geographic query.
-     * @see http://spatialreference.org/ref/epsg/wgs-84/ or https://epsg.io/4326
+     * @see http://spatialreference.org/ref/epsg/wgs-84/
+     * @see https://epsg.io/4326
+     * @see https://epsg.io/3857
      *
      * Geometry (for flat image or projected map):
      * [geo][around][x] = x
@@ -59,6 +61,7 @@ class NormalizeGeometryQuery extends AbstractHelper
     public function __invoke($query)
     {
         if (empty($query['geo'])) {
+            unset($query['geo']);
             return $query;
         }
 
@@ -68,6 +71,7 @@ class NormalizeGeometryQuery extends AbstractHelper
         }
 
         $defaults = [
+            'mode' => 'geometry',
             // Property (data type should be "geometry"), or search all properties.
             'property' => null,
             'around' => [
@@ -79,8 +83,8 @@ class NormalizeGeometryQuery extends AbstractHelper
                 'longitude' => null,
                 // A float.
                 'radius' => null,
-                // Unit only for geographic radius. Can be km 'default) or m.
-                // For a flat image, it is the unit of it (pixel).
+                // Unit only for geographic radius. Can be km (default) or m.
+                // For a flat image, it is always the unit of it (pixel).
                 'unit' => null,
             ],
             // Two opposite coordinates (xy).
@@ -91,8 +95,6 @@ class NormalizeGeometryQuery extends AbstractHelper
             'zone' => null,
             // A well-known text for geography.
             'area' => null,
-            // The spatial reference identifier to use.
-            'srid' => null,
         ];
 
         foreach ($query['geo'] as $key => &$geo) {
@@ -102,11 +104,6 @@ class NormalizeGeometryQuery extends AbstractHelper
             $property = $this->getPropertyId($geo['property']);
             if (is_int($property)) {
                 $result['property'] = $property;
-            }
-
-            $srid = $this->normalizeSrid($geo['srid']);
-            if ($srid) {
-                $result['srid'] = $srid;
             }
 
             $geo['around'] = array_filter($geo['around'], function ($v) {
@@ -166,12 +163,13 @@ class NormalizeGeometryQuery extends AbstractHelper
         } elseif ($isSingle) {
             $query['geo'] = reset($query['geo']);
         }
+
         return $query;
     }
 
     protected function normalizeAround($around)
     {
-        $isGeography = isset($around['latitude']);
+        $isGeography = isset($around['latitude']) && $around['latitude'] !== '';
         if ($isGeography) {
             if (!isset($around['longitude'])
                 || empty($around['radius'])
@@ -314,11 +312,6 @@ class NormalizeGeometryQuery extends AbstractHelper
             return;
         }
         return $area;
-    }
-
-    protected function normalizeSrid($srid)
-    {
-        return (int) $srid;
     }
 
     /**

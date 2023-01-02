@@ -59,11 +59,11 @@ class GeographyCoordinates extends Geography
             return '<div class="field-geometry">'
                 . '<div class="error invalid-value" data-custom-validity="' . $escapeAttr($translate($validity)) . '"></div>'
                 . $view->formHidden($hiddenValue)
-                . '<div>'
+                . '<div class="field-geometry-number">'
                 . $view->formLabel($latitudeElement)
                 . $view->formNumber($latitudeElement)
                 . '</div>'
-                . '<div>'
+                . '<div class="field-geometry-number">'
                 . $view->formLabel($longitudeElement)
                 . $view->formNumber($longitudeElement)
                 . '</div>'

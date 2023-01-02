@@ -55,11 +55,11 @@ class GeometryPosition extends Geometry
         return '<div class="field-geometry">'
             . '<div class="error invalid-value" data-custom-validity="' . $escapeAttr($translate($validity)) . '"></div>'
             . $view->formHidden($hiddenValue)
-            . '<div>'
+            . '<div class="field-geometry-number">'
             . $view->formLabel($xElement)
             . $view->formNumber($xElement)
             . '</div>'
-            . '<div>'
+            . '<div class="field-geometry-number">'
             . $view->formLabel($yElement)
             . $view->formNumber($yElement)
             . '</div>'
@@ -76,7 +76,7 @@ class GeometryPosition extends Geometry
 
     public function hydrate(array $valueObject, Value $value, AbstractEntityAdapter $adapter): void
     {
-        // Remove the leading + if any. The value is already checked.
+        // The value is already checked.
         $matches = [];
         preg_match($this->regexPosition, (string) $valueObject['@value'], $matches);
         $x = $matches['x'];
