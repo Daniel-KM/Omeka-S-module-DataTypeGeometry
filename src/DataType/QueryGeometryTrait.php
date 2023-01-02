@@ -10,7 +10,7 @@ trait QueryGeometryTrait
     /**
      * @var bool
      */
-    protected $isMysql576 = false;
+    protected $isMysqlRecent = null;
 
     /**
      * @var bool
@@ -25,7 +25,6 @@ trait QueryGeometryTrait
      * @see \DataTypeGeometry\View\Helper\NormalizeGeometryQuery
      *
      * @todo Manage another operator than within (intersect, outside…): use direct queries or a specialized database.
-     * @todo Check if mysql 576 is used.
      *
      * Difference between mysql and postgresql:
      * - Point = ST_Point => use only with ST_GeomFromText
@@ -39,9 +38,17 @@ trait QueryGeometryTrait
      */
     public function buildQuery(AbstractEntityAdapter $adapter, QueryBuilder $qb, array $query): void
     {
+        static $isMysqlRecent = null;
+
         if (empty($query['geo'])) {
             return;
         }
+
+        if (is_null($isMysqlRecent)) {
+            $isMysqlRecent = $adapter->getServiceLocator()->get('ViewHelperManager')
+                ->get('databaseVersion')->isDatabaseRecent();
+        }
+        $this->isMysqlRecent = $isMysqlRecent;
 
         $geos = $query['geo'];
         $first = reset($geos);
@@ -121,7 +128,7 @@ trait QueryGeometryTrait
                     "ST_DistanceSphere(ST_GeomFromText($point, $srid), $geometryAlias.value)",
                     $adapter->createNamedParameter($qb, $radiusMetre)
                 ));
-        } elseif ($this->isMysql576) {
+        } elseif ($this->isMysqlRecent) {
             $point = $adapter->createNamedParameter(
                 $qb,
                 'POINT(' . preg_replace('~[^\d.-]~', '', $around['longitude']) . ' ' . preg_replace('~[^\d.-]~', '', $around['latitude']) . ')'

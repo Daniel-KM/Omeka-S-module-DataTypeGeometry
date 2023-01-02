@@ -70,13 +70,15 @@ class Module extends AbstractModule
             $this->execSqlFromFile($this->modulePath() . '/data/install/uninstall-cartography.sql');
         }
 
-        if (!$this->supportSpatialSearch()) {
-            $messenger->addWarning(sprintf('Your database does not support advanced spatial search. See the minimum requirements in readme.')); // @translate
+        $databaseVersion = $services->get('ViewHelperManager')->get('databaseVersion');
+
+        if (!$databaseVersion->supportSpatialSearch()) {
+            $messenger->addWarning('Your database does not support advanced spatial search. See the minimum requirements in readme.'); // @translate
         }
 
         $useMyIsam = $this->requireMyIsamToSupportGeometry();
         if ($useMyIsam) {
-            $messenger->addWarning(sprintf('Your database does not support modern spatial indexing. It has no impact in common cases. See the minimum requirements in readme.')); // @translate
+            $messenger->addWarning('Your database does not support modern spatial indexing. It has no impact in common cases. See the minimum requirements in readme.'); // @translate
         }
 
         $filepath = $useMyIsam
@@ -197,7 +199,13 @@ class Module extends AbstractModule
 
     public function getConfigForm(PhpRenderer $view)
     {
+        $services = $this->getServiceLocator();
         $html = parent::getConfigForm($view);
+        $databaseVersion = $services->get('ViewHelperManager')->get('databaseVersion');
+        if (!$databaseVersion->isDatabaseRecent()) {
+            $messenger = $services->get('ControllerPluginManager')->get('messenger');
+            $messenger->addWarning('Your database does not support full advanced spatial search. See the minimum requirements in readme.'); // @translate
+        }
         return '<p>'
             . $view->translate('Use "Batch edit items" to convert coordinates to/from mapping markers (require module Mapping).') // @translate
             . '</p>'
@@ -802,95 +810,6 @@ SQL;
             'geometry:coordinates' => $dataTypes->get('geometry:coordinates'),
             'geometry:position' => $dataTypes->get('geometry:position'),
         ];
-    }
-
-    /**
-     * Check if Omeka database has minimum requirements to search geometries.
-     *
-     * @see readme.md.
-     *
-     * This minimum versions are required by Omeka anyway (mysql 5.6.4 and mariadb 10.0.5).
-     */
-    protected function supportSpatialSearch(): bool
-    {
-        $db = $this->databaseVersion();
-        switch ($db['db']) {
-            case 'mysql':
-                return version_compare($db['version'], '5.6.1', '>=');
-            case 'mariadb':
-                return version_compare($db['version'], '5.3.3', '>=');
-            default:
-                return true;
-        }
-    }
-
-    /**
-     * Check if the Omeka database requires myIsam to support Geometry.
-     *
-     * @see readme.md.
-     *
-     * @return bool Return false by default: if a specific database is used,
-     * it is presumably geometry compliant.
-     */
-    protected function requireMyIsamToSupportGeometry(): bool
-    {
-        $db = $this->databaseVersion();
-        switch ($db['db']) {
-            case 'mysql':
-                return version_compare($db['version'], '5.7.5', '<');
-            case 'mariadb':
-                return version_compare($db['version'], '10.2.2', '<');
-            case 'innodb':
-                return version_compare($db['version'], '5.7.14', '<');
-            default:
-                return false;
-        }
-    }
-
-    /**
-     * Get  the version of the database.
-     *
-     * @return array with keys "db" and "version".
-     */
-    protected function databaseVersion()
-    {
-        $result = [
-            'db' => '',
-            'version' => '',
-        ];
-
-        /** @var \Doctrine\DBAL\Connection $connection */
-        $connection = $this->getServiceLocator()->get('Omeka\Connection');
-
-        $sql = 'SHOW VARIABLES LIKE "version";';
-        $version = $connection->executeQuery($sql)->fetchAllKeyValue();
-        $version = reset($version);
-
-        $isMySql = stripos($version, 'mysql') !== false;
-        if ($isMySql) {
-            $result['db'] = 'mysql';
-            $result['version'] = $version;
-            return $result;
-        }
-
-        $isMariaDb = stripos($version, 'mariadb') !== false;
-        if ($isMariaDb) {
-            $result['db'] = 'mariadb';
-            $result['version'] = $version;
-            return $result;
-        }
-
-        $sql = 'SHOW VARIABLES LIKE "innodb_version";';
-        $version = $connection->executeQuery($sql)->fetchAllKeyValue();
-        $version = reset($version);
-        $isInnoDb = !empty($version);
-        if ($isInnoDb) {
-            $result['db'] = 'innodb';
-            $result['version'] = $version;
-            return $result;
-        }
-
-        return $result;
     }
 
     /**

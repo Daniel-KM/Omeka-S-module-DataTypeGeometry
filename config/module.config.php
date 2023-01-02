@@ -176,6 +176,7 @@ return [
     ],
     'view_helpers' => [
         'factories' => [
+            'databaseVersion' => Service\ViewHelper\DatabaseVersionFactory::class,
             'geometryFieldset' => Service\ViewHelper\GeometryFieldsetFactory::class,
             'normalizeGeometryQuery' => Service\ViewHelper\NormalizeGeometryQueryFactory::class,
         ],

@@ -323,52 +323,38 @@ class NormalizeGeometryQuery extends AbstractHelper
 
     /**
      * Get a property id from a property term or an integer.
-     *
-     * @param string|int property
-     * @return int
      */
-    protected function getPropertyId($property)
+    protected function getPropertyId($propertyIdOrTerm): ?int
     {
-        static $properties = [];
+        static $properties;
 
-        if (is_null($property) || $property === '') {
-            return;
+        if (is_null($properties)) {
+            $connection = $this->entityManager->getConnection();
+            $qb = $connection->createQueryBuilder();
+            $qb
+                ->select(
+                    'DISTINCT CONCAT(vocabulary.prefix, ":", property.local_name) AS term',
+                    'property.id AS id',
+                    // Required with only_full_group_by.
+                    'vocabulary.id'
+                )
+                ->from('property', 'property')
+                ->innerJoin('property', 'vocabulary', 'vocabulary', 'property.vocabulary_id = vocabulary.id')
+                ->orderBy('vocabulary.id', 'asc')
+                ->addOrderBy('property.id', 'asc')
+            ;
+            $properties = array_map('intval', $connection->executeQuery($qb)->fetchAllKeyValue());
         }
 
-        if (isset($properties[$property])) {
-            return $properties[$property];
+        if (!$propertyIdOrTerm) {
+            return null;
         }
 
-        if (empty($property)) {
-            return 0;
+        if (is_numeric($propertyIdOrTerm)) {
+            $propertyIdOrTerm = (int) $propertyIdOrTerm;
+            return in_array($propertyIdOrTerm, $properties) ? $propertyIdOrTerm : null;
         }
 
-        if (is_numeric($property)) {
-            $property = (int) $property;
-            $properties[$property] = $property;
-            return (int) $property;
-        }
-
-        if (!preg_match('/^[a-z0-9-_]+:[a-z0-9-_]+$/i', $property)) {
-            $properties[$property] = 0;
-            return 0;
-        }
-
-        list($prefix, $localName) = explode(':', $property);
-        $dql = <<<'DQL'
-SELECT p.id
-FROM Omeka\Entity\Property p
-JOIN p.vocabulary v
-WHERE p.localName = :localName
-AND v.prefix = :prefix
-DQL;
-        $properties[$property] = (int) $this->entityManager
-            ->createQuery($dql)
-            ->setParameters([
-                'localName' => $localName,
-                'prefix' => $prefix,
-            ])
-            ->getOneOrNullResult(\Doctrine\ORM\Query::HYDRATE_SINGLE_SCALAR);
-        return $properties[$property];
+        return $properties[$propertyIdOrTerm] ?? null;
     }
 }
