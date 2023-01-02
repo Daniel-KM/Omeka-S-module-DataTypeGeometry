@@ -59,9 +59,8 @@ composer install --no-dev
 MySql does not support all geographic queries, for example to [search a point in a polygon for a sphere],
 so it is disabled by default in the config.
 
-Queries are limited to geographic data, not geometric ones for now.
-
-Because MariaDB [supports only geometric queries], search is disabled when it is used.
+For MariaDB, because it [supports only geometric queries], geographic search is
+disabled when it is used.
 
 ### Omeka database or external database [work in progress]
 
@@ -178,32 +177,34 @@ A geometric position is a `x,y` pair: `2,48`.
 
 In the user interface, this value is composed with two positive integer values,
 separated by a `,`. In the database, it is stored the same and as a geometric
-WKT point. In the api, the value is an object with the two keys (see below),
-that can be used with the w3c geolocation api. The values are presented as
-strings to avoid issues with json implementations of clients.
+WKT point. This point is based on bottom left corner, so the y is inversed.
+
+In the api, the value is an object with the two keys (see below), that can be
+used with the w3c geolocation api. The values are presented as strings to avoid
+issues with json implementations of clients.
 
 ### JSON-LD and GeoJSON
 
 According to the [discussion] on the working group of JSON-LD and GeoJSON, the
-GeoJson cannot be used in all cases inside a JSON-LD. So the representation uses
-the data type `http://www.opengis.net/ont/geosparql#wktLiteral` of the [OGC standard].
-The deprecated datatype `http://geovocab.org/geometry#asWKT` is no more used.
-For coordinates and positions, the data type is the api one, `geography:coordinates`,
-`geometry:coordinates`, `geometry:position`.
+GeoJson cannot be used in all cases inside a JSON-LD.
+
+So the representation uses Omeka types and appends the data type `http://www.opengis.net/ont/geosparql#wktLiteral`
+of the [OGC standard]. The deprecated datatype `http://geovocab.org/geometry#asWKT`
+is no more used. For coordinates and position, no "@type" is appended
 
 ```json
 {
     "dcterms:spatial": [
         {
+            "type': "geography",
             "@type": "http://www.opengis.net/ont/geosparql#wktLiteral",
-            "@value": "POINT (2.294497 48.858252)",
-
+            "@value": "POINT (2.294497 48.858252)"
         },
         {
-            "@type": "geography:coordinates",
+            "type": "geography:coordinates",
             "@value": {
-                "latitude": "48.858252",
-                "longitude": "2.294497"
+                "latitude": 48.858252,
+                "longitude": 2.294497
             }
         }
     ]
@@ -221,7 +222,7 @@ TODO
 - [ ] Upgrade terraformer to terraformer.js (need a precompiled js).
 - [x] Rename api keys to "geometry", "geography", "geography:coordinates" for Omeka S v4.
 - [ ] Support complex forms (multipoint, multiline, multipolygon)
-- [ ] Improve support of various srid for geography and enable search for geometry.
+- [x] Improve support of various srid for geography and enable search for geometry.
 - [ ] Store the srid in geography directly.
 - [ ] Fix parsing check for doctrine and terraformer, for example with an open polygon.
 
@@ -292,6 +293,7 @@ sociales [EHESS]. The improvements were developed for the digital library of the
 [Omeka S]: https://omeka.org/s
 [WKT]: https://wikipedia.org/wiki/Well-known_text
 [Annotate Cartography]: https://gitlab.com/Daniel-KM/Omeka-S-module-Cartography
+[Mapping]: https://github.com/Omeka-S-modules/Mapping
 [Installing a module]: https://omeka.org/s/docs/user-manual/modules/#installing-modules
 [mySql 5.6.1]: https://dev.mysql.com/doc/relnotes/mysql/5.6/en/news-5-6-1.html
 [MariaDB 5.3.3]: https://mariadb.com/kb/en/library/mariadb-533-release-notes/
