@@ -335,16 +335,16 @@ class Module extends AbstractModule
         $filters = $event->getParam('filters');
         $translate = $event->getTarget()->plugin('translate');
         $geo = $query['geo'];
-        if (!empty($geo['around'])) {
+        if (isset($geo['around']['latitude']) && $geo['around']['latitude'] !== '') {
             $filterLabel = $translate('Geographic coordinates'); // @translate
             $filters[$filterLabel][] = sprintf(
                 $translate('Within %1$s %2$s of point %3$s %4$s'), // @translate
                 $geo['around']['radius'], $geo['around']['unit'], $geo['around']['latitude'], $geo['around']['longitude']
             );
-        } elseif (!empty($geo['around']['xy'])) {
+        } elseif (isset($geo['around']['x']) && $geo['around']['x'] !== '') {
             $filterLabel = $translate('Geometric coordinates'); // @translate
             $filters[$filterLabel][] = sprintf(
-                $translate('Within %1$s pixels of point x: %2$s, y: %3$s)'), // @translate
+                $translate('Within %1$s pixels of point x: %2$s, y: %3$s'), // @translate
                 $geo['around']['radius'], $geo['around']['x'], $geo['around']['y']
             );
         } elseif (!empty($geo['mapbox'])) {
