@@ -208,6 +208,30 @@ return [
         '"multipoint", "multiline" and "multipolygon" are not supported for now. Use collection instead.', // @translate
         'Error in input.', // @translate
     ],
+    'csv_import' => [
+        'data_types' => [
+            'geography' => [
+                'label' => 'Geography', // @translate
+                'adapter' => 'literal',
+            ],
+            'geography:coordinates'  => [
+                'label' => 'Geographic coordinates', // @translate
+                'adapter' => 'literal',
+            ],
+            'geometry' => [
+                'label' => 'Geometry', // @translate
+                'adapter' => 'literal',
+            ],
+            'geometry:coordinates' => [
+                'label' => 'Geometric coordinates', // @translate
+                'adapter' => 'literal',
+            ],
+            'geometry:position' => [
+                'label' => 'Geometric position', // @translate
+                'adapter' => 'literal',
+            ],
+        ],
+    ],
     'datatypegeometry' => [
         'config' => [
             'datatypegeometry_locate_srid' => 4326,
