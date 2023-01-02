@@ -25,12 +25,13 @@ trait QueryGeometryTrait
      * @see \DataTypeGeometry\View\Helper\NormalizeGeometryQuery
      *
      * @todo Manage another operator than within (intersect, outside…): use direct queries or a specialized database.
+     * @todo Check if mysql 576 is used.
      *
      * Difference between mysql and postgresql:
      * - Point = ST_Point => use only with ST_GeomFromText
      * - MBRContains = ST_Contains => MBR is used only with a box.
      * - ST_Distance_Sphere = ST_DistanceSphere => specific alias
-     * - No ST_SetSRID
+     * - No ST_SetSRID = ST_SRID = ST_SetSRID
      *
      * @param AbstractEntityAdapter $adapter
      * @param QueryBuilder $qb
@@ -84,12 +85,14 @@ trait QueryGeometryTrait
      */
     protected function searchXy(AbstractEntityAdapter $adapter, QueryBuilder $qb, array $around, $srid, $geometryAlias): void
     {
-        $xLong = $adapter->createNamedParameter($qb, $around['x']);
-        $yLat = $adapter->createNamedParameter($qb, $around['y']);
+        $point = $adapter->createNamedParameter(
+            $qb,
+            'POINT(' . preg_replace('~[^\d.-]~', '', $around['x']) . ' ' . preg_replace('~[^\d.-]~', '', $around['y']) . ')'
+        );
         $srid = $adapter->createNamedParameter($qb, $srid);
         $qb->andWhere($qb->expr()->lte(
-            // Note: 'ST_GeomFromText("Point(49 2)")' is not correct.
-            "ST_Distance(ST_GeomFromText('Point($xLong $yLat)', $srid), $geometryAlias.value)",
+            // Note: 'ST_GeomFromText("Point(49 2)")' is not correct, so use single quote.
+            "ST_Distance(ST_GeomFromText($point, $srid), $geometryAlias.value)",
             $adapter->createNamedParameter($qb, $around['radius'])
         ));
     }
@@ -106,25 +109,32 @@ trait QueryGeometryTrait
         // With srid 4326 (Mercator), the radius should be in metre.
         $radiusMetre = $around['unit'] === 'km' ? $around['radius'] * 1000 : $around['radius'];
 
-        $xLong = $adapter->createNamedParameter($qb, $around['longitude']);
-        $yLat = $adapter->createNamedParameter($qb, $around['latitude']);
-
         $expr = $qb->expr();
         if ($this->isPosgreSql) {
+            $point = $adapter->createNamedParameter(
+                $qb,
+                'POINT(' . preg_replace('~[^\d.-]~', '', $around['longitude']) . ' ' . preg_replace('~[^\d.-]~', '', $around['latitude']) . ')'
+            );
             $srid = $adapter->createNamedParameter($qb, $srid);
             $qb
                 ->andWhere($expr->lte(
-                    "ST_DistanceSphere(ST_GeomFromText('Point($xLong $yLat)', $srid), $geometryAlias.value)",
+                    "ST_DistanceSphere(ST_GeomFromText($point, $srid), $geometryAlias.value)",
                     $adapter->createNamedParameter($qb, $radiusMetre)
                 ));
         } elseif ($this->isMysql576) {
+            $point = $adapter->createNamedParameter(
+                $qb,
+                'POINT(' . preg_replace('~[^\d.-]~', '', $around['longitude']) . ' ' . preg_replace('~[^\d.-]~', '', $around['latitude']) . ')'
+            );
             $srid = $adapter->createNamedParameter($qb, $srid);
             $qb
                 ->andWhere($expr->lte(
-                    "ST_Distance_Sphere(ST_GeomFromText('Point($xLong $yLat)', $srid), $geometryAlias.value)",
+                    "ST_Distance_Sphere(ST_GeomFromText($point, $srid), $geometryAlias.value)",
                     $adapter->createNamedParameter($qb, $radiusMetre)
                 ));
         } else {
+            $xLong = $adapter->createNamedParameter($qb, $around['longitude']);
+            $yLat = $adapter->createNamedParameter($qb, $around['latitude']);
             $radiusDegree = $radiusMetre / 111133;
             $radius = $adapter->createNamedParameter($qb, $radiusDegree);
             $qb
@@ -158,18 +168,18 @@ trait QueryGeometryTrait
      */
     protected function searchBox(AbstractEntityAdapter $adapter, QueryBuilder $qb, array $box, $srid, $geometryAlias): void
     {
-        $x1 = $adapter->createNamedParameter($qb, $box[0]);
-        $y1 = $adapter->createNamedParameter($qb, $box[1]);
-        $x2 = $adapter->createNamedParameter($qb, $box[2]);
-        $y2 = $adapter->createNamedParameter($qb, $box[3]);
+        $x1 = preg_replace('~[^\d.-]~', '', $box[0]);
+        $y1 = preg_replace('~[^\d.-]~', '', $box[1]);
+        $x2 = preg_replace('~[^\d.-]~', '', $box[2]);
+        $y2 = preg_replace('~[^\d.-]~', '', $box[3]);
+        $mbr = $adapter->createNamedParameter($qb, "Polygon(($x1 $y1, $x2 $y1, $x2 $y2, $x1 $y2, $x1 $y1))");
         $srid = $adapter->createNamedParameter($qb, $srid);
-        $mbr = "Polygon(($x1 $y1, $x2 $y1, $x2 $y2, $x1 $y2, $x1 $y1))";
 
         $expr = $qb->expr();
         if ($this->isPosgreSql) {
             // Or use an enveloppe or a box.
             $qb->andWhere($expr->eq(
-                "ST_Contains(ST_GeomFromText('$mbr', $srid), $geometryAlias.value)",
+                "ST_Contains(ST_GeomFromText($mbr, $srid), $geometryAlias.value)",
                 $expr->literal(true)
             ));
             return;
@@ -177,7 +187,7 @@ trait QueryGeometryTrait
 
         // "= true" is needed only to avoid an issue when converting dql to sql.
         $qb->andWhere($expr->eq(
-            "MBRContains(ST_GeomFromText('$mbr', $srid), $geometryAlias.value)",
+            "MBRContains(ST_GeomFromText($mbr, $srid), $geometryAlias.value)",
             $expr->literal(true)
         ));
     }
