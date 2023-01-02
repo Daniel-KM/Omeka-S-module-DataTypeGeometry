@@ -318,7 +318,7 @@ trait QueryGeometryTrait
         if (!preg_match('/^[a-z0-9-_]+:[a-z0-9-_]+$/i', $property)) {
             return 0;
         }
-        list($prefix, $localName) = explode(':', $property);
+        [$prefix, $localName] = explode(':', $property);
         $dql = <<<'DQL'
 SELECT p.id
 FROM Omeka\Entity\Property p

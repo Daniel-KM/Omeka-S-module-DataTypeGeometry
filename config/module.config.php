@@ -224,7 +224,7 @@ return [
                 'label' => 'Geography', // @translate
                 'adapter' => 'literal',
             ],
-            'geography:coordinates'  => [
+            'geography:coordinates' => [
                 'label' => 'Geographic coordinates', // @translate
                 'adapter' => 'literal',
             ],

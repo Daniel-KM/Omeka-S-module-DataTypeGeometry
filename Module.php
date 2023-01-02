@@ -83,7 +83,7 @@ class Module extends AbstractModule
 
         $filepath = $useMyIsam
             ? $this->modulePath() . '/data/install/schema-myisam.sql'
-            :  $this->modulePath() . '/data/install/schema.sql';
+            : $this->modulePath() . '/data/install/schema.sql';
         $this->execSqlFromFile($filepath);
     }
 
@@ -831,7 +831,7 @@ SQL;
     /**
      * @todo Remove the fix of srid in geographic table after save (check dependency?).
      */
-    public function fixSridInDatabase(Event $event)
+    public function fixSridInDatabase(Event $event): void
     {
         $services = $this->getServiceLocator();
         /** @var \Doctrine\DBAL\Connection $connection */

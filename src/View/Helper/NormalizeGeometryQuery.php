@@ -106,9 +106,7 @@ class NormalizeGeometryQuery extends AbstractHelper
                 $result['property'] = $property;
             }
 
-            $geo['around'] = array_filter($geo['around'], function ($v) {
-                return $v !== null && $v !== '';
-            });
+            $geo['around'] = array_filter($geo['around'], fn ($v) => $v !== null && $v !== '');
             if ($geo['around']) {
                 $around = $this->normalizeAround($geo['around'] + $defaults['around']);
                 if ($around) {
@@ -258,7 +256,7 @@ class NormalizeGeometryQuery extends AbstractHelper
             if (strpos($box, ' ') === false) {
                 return;
             }
-            list($left, $top, $right, $bottom) = explode(' ', $box, 4);
+            [$left, $top, $right, $bottom] = explode(' ', $box, 4);
         }
         if (is_numeric($left)
             && is_numeric($top)

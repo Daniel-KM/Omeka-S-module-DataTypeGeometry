@@ -146,7 +146,7 @@ class GeometryPosition extends Geometry
         if (is_string($value)) {
             $matches = [];
             $value = preg_match($this->regexPosition, (string) $value, $matches)
-                ? 'POINT (' . $matches['x'] . ' ' . ($matches['y'] ? '-' : ''). $matches['y'] . ')'
+                ? 'POINT (' . $matches['x'] . ' ' . ($matches['y'] ? '-' : '') . $matches['y'] . ')'
                 : strtoupper((string) $value);
         }
         try {

@@ -112,7 +112,7 @@ abstract class AbstractDataType extends BaseAbstractDataType implements DataType
         return $geometry;
     }
 
-    public function valueAnnotationPrepareForm(PhpRenderer $view)
+    public function valueAnnotationPrepareForm(PhpRenderer $view): void
     {
         $this->prepareForm($view);
     }
