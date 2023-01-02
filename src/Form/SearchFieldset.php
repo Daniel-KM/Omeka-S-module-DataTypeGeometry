@@ -71,7 +71,7 @@ class SearchFieldset extends Fieldset
                 'class' => 'query-geo-around-radius',
                 'min' => '1',
                 'max' => '20038000',
-                'step' => '1',
+                'step' => '0.001',
                 'placeholder' => 'Radius', // @translate
                 'aria-label' => 'Radius', // @translate
             ],

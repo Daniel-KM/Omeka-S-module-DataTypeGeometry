@@ -107,7 +107,7 @@ trait QueryGeometryTrait
     protected function searchAround(AbstractEntityAdapter $adapter, QueryBuilder $qb, array $around, $srid, $geometryAlias): void
     {
         // With srid 4326 (Mercator), the radius should be in metre.
-        $radiusMetre = $around['unit'] === 'km' ? $around['radius'] * 1000 : $around['radius'];
+        $radiusMetre = $around['unit'] === 'km' ? $around['radius'] * 1000.0 : $around['radius'] * 1.0;
 
         $expr = $qb->expr();
         if ($this->isPosgreSql) {
