@@ -257,7 +257,7 @@
 
     });
 
-    $(document).on('o:prepare-value', function(e, dataType, value, valueObj) {
+    $(document).on('o:prepare-value o:prepare-value-annotation', function(e, dataType, value, valueObj) {
         if (dataType === 'geography:coordinates' && valueObj) {
             // The value is an object that cannot be set by resource-fom.js.
             $(value).find('.value.to-require').val('');

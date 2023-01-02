@@ -7,9 +7,10 @@ use Laminas\View\Renderer\PhpRenderer;
 use Omeka\Api\Adapter\AbstractEntityAdapter;
 use Omeka\Api\Representation\ValueRepresentation;
 use Omeka\DataType\AbstractDataType as BaseAbstractDataType;
+use Omeka\DataType\ValueAnnotatingInterface;
 use Omeka\Entity\Value;
 
-abstract class AbstractDataType extends BaseAbstractDataType implements DataTypeInterface
+abstract class AbstractDataType extends BaseAbstractDataType implements DataTypeInterface, ValueAnnotatingInterface
 {
     use QueryGeometryTrait;
 
@@ -107,6 +108,16 @@ abstract class AbstractDataType extends BaseAbstractDataType implements DataType
             return null;
         }
         return $geometry;
+    }
+
+    public function valueAnnotationPrepareForm(PhpRenderer $view)
+    {
+        $this->prepareForm($view);
+    }
+
+    public function valueAnnotationForm(PhpRenderer $view)
+    {
+        return $this->form($view);
     }
 
     abstract public function getEntityClass(): string;

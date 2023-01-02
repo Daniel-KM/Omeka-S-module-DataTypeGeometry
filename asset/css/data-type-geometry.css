@@ -27,6 +27,14 @@
     width: 50%;
 }
 
+.sidebar-content .field-geometry label {
+    display: initial;
+    font-weight: normal;
+}
+.sidebar-content .field-geometry input.geometry-position {
+    width: calc( 100% - 3em );
+}
+
 @media screen and (max-width:640px) {
     .resource-form #resource-values .inputs .values [data-data-type="geometry:position"] .input-body label,
     .resource-form #resource-values .inputs .values [data-data-type="geometry:coordinates"] .input-body label,

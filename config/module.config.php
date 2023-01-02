@@ -161,6 +161,13 @@ return [
             // as used in image editor, iiif, alto, etc.
             'geometry:position' => DataType\GeometryPosition::class,
         ],
+        'value_annotating' => [
+            'geography',
+            'geography:coordinates',
+            'geometry',
+            'geometry:coordinates',
+            'geometry:position',
+        ],
     ],
     'view_manager' => [
         'template_path_stack' => [

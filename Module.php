@@ -115,6 +115,7 @@ class Module extends AbstractModule
             \Omeka\Api\Adapter\ItemAdapter::class,
             \Omeka\Api\Adapter\ItemSetAdapter::class,
             \Omeka\Api\Adapter\MediaAdapter::class,
+            \Omeka\Api\Adapter\ValueAnnotationAdapter::class,
             \Annotate\Api\Adapter\AnnotationAdapter::class,
             \Annotate\Api\Adapter\AnnotationBodyHydrator::class,
             \Annotate\Api\Adapter\AnnotationTargetHydrator::class,
