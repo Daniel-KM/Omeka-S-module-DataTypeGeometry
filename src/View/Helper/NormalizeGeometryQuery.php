@@ -303,6 +303,19 @@ class NormalizeGeometryQuery extends AbstractHelper
         return $zone;
     }
 
+    protected function normalizeArea($area)
+    {
+        // TODO Add the srid.
+        $area = trim($area);
+        try {
+            $geometry = new GeoWktParser($area);
+            $geometry = $geometry->parse();
+        } catch (\Exception $e) {
+            return;
+        }
+        return $area;
+    }
+
     protected function normalizeSrid($srid)
     {
         return (int) $srid;
