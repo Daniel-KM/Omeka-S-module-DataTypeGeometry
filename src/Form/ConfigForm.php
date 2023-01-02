@@ -23,7 +23,7 @@ class ConfigForm extends Form
                 'options' => [
                     'label' => 'Spatial reference id (Srid) for Locate', // @translate
                     'info' => 'The Srid allows to take the curvature of the Earth into account for map.
-    Recommended: 0 or 4326.
+    Recommended: 3857 (OpenStreetMap and web maps) or 4326 (default, used by gps and expert tools).
     It is displayed in the json-ld output.', // @translate
                 ],
                 'attributes' => [

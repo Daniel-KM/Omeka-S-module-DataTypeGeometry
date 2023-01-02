@@ -11,7 +11,11 @@ class Geography extends AbstractDataType
     /**
      * The default srid.
      *
+     * This is used in GPS and Google Earth and expert tools.
+     * 3857 is used in web maps like OpenStreetMap and derivative like Google Maps, OpenStreetMap, Bing, ArcGIS, ESRI.
+     *
      * @link http://www.opengis.net/def/crs/OGC/1.3/CRS84
+     * @link https://epsg.io/3857
      * @link https://epsg.io/4326
      *
      * @var int

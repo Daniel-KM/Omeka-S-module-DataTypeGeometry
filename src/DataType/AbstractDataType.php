@@ -95,6 +95,8 @@ abstract class AbstractDataType extends BaseAbstractDataType implements DataType
     /**
      * Convert a wkt string (with or without srid) into a geometry array.
      *
+     * @todo Check doctrine and terraformer parser for valid wkt (exemple: open polygon).
+     *
      * @param string $value
      * @return array|null
      */
