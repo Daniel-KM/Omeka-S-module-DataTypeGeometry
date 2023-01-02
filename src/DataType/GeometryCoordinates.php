@@ -67,16 +67,28 @@ class GeometryCoordinates extends Geometry
 
     public function isValid(array $valueObject)
     {
+        // Value is stored as string, but the json representation is an array.
+        // So the check may be done on the string or on the array.
         return !empty($valueObject)
             && !empty($valueObject['@value'])
-            && preg_match($this->regexCoordinates, (string) $valueObject['@value']);
+            && preg_match($this->regexCoordinates,
+                is_array($valueObject['@value'])
+                    ? implode(',', $valueObject['@value'])
+                    : (string) $valueObject['@value']
+            );
     }
 
     public function hydrate(array $valueObject, Value $value, AbstractEntityAdapter $adapter): void
     {
         // Remove the leading + if any. The value is already checked.
         $matches = [];
-        preg_match($this->regexCoordinates, (string) $valueObject['@value'], $matches);
+        preg_match(
+            $this->regexCoordinates,
+            is_array($valueObject['@value'])
+                ? implode(',', $valueObject['@value'])
+                : (string) $valueObject['@value'],
+            $matches
+        );
         $x = trim($matches['x'], '+ ');
         $y = trim($matches['y'], '+ ');
         $value->setValue($x . ',' . $y);

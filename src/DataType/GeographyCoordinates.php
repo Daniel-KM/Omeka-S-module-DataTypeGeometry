@@ -73,16 +73,28 @@ class GeographyCoordinates extends Geography
 
     public function isValid(array $valueObject)
     {
+        // Value is stored as string, but the json representation is an array.
+        // So the check may be done on the string or on the array.
         return !empty($valueObject)
             && !empty($valueObject['@value'])
-            && preg_match($this->regexLatitudeLongitude, (string) $valueObject['@value']);
+            && preg_match($this->regexLatitudeLongitude,
+                is_array($valueObject['@value'])
+                    ? implode(',', $valueObject['@value'])
+                    : (string) $valueObject['@value']
+            );
     }
 
     public function hydrate(array $valueObject, Value $value, AbstractEntityAdapter $adapter): void
     {
         // Remove the leading + if any. The value is already checked.
         $matches = [];
-        preg_match($this->regexLatitudeLongitude, (string) $valueObject['@value'], $matches);
+        preg_match(
+            $this->regexLatitudeLongitude,
+            is_array($valueObject['@value'])
+                ? implode(',', $valueObject['@value'])
+                : (string) $valueObject['@value'],
+            $matches
+        );
         $latitude = trim($matches['latitude'], '+ ');
         $longitude = trim($matches['longitude'], '+ ');
         $value->setValue($latitude . ',' . $longitude);

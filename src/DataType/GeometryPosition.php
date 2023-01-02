@@ -69,16 +69,28 @@ class GeometryPosition extends Geometry
 
     public function isValid(array $valueObject)
     {
+        // Value is stored as string, but the json representation is an array.
+        // So the check may be done on the string or on the array.
         return !empty($valueObject)
             && !empty($valueObject['@value'])
-            && preg_match($this->regexPosition, (string) $valueObject['@value']);
+            && preg_match($this->regexPosition,
+                is_array($valueObject['@value'])
+                    ? implode(',', $valueObject['@value'])
+                    : (string) $valueObject['@value']
+            );
     }
 
     public function hydrate(array $valueObject, Value $value, AbstractEntityAdapter $adapter): void
     {
         // The value is already checked.
         $matches = [];
-        preg_match($this->regexPosition, (string) $valueObject['@value'], $matches);
+        preg_match(
+            $this->regexPosition,
+            is_array($valueObject['@value'])
+                ? implode(',', $valueObject['@value'])
+                : (string) $valueObject['@value'],
+            $matches
+        );
         $x = $matches['x'];
         $y = $matches['y'];
         $value->setValue($x . ',' . $y);
