@@ -205,6 +205,8 @@ return [
         'Please enter a valid radius in m.', // @translate
         'Please enter a valid radius in km.', // @translate
         'Please enter a valid wkt for the geometry.', // @translate
+        '"multipoint", "multiline" and "multipolygon" are not supported for now. Use collection instead.', // @translate
+        'Error in input.', // @translate
     ],
     'datatypegeometry' => [
         'config' => [

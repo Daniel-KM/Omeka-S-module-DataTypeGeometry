@@ -31,7 +31,8 @@ class GeographyCoordinates extends Geography
     public function form(PhpRenderer $view)
     {
         $translate = $view->plugin('translate');
-        $escape = $view->plugin('escapeHtml');
+        $escapeAttr = $view->plugin('escapeHtmlAttr');
+        $validity = 'Value must be valid coordinates (latitude and longitude)'; // @translate
 
         $hiddenValue = (new Element\Hidden('@value'))
             ->setAttributes([
@@ -55,17 +56,19 @@ class GeographyCoordinates extends Geography
                 'max' => '180.0',
             ]);
 
-        $strings = [];
-        $strings['validity'] = $escape($translate('Value must be valid coordinates (latitude and longitude)')); // @translate
-        $div = <<<HTML
-<div class="error invalid-value" data-custom-validity="{$strings['validity']}"></div>
-HTML;
-        return $div
-            . $view->formHidden($hiddenValue)
-            . $view->formLabel($latitudeElement)
-            . $view->formNumber($latitudeElement)
-            . $view->formLabel($longitudeElement)
-            . $view->formNumber($longitudeElement);
+            return '<div class="field-geometry">'
+                . '<div class="error invalid-value" data-custom-validity="' . $escapeAttr($translate($validity)) . '"></div>'
+                . $view->formHidden($hiddenValue)
+                . '<div>'
+                . $view->formLabel($latitudeElement)
+                . $view->formNumber($latitudeElement)
+                . '</div>'
+                . '<div>'
+                . $view->formLabel($longitudeElement)
+                . $view->formNumber($longitudeElement)
+                . '</div>'
+                . '</div>'
+            ;
     }
 
     public function isValid(array $valueObject)

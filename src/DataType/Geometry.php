@@ -23,13 +23,20 @@ class Geometry extends AbstractDataType
 
     public function form(PhpRenderer $view)
     {
+        $translate = $view->plugin('translate');
+        $escapeAttr = $view->plugin('escapeHtmlAttr');
+        $validity = 'Please enter a valid wkt for the geometry.'; // @translate
+
         $element = new Element\Textarea('geometry');
         $element->setAttributes([
             'class' => 'value to-require geometry',
             'data-value-key' => '@value',
+            'data-invalid-message' => $validity,
             // 'placeholder' => 'POINT (2.294497 48.858252)',
         ]);
-        return $view->formTextarea($element);
+
+        return '<div class="error invalid-value" data-custom-validity="' . $escapeAttr($translate($validity)) . '"></div>'
+            . $view->formTextarea($element);
     }
 
     public function getEntityClass(): string

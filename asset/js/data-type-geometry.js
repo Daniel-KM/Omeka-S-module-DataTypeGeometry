@@ -12,57 +12,47 @@
      * @param string datatype
      * @return bool
      */
-    var geometryCheck = function(element, datatype) {
-        var primitive, message;
-        var val = element.value.trim().toUpperCase();
-        if (datatype === 'geography:coordinates') {
-            if (val.match(regexLatitudeLongitude)) {
-                primitive = true;
+    var checkGeometry = function(element, datatype) {
+        const val = element.value.trim().toUpperCase();
+        var primitive = null;
+        var message = null;
+        if (datatype === 'geography') {
+            if (val.includes('MULTIPOINT') || val.includes('MULTILINE') || val.includes('MULTIPOLYGON')) {
+                message = Omeka.jsTranslate('"multipoint", "multiline" and "multipolygon" are not supported for now. Use collection instead.');
             } else {
-                var invalidValue = $(element).closest('.input-body').find('.invalid-value');
-                message = invalidValue.data('customValidity');
-            }
-        } else if (datatype === 'geometry:coordinates') {
-            if (val.match(regexCoordinates)) {
-                primitive = true;
-            } else {
-                var invalidValue = $(element).closest('.input-body').find('.invalid-value');
-                message = invalidValue.data('customValidity');
-            }
-        } else if (datatype === 'geometry:position') {
-            if (val.match(regexPosition)) {
-                primitive = true;
-            } else {
-                var invalidValue = $(element).closest('.input-body').find('.invalid-value');
-                message = invalidValue.data('customValidity');
-            }
-        } else if (datatype === 'geography') {
-            try {
-                primitive = Terraformer.WKT.parse(val);
-            } catch (err) {
-                var error = true;
-                // Check ewkt.
-                if (/^srid\s*=\s*\d{1,5}\s*;\s*.+/i.test(val)) {
-                    try {
-                        primitive = Terraformer.WKT.parse(val.slice(val.indexOf(';')+ 1));
-                        error = false;
-                    } catch (err) {
+                try {
+                    primitive = Terraformer.WKT.parse(val);
+                } catch (err) {
+                    var error = true;
+                    // Check ewkt.
+                    if (/^srid\s*=\s*\d{1,5}\s*;\s*.+/i.test(val)) {
+                        try {
+                            primitive = Terraformer.WKT.parse(val.slice(val.indexOf(';')+ 1));
+                            error = false;
+                        } catch (err) {
+                        }
+                    }
+                    if (error) {
+                        message = 'Please enter a valid wkt for the geography.';
                     }
                 }
-                if (error) {
-                    message = 'Please enter a valid wkt for the geography.';
+                // TODO Check all x and y, that should be below 180 and 90.
+            }
+        } else if (datatype === 'geometry') {
+            if (val.includes('MULTIPOINT') || val.includes('MULTILINE') || val.includes('MULTIPOLYGON')) {
+                message = Omeka.jsTranslate('"multipoint", "multiline" and "multipolygon" are not supported for now. Use collection instead.');
+            } else {
+                try {
+                    primitive = Terraformer.WKT.parse(val);
+                } catch (err) {
+                    message = invalidMessage(element);
                 }
             }
-            // TODO Check all x and y, that should be below 180 and 90.
-        } else if (datatype === 'geometry') {
-            try {
-                primitive = Terraformer.WKT.parse(val);
-            } catch (err) {
-                message = 'Please enter a valid wkt for the geometry.';
-            }
+        } else {
+            return false;
         }
 
-        if (val === '' || primitive) {
+        if (val === '' || primitive || !message) {
             element.setCustomValidity('');
             return true;
         } else {
@@ -72,17 +62,61 @@
     }
 
     /**
+     * Check user input coordinates.
+     *
+     * @param object element
+     * @param string datatype
+     * @return bool
+     */
+    var checkCoordinates = function(element, datatype) {
+        const val = element.value.trim().toUpperCase();
+        var check = false;
+        var message = null;
+        if (datatype === 'geography:coordinates') {
+            check = val.match(regexLatitudeLongitude);
+        } else if (datatype === 'geometry:coordinates') {
+            check = val.match(regexCoordinates);
+        } else if (datatype === 'geometry:position') {
+            check = val.match(regexPosition);
+        } else {
+            return false;
+       }
+        if (check) {
+            element.classList.remove('invalid');
+            element.setCustomValidity('');
+            $(element).parent().find('input[type=number]')
+                .removeClass('invalid')
+                .get(0).setCustomValidity('');
+            return true;
+        } else {
+            $(element).val('');
+            message = invalidMessage(element);
+            element.classList.add('invalid');
+            element.setCustomValidity(Omeka.jsTranslate(message));
+            $(element).parent().find('input[type=number]')
+                .addClass('invalid')
+                .get(0).setCustomValidity(message);
+            return false;
+        }
+    }
+
+    var invalidMessage = function(element) {
+        let invalidValue = $(element).parent().closest('.value').find('.invalid-value');
+        return invalidValue.length ? invalidValue.data('customValidity') : Omeka.jsTranslate('Error in input.');
+    }
+
+    /**
      * Check user input lat or long.
      *
      * @param object element
      * @param string datatype
      */
     var latlongCheck = function(element, datatype) {
-        var message;
-        var val = element.value.trim();
         var element2;
-        var elementRadius = $('input.query-geo-around-radius')[0];
-        var radius = elementRadius.value.trim();
+        var message;
+        const val = element.value.trim();
+        const elementRadius = $('input.query-geo-around-radius')[0];
+        const radius = elementRadius.value.trim();
         if (datatype === 'latitude') {
             element2 = $('input.query-geo-around-longitude')[0];
             if (val < -90 || val > 90) {
@@ -95,8 +129,7 @@
             }
         }
 
-        var val2 = element2.value.trim();
-
+        const val2 = element2.value.trim();
         if (val === '' && val2 === '') {
             element.setCustomValidity('');
             element2.setCustomValidity('');
@@ -126,12 +159,12 @@
      * @param object element
      */
     var radiusCheck = function(element) {
-        var message;
-        var val = element.value.trim();
-        var radius = val;
-        var latitude = $('input.query-geo-around-latitude')[0].value.trim();
-        var longitude = $('input.query-geo-around-longitude')[0].value.trim();
-        var unit = $('input.query-geo-around-unit[name="geo[around][unit]"]:checked').val();
+        var message = '';
+        const val = element.value.trim();
+        const radius = val;
+        const latitude = $('input.query-geo-around-latitude')[0].value.trim();
+        const longitude = $('input.query-geo-around-longitude')[0].value.trim();
+        const unit = $('input.query-geo-around-unit[name="geo[around][unit]"]:checked').val();
         if (latitude.length || longitude.length) {
             if (radius <= 0) {
                 message = 'Please enter a valid radius.';
@@ -143,11 +176,10 @@
                 message = 'Please enter a valid radius in km.';
             }
         }
-
         if ((latitude.length || longitude.length) && val === '') {
             message = 'Please enter a radius.';
             element.setCustomValidity(Omeka.jsTranslate(message));
-        } else if (val === '' || !message) {
+        } else if (val === '' || message === '') {
             element.setCustomValidity('');
         } else {
             element.setCustomValidity(Omeka.jsTranslate(message));
@@ -163,65 +195,60 @@
         $('#geometry')
             .prepend('<legend>' + Omeka.jsTranslate('Geographic coordinates') + '</legend>');
 
-        $('.geography-coordinates').on('keyup change', function(e) {
-            var div = $(this).closest('.input-body');
-            var latitude = div.find('.geography-coordinates-latitude').val().trim();
-            var longitude = div.find('.geography-coordinates-longitude').val().trim();
-            var element = div.find('.value.to-require');
-            element.val(latitude + ',' + longitude);
-            if (!geometryCheck(element[0], 'geography:coordinates')) {
-                element.val('');
-                // TODO Display error on the invalid part.
-            }
+        $(document).on('keyup change', '.geography-coordinates', function(e) {
+            var message = null;
+            const div = $(this).closest('.value');
+            const latitude = div.find('.geography-coordinates-latitude').val().trim();
+            const longitude = div.find('.geography-coordinates-longitude').val().trim();
+            const element = div.find('.value.to-require');
+            const val = latitude + ',' + longitude;
+            element.val(val);
+            checkCoordinates(element[0], 'geography:coordinates');
         });
 
-        $('.geometry-coordinates').on('keyup change', function(e) {
-            var div = $(this).closest('.input-body');
-            var x = div.find('.geometry-coordinates-x').val().trim();
-            var y = div.find('.geometry-coordinates-y').val().trim();
-            var element = div.find('.value.to-require');
-            element.val(x + ',' + y);
-            if (!geometryCheck(element[0], 'geometry:coordinates')) {
-                element.val('');
-                // TODO Display error on the invalid part.
-            }
+        $(document).on('keyup change', '.geometry-coordinates', function(e) {
+            const div = $(this).closest('.value');
+            const x = div.find('.geometry-coordinates-x').val().trim();
+            const y = div.find('.geometry-coordinates-y').val().trim();
+            const element = div.find('.value.to-require');
+            const val = x + ',' + y;
+            element.val(val);
+            checkCoordinates(element[0], 'geometry:coordinates')
         });
 
-        $('.geometry-position').on('keyup change', function(e) {
-            var div = $(this).closest('.input-body');
-            var x = div.find('.geometry-position-x').val().trim();
-            var y = div.find('.geometry-position-y').val().trim();
-            var element = div.find('.value.to-require');
-            element.val(x + ',' + y);
-            if (!geometryCheck(element[0], 'geometry:position')) {
-                element.val('');
-                // TODO Display error on the invalid part.
-            }
+        $(document).on('keyup change', '.geometry-position', function(e) {
+            const div = $(this).closest('.value');
+            const x = div.find('.geometry-position-x').val().trim();
+            const y = div.find('.geometry-position-y').val().trim();
+            const element = div.find('.value.to-require');
+            const val = x + ',' + y;
+            element.val(val);
+            checkCoordinates(element[0], 'geometry:position');
         });
 
-        $('textarea.value.geography').on('keyup change', function(e) {
-            geometryCheck(this, 'geography');
+        $(document).on('keyup change', 'textarea.value.geography', function(e) {
+            checkGeometry(this, 'geography');
         });
 
-        $('textarea.value.geometry').on('keyup change', function(e) {
-            geometryCheck(this, 'geometry');
+        $(document).on('keyup change', 'textarea.value.geometry', function(e) {
+            checkGeometry(this, 'geometry');
         });
 
         // Search form.
 
         // The form uses geography only, because to query non-georeferenced
         // geometries has no meaning.
-        $('textarea.query-geo-area').on('keyup', function(e) {
-            geometryCheck(this, 'geography');
+        $('textarea.query-geo-area').on('keyup change', function(e) {
+            checkGeometry(this, 'geography');
         });
 
-        $('input.query-geo-around-latitude').on('keyup', function(e) {
+        $('input.query-geo-around-latitude').on('keyup change', function(e) {
             latlongCheck(this, 'latitude');
         });
-        $('input.query-geo-around-longitude').on('keyup', function(e) {
+        $('input.query-geo-around-longitude').on('keyup change', function(e) {
             latlongCheck(this, 'longitude');
         });
-        $('input.query-geo-around-radius').on('keyup', function(e) {
+        $('input.query-geo-around-radius').on('keyup change', function(e) {
             radiusCheck(this);
         });
         $('input.query-geo-around-unit').on('click', function(e) {
@@ -241,7 +268,7 @@
             if (typeof coordinates === 'object') {
                 coordinates = coordinates.latitude + ',' + coordinates.longitude;
             }
-            var coords = coordinates.match(regexLatitudeLongitude);
+            const coords = coordinates.match(regexLatitudeLongitude);
             if (!coords) {
                 return;
             }
@@ -258,7 +285,7 @@
             if (typeof coordinates === 'object') {
                 coordinates = coordinates.x + ',' + coordinates.y;
             }
-            var coords = coordinates.match(regexCoordinates);
+            const coords = coordinates.match(regexCoordinates);
             if (!coords) {
                 return;
             }
@@ -275,7 +302,7 @@
             if (typeof position === 'object') {
                 position = position.x + ',' + position.y;
             }
-            var pos = position.match(regexPosition);
+            const pos = position.match(regexPosition);
             if (!pos) {
                 return;
             }

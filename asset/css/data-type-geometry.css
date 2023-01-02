@@ -7,6 +7,10 @@
     content: "\f3c5";
 }
 
+.inputs .values .touched.invalid {
+    box-shadow: 0 0 2px 2px #a91919;
+}
+
 .resource-form #resource-values .inputs .values [data-data-type="geometry:position"] .input-body label,
 .resource-form #resource-values .inputs .values [data-data-type="geometry:coordinates"] .input-body label,
 .resource-form #resource-values .inputs .values [data-data-type="geography:coordinates"] .input-body label {

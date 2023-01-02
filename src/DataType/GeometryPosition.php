@@ -29,7 +29,8 @@ class GeometryPosition extends Geometry
     public function form(PhpRenderer $view)
     {
         $translate = $view->plugin('translate');
-        $escape = $view->plugin('escapeHtml');
+        $escapeAttr = $view->plugin('escapeHtmlAttr');
+        $validity = 'Value must be a valid integer position from the top left corner'; // @translate
 
         $hiddenValue = (new Element\Hidden('@value'))
             ->setAttributes([
@@ -51,17 +52,19 @@ class GeometryPosition extends Geometry
                 'min' => '0',
             ]);
 
-        $strings = [];
-        $strings['validity'] = $escape($translate('Value must be a valid integer position from the top left corner')); // @translate
-        $div = <<<HTML
-<div class="error invalid-value" data-custom-validity="{$strings['validity']}"></div>
-HTML;
-        return $div
+        return '<div class="field-geometry">'
+            . '<div class="error invalid-value" data-custom-validity="' . $escapeAttr($translate($validity)) . '"></div>'
             . $view->formHidden($hiddenValue)
+            . '<div>'
             . $view->formLabel($xElement)
             . $view->formNumber($xElement)
+            . '</div>'
+            . '<div>'
             . $view->formLabel($yElement)
-            . $view->formNumber($yElement);
+            . $view->formNumber($yElement)
+            . '</div>'
+            . '</div>'
+        ;
     }
 
     public function isValid(array $valueObject)
