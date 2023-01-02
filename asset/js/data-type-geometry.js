@@ -12,14 +12,14 @@
     var geometryCheck = function(element, datatype) {
         var primitive, message;
         var val = element.value.trim().toUpperCase();
-        if (datatype === 'geometry:geography:coordinates') {
+        if (datatype === 'geography:coordinates') {
             if (val.match(regexLatitudeLongitude)) {
                 primitive = true;
             } else {
                 var invalidValue = $(element).closest('.input-body').find('.invalid-value');
                 message = invalidValue.data('customValidity');
             }
-        } else if (datatype === 'geometry:geography') {
+        } else if (datatype === 'geography') {
             try {
                 primitive = Terraformer.WKT.parse(val);
             } catch (err) {
@@ -37,7 +37,7 @@
                 }
             }
             // TODO Check all x and y, that should be below 180 and 90.
-        } else if (datatype === 'geometry:geometry') {
+        } else if (datatype === 'geometry') {
             try {
                 primitive = Terraformer.WKT.parse(val);
             } catch (err) {
@@ -152,18 +152,18 @@
             var longitude = div.find('.geography-coordinates-longitude').val().trim();
             var element = div.find('.value.to-require');
             element.val(latitude + ',' + longitude);
-            if (!geometryCheck(element[0], 'geometry:geography:coordinates')) {
+            if (!geometryCheck(element[0], 'geography:coordinates')) {
                 element.val('');
                 // TODO Display error on the invalid part.
             }
         });
 
         $('textarea.value.geography').on('keyup, change', function(e) {
-            geometryCheck(this, 'geometry:geography');
+            geometryCheck(this, 'geography');
         });
 
         $('textarea.value.geometry').on('keyup, change', function(e) {
-            geometryCheck(this, 'geometry:geometry');
+            geometryCheck(this, 'geometry');
         });
 
         // Search form.
@@ -171,7 +171,7 @@
         // The form uses geography only, because to query non-georeferenced
         // geometries has no meaning.
         $('textarea.query-geo-area').on('keyup', function(e) {
-            geometryCheck(this, 'geometry:geography');
+            geometryCheck(this, 'geography');
         });
 
         $('input.query-geo-around-latitude').on('keyup', function(e) {
@@ -190,7 +190,7 @@
     });
 
     $(document).on('o:prepare-value', function(e, dataType, value, valueObj) {
-        if (dataType === 'geometry:geography:coordinates' && valueObj) {
+        if (dataType === 'geography:coordinates' && valueObj) {
             // The value is an object that cannot be set by resource-fom.js.
             $(value).find('.value.to-require').val('');
             var coordinates = valueObj['@value'];

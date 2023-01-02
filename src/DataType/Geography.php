@@ -20,7 +20,7 @@ class Geography extends AbstractDataType
 
     public function getName()
     {
-        return 'geometry:geography';
+        return 'geography';
     }
 
     public function getLabel()

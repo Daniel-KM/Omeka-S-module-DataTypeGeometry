@@ -20,7 +20,7 @@ class GeographyCoordinates extends Geography
 
     public function getName()
     {
-        return 'geometry:geography:coordinates';
+        return 'geography:coordinates';
     }
 
     public function getLabel()
@@ -100,7 +100,7 @@ HTML;
         $latitude = $matches['latitude'];
         $longitude = $matches['longitude'];
         $result = [];
-        $result['@type'] = 'geometry:geography:coordinates';
+        $result['@type'] = 'geography:coordinates';
         $result['@value'] = [
             'latitude' => $latitude,
             'longitude' => $longitude,

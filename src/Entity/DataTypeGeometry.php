@@ -56,7 +56,7 @@ class DataTypeGeometry extends AbstractEntity
      * @var GeometryInterface
      *
      * @Column(
-     *     type="geometry:geometry",
+     *     type="geometry",
      *     nullable=false
      * )
      *

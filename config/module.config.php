@@ -153,9 +153,9 @@ return [
     ],
     'data_types' => [
         'invokables' => [
-            'geometry:geography:coordinates' => DataType\GeographyCoordinates::class,
-            'geometry:geography' => DataType\Geography::class,
-            'geometry:geometry' => DataType\Geometry::class,
+            'geography' => DataType\Geography::class,
+            'geography:coordinates' => DataType\GeographyCoordinates::class,
+            'geometry' => DataType\Geometry::class,
         ],
     ],
     'view_manager' => [

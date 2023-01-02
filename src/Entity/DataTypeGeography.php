@@ -56,7 +56,7 @@ class DataTypeGeography extends AbstractEntity
      * @var GeographyInterface
      *
      * @Column(
-     *     type="geometry:geography",
+     *     type="geography",
      *     nullable=false
      * )
      *

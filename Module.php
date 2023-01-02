@@ -45,11 +45,11 @@ class Module extends AbstractModule
 
         // TODO It is possible to register each geometry separately (line, point…). Is it useful? Or a Omeka type is enough (geometry:point…)? Or a column in the table (no)?
         \Doctrine\DBAL\Types\Type::addType(
-            'geometry:geometry',
+            'geometry',
             \CrEOF\Spatial\DBAL\Types\GeometryType::class
         );
         \Doctrine\DBAL\Types\Type::addType(
-            'geometry:geography',
+            'geography',
             \CrEOF\Spatial\DBAL\Types\GeographyType::class
         );
     }
@@ -277,7 +277,7 @@ class Module extends AbstractModule
         $adapter = $event->getTarget();
         $qb = $event->getParam('queryBuilder');
         $dataTypes = $this->getGeometryDataTypes();
-        $dataTypes['geometry:geography']->buildQuery($adapter, $qb, $query);
+        $dataTypes['geography']->buildQuery($adapter, $qb, $query);
     }
 
     /**
@@ -595,7 +595,7 @@ SQL;
         $sql = <<<SQL
 UPDATE `value`
 SET
-    `value`.`type` = "geometry:geography:coordinates"
+    `value`.`type` = "geography:coordinates"
 $whereSql
 SQL;
         $connection->executeStatement($sql, $bind, $types);
@@ -632,7 +632,7 @@ LEFT JOIN `mapping_marker`
         AND CONCAT(`mapping_marker`.`lat`, ",", `mapping_marker`.`lng`) = `value`.`value`
 WHERE
     `value`.`resource_id` IN (:resource_ids)
-    AND `value`.`type` = "geometry:geography:coordinates"
+    AND `value`.`type` = "geography:coordinates"
     AND `mapping_marker`.`id` IS NULL
     $sqlWhere
 ;
@@ -658,7 +658,7 @@ FROM `mapping_marker`
 LEFT JOIN `value`
     ON `value`.`resource_id` = `mapping_marker`.`item_id`
         AND `value`.`value` = CONCAT(`mapping_marker`.`lat`, ",", `mapping_marker`.`lng`)
-        AND `value`.`type` = "geometry:geography:coordinates"
+        AND `value`.`type` = "geography:coordinates"
 WHERE
     `mapping_marker`.`item_id` IN (:resource_ids)
     AND `value`.`id` IS NULL
@@ -685,7 +685,7 @@ SELECT DISTINCT
     `mapping_marker`.`item_id`,
     :property_id,
     NULL,
-    "geometry:geography:coordinates",
+    "geography:coordinates",
     NULL,
     CONCAT(`mapping_marker`.`lat`, ",", `mapping_marker`.`lng`),
     NULL,
@@ -732,6 +732,7 @@ SQL;
             }
 
             $dataTypeClass = $dataType->getEntityClass();
+            $currentSrid = in_array($dataTypeName, ['geography', 'geography:coordinates']) ? $srid : 0;
 
             // TODO Remove this persist, that is used only when a geometry is updated on the map.
             // Persist is required for annotation, since there is no cascade
@@ -762,14 +763,11 @@ SQL;
                     next($existingDataValues);
                 }
 
-                // Set the default srid when needed for geographic geometries.
-                // TODO Add method setEntityValues.
+                // Set the default srid for geographies in all cases.
+                /** @var \CrEOF\Spatial\PHP\Types\Geography\GeographyInterface|\CrEOF\Spatial\PHP\Types\Geometry\GeometryInterface $geometry */
                 $geometry = $dataType->getGeometryFromValue($value->getValue());
-                if ($srid
-                    && in_array($dataTypeName, ['geometry:geography', 'geometry:geography:coordinates'])
-                    && empty($geometry->getSrid())
-                ) {
-                    $geometry->setSrid($srid);
+                if ($geometry instanceof \CrEOF\Spatial\PHP\Types\Geography\GeographyInterface) {
+                    $geometry->setSrid($currentSrid);
                 }
 
                 $dataValue->setResource($entity);
@@ -797,9 +795,9 @@ SQL;
     {
         $dataTypes = $this->getServiceLocator()->get('Omeka\DataTypeManager');
         return [
-            'geometry:geography:coordinates' => $dataTypes->get('geometry:geography:coordinates'),
-            'geometry:geography' => $dataTypes->get('geometry:geography'),
-            'geometry:geometry' => $dataTypes->get('geometry:geometry'),
+            'geography:coordinates' => $dataTypes->get('geography:coordinates'),
+            'geography' => $dataTypes->get('geography'),
+            'geometry' => $dataTypes->get('geometry'),
         ];
     }
 

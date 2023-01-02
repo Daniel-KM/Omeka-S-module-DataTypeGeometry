@@ -10,7 +10,7 @@ class Geometry extends AbstractDataType
 {
     public function getName()
     {
-        return 'geometry:geometry';
+        return 'geometry';
     }
 
     public function getLabel()

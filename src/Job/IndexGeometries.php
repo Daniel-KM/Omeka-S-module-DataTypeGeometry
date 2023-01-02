@@ -163,8 +163,8 @@ SQL;
             ? '"Annotate\\\\Entity\\\\Annotation", "Annotate\\\\Entity\\\\AnnotationBody", "Annotate\\\\Entity\\\\AnnotationTarget"'
             : '"Omeka\\\\Entity\\\\Item", "Omeka\\\\Entity\\\\ItemSet", "Omeka\\\\Entity\\\\Media"';
         $dataType = $isGeography
-            ? 'geometry:geography'
-            : 'geometry:geometry';
+            ? 'geography'
+            : 'geometry';
         $table = $isGeography
             ? 'data_type_geography'
             : 'data_type_geometry';
@@ -177,7 +177,7 @@ UPDATE `value`
 INNER JOIN `resource` ON `resource`.`id` = `value`.`resource_id`
 SET `type` = "$dataType", `lang` = NULL, `value_resource_id` = NULL, `uri` = NULL
 WHERE `resource`.`resource_type` IN ($resourceTypes)
-AND `value`.`type` IN ("geometry:geometry", "geometry:geography");
+AND `value`.`type` IN ("geometry", "geography");
 SQL;
             $connection->executeStatement($sql);
             $logger->info(new Message(
@@ -187,9 +187,9 @@ SQL;
         }
 
         $tables = [
-            // 'geometry:geography:coordinates' => 'data_type_geography' ,
-            'geometry:geography' => 'data_type_geography' ,
-            'geometry:geometry' => 'data_type_geometry' ,
+            // 'geography:coordinates' => 'data_type_geography' ,
+            'geography' => 'data_type_geography' ,
+            'geometry' => 'data_type_geometry' ,
         ];
 
         // Remove existing index for resources or annotations in all tables.
@@ -211,7 +211,7 @@ SQL;
         // When the values are forced to a data type, all data types are indexed
         // in one table.
         if (!$updateValues) {
-            $dataTypes = '"geometry:geography", "geometry:geometry"';
+            $dataTypes = '"geography", "geometry"';
             $tables = [$dataType => $tables[$dataType]];
         }
 
@@ -261,7 +261,7 @@ SQL;
         $connection = $this->connection;
 
         // All annotation targets that have wkt and a media as selector are
-        // "geometry:geometry", and other wkt targets are "geometry:geography".
+        // "geometry", and other wkt targets are "geography".
 
         $property = 'rdf:value';
         $rdfValue = $api->searchOne('properties', ['term' => $property])->getContent();
@@ -291,9 +291,9 @@ SQL;
 UPDATE value
 INNER JOIN annotation_target ON annotation_target.id = value.resource_id
 INNER JOIN resource ON resource.id = value.resource_id
-SET type = "geometry:geography", lang = NULL, value_resource_id = NULL, uri = NULL
+SET type = "geography", lang = NULL, value_resource_id = NULL, uri = NULL
 WHERE resource.resource_type = "Annotate\\\\Entity\\\\AnnotationTarget"
-AND value.type IN ("geometry:geometry", "geometry:geography")
+AND value.type IN ("geometry", "geography")
 AND value.property_id = $rdfValue;
 SQL;
 
@@ -303,8 +303,8 @@ SQL;
         $sql = <<<SQL
 UPDATE `value`
 INNER JOIN `annotation_target` ON annotation_target.id = value.resource_id
-SET type = "geometry:geometry", lang = NULL, value_resource_id = NULL, uri = NULL
-WHERE value.type IN ("geometry:geometry", "geometry:geography")
+SET type = "geometry", lang = NULL, value_resource_id = NULL, uri = NULL
+WHERE value.type IN ("geometry", "geography")
 AND value.property_id = $rdfValue
 AND value.resource_id IN (
   SELECT resource_id FROM (
@@ -324,8 +324,8 @@ SQL;
         ));
 
         $tables = [
-            'geometry:geography' => 'data_type_geography' ,
-            'geometry:geometry' => 'data_type_geometry' ,
+            'geography' => 'data_type_geography' ,
+            'geometry' => 'data_type_geometry' ,
         ];
         foreach ($tables as $dataType => $table) {
             $srid = $table === 'data_type_geography' ? $defaultSrid : 0;
@@ -405,13 +405,13 @@ SQL;
         $isGeography = $options['isGeography'];
         if (is_null($isGeography)) {
             $dataTypes = [
-                'geometry:geography',
-                'geometry:geometry',
+                'geography',
+                'geometry',
             ];
         } else {
             $dataTypes = $isGeography
-                ? ['geometry:geography']
-                : ['geometry:geometry'];
+                ? ['geography']
+                : ['geometry'];
         }
 
         $success = true;
@@ -435,7 +435,7 @@ SQL;
             if (!$total) {
                 $logger->notice(new Message(
                     'There seems no issues in %s.', // @translate
-                    $dataType === 'geometry:geography' ? 'geographies' : 'geometries'
+                    $dataType === 'geography' ? 'geographies' : 'geometries'
                 ));
                 continue;
             }
@@ -466,7 +466,7 @@ SQL;
 
             $logger->warn(new Message(
                 'These %d %s have issues.', // @translate
-                $total, $dataType === 'geometry:geography' ? 'geographies' : 'geometries'
+                $total, $dataType === 'geography' ? 'geographies' : 'geometries'
             ));
 
             $stmt = $connection->query($sql);
