@@ -184,18 +184,17 @@
         } else {
             element.setCustomValidity(Omeka.jsTranslate(message));
         }
+    }
 
-        var geometryOrGeographyFieldset = function() {
-            const mode = $('input[name="geo[mode]"]:checked').val();
-            if (mode === 'geography') {
-                $('[data-geo-mode=geometry]').closest('.field-geo').hide();
-                $('[data-geo-mode=geography]').closest('.field-geo').show();
-            } else {
-                $('[data-geo-mode=geometry]').closest('.field-geo').show();
-                $('[data-geo-mode=geography]').closest('.field-geo').hide();
-            }
+    var geometryOrGeographyFieldset = function() {
+        const mode = $('input[name="geo[mode]"]:checked').val();
+        if (mode === 'geography') {
+            $('[data-geo-mode=geometry]').closest('.field-geo').hide();
+            $('[data-geo-mode=geography]').closest('.field-geo').show();
+        } else {
+            $('[data-geo-mode=geometry]').closest('.field-geo').show();
+            $('[data-geo-mode=geography]').closest('.field-geo').hide();
         }
-
     }
 
     $(document).ready(function() {
