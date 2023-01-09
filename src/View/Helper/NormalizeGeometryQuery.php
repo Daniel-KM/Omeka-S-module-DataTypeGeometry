@@ -106,7 +106,9 @@ class NormalizeGeometryQuery extends AbstractHelper
                 $result['property'] = $property;
             }
 
-            $geo['around'] = array_filter($geo['around'], fn ($v) => $v !== null && $v !== '');
+            $geo['around'] = array_filter($geo['around'], function ($v) {
+                return $v !== null && $v !== '';
+            });
             if ($geo['around']) {
                 $around = $this->normalizeAround($geo['around'] + $defaults['around']);
                 if ($around) {
