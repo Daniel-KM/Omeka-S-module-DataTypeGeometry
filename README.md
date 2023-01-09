@@ -196,7 +196,7 @@ is no more used. For coordinates and position, no "@type" is appended
 {
     "dcterms:spatial": [
         {
-            "type': "geography",
+            "type": "geography",
             "@type": "http://www.opengis.net/ont/geosparql#wktLiteral",
             "@value": "POINT (2.294497 48.858252)"
         },

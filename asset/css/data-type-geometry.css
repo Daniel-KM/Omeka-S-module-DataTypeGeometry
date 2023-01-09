@@ -1,45 +1,51 @@
 /* Data type Geometry */
 
-.o-icon-geometry:before {
-    content: "\f5ee";
-}
-.o-icon-geography:before {
-    content: "\f3c5";
-}
+@media screen {
+    .o-icon-geometry:before {
+        content: "\f5ee";
+    }
+    .o-icon-geography:before {
+        content: "\f3c5";
+    }
 
-.inputs .values .touched.invalid {
-    box-shadow: 0 0 2px 2px #a91919;
-}
+    .inputs .values .touched.invalid {
+        box-shadow: 0 0 2px 2px #a91919;
+    }
 
-.resource-form #resource-values .inputs .values [data-data-type="geometry:position"] .input-body label,
-.resource-form #resource-values .inputs .values [data-data-type="geometry:coordinates"] .input-body label,
-.resource-form #resource-values .inputs .values [data-data-type="geography:coordinates"] .input-body label {
-    display: inline-block;
-    width: 50%;
-    padding-left: 6px;
-    padding-right: 6px;
-    text-align: right;
-}
+    .resource-form #resource-values .inputs .values [data-data-type="geometry:position"] .input-body label,
+    .resource-form #resource-values .inputs .values [data-data-type="geometry:coordinates"] .input-body label,
+    .resource-form #resource-values .inputs .values [data-data-type="geography:coordinates"] .input-body label {
+        display: inline-block;
+        width: 50%;
+        padding-left: 6px;
+        padding-right: 6px;
+        text-align: right;
+    }
 
-.resource-form #resource-values .inputs .values [data-data-type="geometry:position"] .input-body .geometry-position,
-.resource-form #resource-values .inputs .values [data-data-type="geometry:coordinates"] .input-body .geometry-coordinates,
-.resource-form #resource-values .inputs .values [data-data-type="geography:coordinates"] .input-body .geography-coordinates {
-    width: 50%;
-}
+    .resource-form #resource-values .inputs .values [data-data-type="geometry:position"] .input-body .geometry-position,
+    .resource-form #resource-values .inputs .values [data-data-type="geometry:coordinates"] .input-body .geometry-coordinates,
+    .resource-form #resource-values .inputs .values [data-data-type="geography:coordinates"] .input-body .geography-coordinates {
+        width: 50%;
+    }
 
-.sidebar-content .field-geometry {
-    width: calc( 100% - 30px );
-}
-.sidebar-content .field-geometry label {
-    display: initial;
-    font-weight: normal;
-    text-align: right;
-}
-.sidebar-content .field-geometry .field-geometry-number {
-    display: flex;
-}
-.sidebar-content .field-geometry input.geometry-position {
-    width: calc( 100% - 3em );
+    .sidebar-content .field-geometry {
+        width: calc( 100% - 30px );
+    }
+    .sidebar-content .field-geometry label {
+        display: initial;
+        font-weight: normal;
+        text-align: right;
+    }
+    .sidebar-content .field-geometry .field-geometry-number {
+        display: flex;
+    }
+    .sidebar-content .field-geometry input.geometry-position {
+        width: calc( 100% - 3em );
+    }
+
+    .batch-edit .field-container > legend {
+        font-size: 16px;
+    }
 }
 
 @media screen and (max-width:640px) {
@@ -48,8 +54,4 @@
     .resource-form #resource-values .inputs .values [data-data-type="geography:coordinates"] .input-body label {
         text-align: initial;
     }
-}
-
-.batch-edit .field-container > legend {
-    font-size: 16px;
 }
