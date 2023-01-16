@@ -782,6 +782,7 @@ SQL;
 
             $mainGeo = strtok($dataTypeName, ':');
             $currentSrid = $mainGeo === 'geography' ? $srid : 0;
+
             $dataTypeClass = $dataType->getEntityClass();
 
             /** @var \DataTypeGeometry\Entity\DataTypeGeometry[] $existingDataValues */
@@ -833,6 +834,12 @@ SQL;
      */
     public function fixSridInDatabase(Event $event): void
     {
+        static $supportGeography = null;
+
+        if ($supportGeography === false) {
+            return;
+        }
+
         $services = $this->getServiceLocator();
         /** @var \Doctrine\DBAL\Connection $connection */
         $connection = $services->get('Omeka\Connection');
@@ -842,7 +849,12 @@ UPDATE `data_type_geography`
 SET `value` = ST_SRID(`value`, $srid)
 WHERE ST_SRID(`value`) != $srid;
 SQL;
-        $connection->executeStatement($sql);
+        try {
+            $connection->executeStatement($sql);
+            $supportGeography = true;
+        } catch (\Exception $e) {
+            $supportGeography = false;
+        }
     }
 
     /**

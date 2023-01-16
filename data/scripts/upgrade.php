@@ -93,7 +93,14 @@ UPDATE `data_type_geography`
 SET `value` = ST_SRID(`value`, $defaultSrid)
 WHERE ST_SRID(`value`) != $defaultSrid;
 SQL;
-    $connection->executeStatement($sql);
+    try {
+        $connection->executeStatement($sql);
+    } catch (\Exception $e) {
+        $message = new Message(
+            'Your database is not compatible with geographic search: only flat geometry is supported.' // @translate
+        );
+        $messenger->addWarning($message);
+    }
 
     $message = new Message(
         'Datatype names were simplified: "geometry", "geography", "geography:coordinates".' // @translate
