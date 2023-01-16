@@ -59,8 +59,8 @@ composer install --no-dev
 MySql does not support all geographic queries, for example to [search a point in a polygon for a sphere],
 so it is disabled by default in the config.
 
-For MariaDB, because it [supports only geometric queries], geographic search is
-disabled when it is used.
+For MariaDB, because it [supports only flat geometric queries], geographic
+search is disabled when it is used.
 
 ### Omeka database or external database [work in progress]
 
@@ -307,7 +307,7 @@ sociales [EHESS]. The improvements were developed for the digital library of the
 [DataTypeGeometry.zip]: https://gitlab.com/Daniel-KM/Omeka-S-module-DataTypeGeometry/-/releases
 [doctrine2-spatial]: https://github.com/creof/doctrine2-spatial/blob/HEAD/doc/index.md
 [search a point in a polygon for a sphere]: https://dev.mysql.com/doc/mysql-errors/8.0/en/server-error-reference.html
-[supports only geometric queries]: https://mariadb.com/kb/en/st_srid
+[supports only flat geometric queries]: https://mariadb.com/kb/en/st_srid
 [`4326`]: https://epsg.io/4326
 [`3857`]: https://epsg.io/3857
 [discussion]: https://github.com/json-ld/json-ld.org/issues/397
