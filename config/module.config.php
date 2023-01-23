@@ -184,10 +184,10 @@ return [
     'form_elements' => [
         'invokables' => [
             Form\BatchEditFieldset::class => Form\BatchEditFieldset::class,
-            Form\SearchFieldset::class => Form\SearchFieldset::class,
         ],
         'factories' => [
             Form\ConfigForm::class => Service\Form\ConfigFormFactory::class,
+            Form\SearchFieldset::class => Service\Form\SearchFieldsetFactory::class,
         ],
     ],
     'translator' => [

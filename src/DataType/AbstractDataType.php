@@ -22,6 +22,7 @@ abstract class AbstractDataType extends BaseAbstractDataType implements DataType
     public function prepareForm(PhpRenderer $view): void
     {
         // TODO Use js/css for geography. Currently mainly use to check wkt.
+        // These assets are used in module Cartography too.
         $assetUrl = $view->plugin('assetUrl');
         $view->headLink()
             ->appendStylesheet($assetUrl('css/data-type-geometry.css', 'DataTypeGeometry'));
