@@ -29,7 +29,7 @@ use Omeka\Stdlib\Message;
  * Adds a data type Geometry to properties of resources and allows to manage
  * values in Omeka or an an external database.
  *
- * @copyright Daniel Berthereau, 2018
+ * @copyright Daniel Berthereau, 2018-2023
  * @license http://www.cecill.info/licences/Licence_CeCILL_V2.1-en.txt
  */
 class Module extends AbstractModule
@@ -70,13 +70,20 @@ class Module extends AbstractModule
             $this->execSqlFromFile($this->modulePath() . '/data/install/uninstall-cartography.sql');
         }
 
-        $databaseVersion = $services->get('ViewHelperManager')->get('databaseVersion');
+        // The module is not available during install.
+        require_once __DIR__ . '/src/View/Helper/DatabaseVersion.php';
+        require_once __DIR__ . '/src/Service/ViewHelper/DatabaseVersionFactory.php';
 
-        if (!$databaseVersion->supportSpatialSearch()) {
+        /** @var \DataTypeGeometry\View\Helper\DatabaseVersion $databaseVersion */
+        // $databaseVersion = $services->get('ViewHelperManager')->get('databaseVersion');
+        $databaseVersion = new \DataTypeGeometry\Service\ViewHelper\DatabaseVersionFactory;
+        $databaseVersion = $databaseVersion($services, 'databaseVersion', []);
+
+        if (!$databaseVersion->supportGeographicSearch()) {
             $messenger->addWarning('Your database does not support advanced spatial search. See the minimum requirements in readme.'); // @translate
         }
 
-        $useMyIsam = $this->requireMyIsamToSupportGeometry();
+        $useMyIsam = $databaseVersion->requireMyIsamToSupportGeometry();
         if ($useMyIsam) {
             $messenger->addWarning('Your database does not support modern spatial indexing. It has no impact in common cases. See the minimum requirements in readme.'); // @translate
         }
