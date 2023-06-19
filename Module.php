@@ -204,12 +204,12 @@ class Module extends AbstractModule
 
         // TODO The conversion to coordinates can be done for other resources but the module Mapping doesn't manage them.
         $sharedEventManager->attach(
-            'Omeka\Api\Adapter\ItemAdapter',
+            \Omeka\Api\Adapter\ItemAdapter::class,
             'api.preprocess_batch_update',
             [$this, 'handleResourceBatchUpdatePreprocess']
         );
         $sharedEventManager->attach(
-            'Omeka\Api\Adapter\ItemAdapter',
+            \Omeka\Api\Adapter\ItemAdapter::class,
             'api.batch_update.post',
             [$this, 'handleResourceBatchUpdatePost']
         );
@@ -406,8 +406,11 @@ class Module extends AbstractModule
 
         /** @var \Omeka\Form\ResourceBatchUpdateForm $form */
         $form = $event->getTarget();
-        $fieldset = $this->getServiceLocator()->get('FormElementManager')
-            ->get(BatchEditFieldset::class);
+        $services = $this->getServiceLocator();
+        $formElementManager = $services->get('FormElementManager');
+        // $resourceType = $form->getOption('resource_type');
+
+        $fieldset = $formElementManager->get(BatchEditFieldset::class);
         $form->add($fieldset);
     }
 

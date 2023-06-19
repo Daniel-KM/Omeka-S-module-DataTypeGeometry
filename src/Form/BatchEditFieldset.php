@@ -20,8 +20,8 @@ class BatchEditFieldset extends Fieldset
                 'class' => 'field-container',
                 // This attribute is required to make "batch edit all" working.
                 'data-collection-action' => 'replace',
-            ]);
-        $this
+            ])
+
             ->add([
                 'name' => 'convert_literal_to_coordinates',
                 'type' => Element\Checkbox::class,

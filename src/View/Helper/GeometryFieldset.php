@@ -11,7 +11,7 @@ class GeometryFieldset extends AbstractHelper
     /**
      * @var SearchFieldset
      */
-    protected $searchFielset;
+    protected $searchFieldset;
 
     /**
      * @param SearchFieldset $searchFielset
