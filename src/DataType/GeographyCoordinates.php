@@ -11,8 +11,10 @@ use Omeka\Entity\Value;
 
 /**
  * WKT uses "Point(x y)", so "Point(longitude latitude)".
- * The Geographic coordinates use latitude/longitude, more common for end users.
+ * The Geographic coordinates use "latitude,longitude", more common for end users.
  * They are all xsd:decimal values.
+ *
+ * @see https://opengeospatial.github.io/ogc-geosparql/geosparql11/spec.html#geo:kmlLiteral
  */
 class GeographyCoordinates extends Geography
 {
@@ -78,28 +80,16 @@ class GeographyCoordinates extends Geography
 
     public function isValid(array $valueObject)
     {
-        // Value is stored as string, but the json representation is an array.
-        // So the check may be done on the string or on the array.
         return !empty($valueObject)
             && !empty($valueObject['@value'])
-            && preg_match($this->regexLatitudeLongitude,
-                is_array($valueObject['@value'])
-                    ? implode(',', $valueObject['@value'])
-                    : (string) $valueObject['@value']
-            );
+            && preg_match($this->regexLatitudeLongitude, (string) $valueObject['@value']);
     }
 
     public function hydrate(array $valueObject, Value $value, AbstractEntityAdapter $adapter): void
     {
         // Remove the leading + if any. The value is already checked.
         $matches = [];
-        preg_match(
-            $this->regexLatitudeLongitude,
-            is_array($valueObject['@value'])
-                ? implode(',', $valueObject['@value'])
-                : (string) $valueObject['@value'],
-            $matches
-        );
+        preg_match($this->regexLatitudeLongitude, (string) $valueObject['@value'], $matches);
         $latitude = trim($matches['latitude'], '+ ');
         $longitude = trim($matches['longitude'], '+ ');
         $value->setValue($latitude . ',' . $longitude);
@@ -115,26 +105,18 @@ class GeographyCoordinates extends Geography
 
     public function getJsonLd(ValueRepresentation $value)
     {
-        $matches = [];
-        preg_match($this->regexLatitudeLongitude, (string) $value->value(), $matches);
-        $latitude = $matches['latitude'];
-        $longitude = $matches['longitude'];
-        $result = [];
-        $result['@value'] = [
-            'latitude' => (float) $latitude,
-            'longitude' => (float) $longitude,
+        return [
+            '@value' => (string) $value->value(),
+            '@type' => 'http://www.opengis.net/ont/geosparql#kmlLiteral',
         ];
-        return $result;
     }
 
     public function getGeometryPoint($value): ?string
     {
         $matches = [];
-        $value = is_array($value) && isset($value['latitude']) && isset($value['longitude'])
-            ? $value['latitude'] . ',' . $value['longitude']
-            : (string) $value;
-        return preg_match($this->regexLatitudeLongitude, (string) $value, $matches)
-           ? 'POINT (' . $matches['longitude'] . ' ' . $matches['latitude'] . ')'
+        $value = is_array($value) ? (string) $value['@value'] : (string) $value;
+        return preg_match($this->regexLatitudeLongitude, $value, $matches)
+            ? 'POINT (' . $matches['longitude'] . ' ' . $matches['latitude'] . ')'
             : null;
     }
 

@@ -72,28 +72,16 @@ class GeometryCoordinates extends Geometry
 
     public function isValid(array $valueObject)
     {
-        // Value is stored as string, but the json representation is an array.
-        // So the check may be done on the string or on the array.
         return !empty($valueObject)
             && !empty($valueObject['@value'])
-            && preg_match($this->regexCoordinates,
-                is_array($valueObject['@value'])
-                    ? implode(',', $valueObject['@value'])
-                    : (string) $valueObject['@value']
-            );
+            && preg_match($this->regexCoordinates, (string) $valueObject['@value']);
     }
 
     public function hydrate(array $valueObject, Value $value, AbstractEntityAdapter $adapter): void
     {
         // Remove the leading + if any. The value is already checked.
         $matches = [];
-        preg_match(
-            $this->regexCoordinates,
-            is_array($valueObject['@value'])
-                ? implode(',', $valueObject['@value'])
-                : (string) $valueObject['@value'],
-            $matches
-        );
+        preg_match($this->regexCoordinates, (string) $valueObject['@value'], $matches);
         $x = trim($matches['x'], '+ ');
         $y = trim($matches['y'], '+ ');
         $value->setValue($x . ',' . $y);
@@ -109,26 +97,17 @@ class GeometryCoordinates extends Geometry
 
     public function getJsonLd(ValueRepresentation $value)
     {
-        $matches = [];
-        preg_match($this->regexCoordinates, (string) $value->value(), $matches);
-        $x = $matches['x'];
-        $y = $matches['y'];
-        $result = [];
-        $result['@value'] = [
-            'x' => (float) $x,
-            'y' => (float) $y,
+        return [
+            '@value' => (string) $value->value(),
         ];
-        return $result;
     }
 
     public function getGeometryPoint($value): ?string
     {
         $matches = [];
-        $value = is_array($value) && isset($value['x']) && isset($value['y'])
-            ? $value['x'] . ',' . $value['y']
-            : (string) $value;
-        return preg_match($this->regexCoordinates, (string) $value, $matches)
-           ? 'POINT (' . $matches['x'] . ' ' . $matches['y'] . ')'
+        $value = is_array($value) ? (string) $value['@value'] : (string) $value;
+        return preg_match($this->regexCoordinates, $value, $matches)
+            ? 'POINT (' . $matches['x'] . ' ' . $matches['y'] . ')'
             : null;
     }
 
