@@ -2,6 +2,9 @@
 
 namespace DataTypeGeometry\DataType;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\DBAL\ParameterType;
+use Doctrine\ORM\Query\Parameter;
 use Doctrine\ORM\QueryBuilder;
 use Omeka\Api\Adapter\AbstractEntityAdapter;
 
@@ -329,10 +332,10 @@ DQL;
         return (int) $adapter
             ->getEntityManager()
             ->createQuery($dql)
-            ->setParameters([
-                'localName' => $localName,
-                'prefix' => $prefix,
-            ])
+            ->setParameters(new ArrayCollection([
+                new Parameter('localName', $localName, ParameterType::STRING),
+                new Parameter('prefix', $prefix, ParameterType::STRING),
+            ]))
             ->getOneOrNullResult(\Doctrine\ORM\Query::HYDRATE_SINGLE_SCALAR);
     }
 }
