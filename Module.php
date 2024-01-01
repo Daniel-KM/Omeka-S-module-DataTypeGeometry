@@ -100,6 +100,7 @@ class Module extends AbstractModule
             'Omeka\Controller\Admin\Item',
             'Omeka\Controller\Admin\ItemSet',
             'Omeka\Controller\Admin\Media',
+            'Omeka\Controller\Admin\Query',
             \Annotate\Controller\Admin\AnnotationController::class,
             'Omeka\Controller\Site\Item',
             'Omeka\Controller\Site\ItemSet',
@@ -111,7 +112,7 @@ class Module extends AbstractModule
             $sharedEventManager->attach(
                 $controller,
                 'view.advanced_search',
-                [$this, 'displayAdvancedSearch']
+                [$this, 'handleViewAdvancedSearch']
             );
             $sharedEventManager->attach(
                 $controller,
@@ -315,7 +316,7 @@ class Module extends AbstractModule
      *
      * @param Event $event
      */
-    public function displayAdvancedSearch(Event $event): void
+    public function handleViewAdvancedSearch(Event $event): void
     {
         $view = $event->getTarget();
         $assetUrl = $view->plugin('assetUrl');
@@ -327,6 +328,11 @@ class Module extends AbstractModule
             ->appendFile($assetUrl('vendor/terraformer-wkt-parser/terraformer-wkt-parser-1.2.1.min.js', 'DataTypeGeometry'), 'text/javascript', ['defer' => 'defer'])
             ->appendFile($assetUrl('js/data-type-geometry.js', 'DataTypeGeometry'), 'text/javascript', ['defer' => 'defer']);
 
+        $this->handlePartialsAdvancedSearch($event);
+    }
+
+    public function handlePartialsAdvancedSearch(Event $event): void
+    {
         // There is no advanced search form, only a list of partials.
         $partials = $event->getParam('partials', []);
         $partials[] = 'common/advanced-search/data-type-geography';

@@ -46,6 +46,14 @@
     .batch-edit .field-container > legend {
         font-size: 16px;
     }
+
+    .sidebar #advanced-search .inputs label.type-radio {
+        margin: auto;
+        padding: initial;
+    }
+    .sidebar #advanced-search .inputs label.type-radio::after {
+        background: initial;
+    }
 }
 
 @media screen and (max-width:640px) {

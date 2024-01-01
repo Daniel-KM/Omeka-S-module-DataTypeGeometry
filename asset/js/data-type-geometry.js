@@ -186,14 +186,17 @@
         }
     }
 
-    var geometryOrGeographyFieldset = function() {
-        const mode = $('input[name="geo[mode]"]:checked').val();
+    const geometryOrGeographyFieldset = function(input) {
+        input = input ? input :  $('#advanced-search input[name="geo[mode]"]:checked');
+        const mode = input.val();
+        const sidebar = input.closest('.sidebar');
+        const form = sidebar.length > 0 ? sidebar.find('#advanced-search') : input.closest('#advanced-search');
         if (mode === 'geography') {
-            $('[data-geo-mode=geometry]').closest('.field-geo').hide();
-            $('[data-geo-mode=geography]').closest('.field-geo').show();
+            form.find('[data-geo-mode=geometry]').closest('.field-geo').hide();
+            form.find('[data-geo-mode=geography]').closest('.field-geo').show();
         } else {
-            $('[data-geo-mode=geometry]').closest('.field-geo').show();
-            $('[data-geo-mode=geography]').closest('.field-geo').hide();
+            form.find('[data-geo-mode=geometry]').closest('.field-geo').show();
+            form.find('[data-geo-mode=geography]').closest('.field-geo').hide();
         }
     }
 
@@ -250,7 +253,7 @@
         // Search form.
 
         $(document).on('click', 'input[name="geo[mode]"]', function(e) {
-            geometryOrGeographyFieldset();
+            geometryOrGeographyFieldset($(this));
         });
 
         $(document).on('keyup change', 'input.query-geo-around-latitude', function(e) {
@@ -269,6 +272,10 @@
         $(document).on('keyup change', 'textarea.query-geo-zone, textarea.query-geo-area', function(e) {
             checkGeometry(this, $(this).hasClass('query-geo-area') ? 'geography' : 'geometry');
         });
+
+    $(document).on('o:sidebar-content-loaded', '#query-sidebar-edit', function(e) {
+        geometryOrGeographyFieldset($(this).find('input[name="geo[mode]"]:checked'));
+    });
 
         geometryOrGeographyFieldset();
 

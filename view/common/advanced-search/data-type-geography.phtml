@@ -21,7 +21,7 @@ $hasGeographic = $around->has('latitude');
         <div class="field-meta">
         </div>
         <div class="inputs">
-            <?= $this->formRadio($element) ?>
+            <?= $this->formRadio($element->setLabelAttributes(['class' => 'type-radio'])) ?>
         </div>
     </div>
 <?php else: ?>
@@ -60,7 +60,7 @@ $hasGeographic = $around->has('latitude');
             <span class="field-geo">
                 <?php
                 $element = $around->get('unit');
-                echo $this->formRadio($element);
+                echo $this->formRadio($element->setLabelAttributes(['class' => 'type-radio']));
                 ?>
             </span>
             <?php endif; ?>
