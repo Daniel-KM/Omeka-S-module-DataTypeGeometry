@@ -106,8 +106,16 @@ SQL;
         'Datatype names were simplified: "geometry", "geography", "geography:coordinates".' // @translate
     );
     $messenger->addWarning($message);
+
     $message = new Message(
         'Two new datatypes have been added to manage geometries: x/y coordinates ("geometry:coordinates") and position from top left ("geometry:position").' // @translate
     );
     $messenger->addSuccess($message);
+}
+
+if (version_compare($oldVersion, '3.4.4', '<')) {
+    $message = new Message(
+        'WARNING: the value representation has been normalized in the api to follow the opengis specifications for geography:coordinates, geometry:coordinates and geometry:position. The rdf value is now always a string, no more an array. Check compatibility with your external tools if needed.' // @translate
+    );
+    $messenger->addWarning($message);
 }
