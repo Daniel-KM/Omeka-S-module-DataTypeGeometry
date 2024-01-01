@@ -30,8 +30,13 @@ class GeographyCoordinates extends Geography
 
     public function form(PhpRenderer $view)
     {
-        $translate = $view->plugin('translate');
-        $escapeAttr = $view->plugin('escapeHtmlAttr');
+        $plugins = $view->getHelperPluginManager();
+        $translate = $plugins->get('translate');
+        $escapeAttr = $plugins->get('escapeHtmlAttr');
+        $formLabel = $plugins->get('formLabel');
+        $formHidden = $plugins->get('formHidden');
+        $formNumber = $plugins->get('formNumber');
+
         $validity = 'Value must be valid coordinates (latitude and longitude)'; // @translate
 
         $hiddenValue = (new Element\Hidden('@value'))
@@ -58,14 +63,14 @@ class GeographyCoordinates extends Geography
 
         return '<div class="field-geometry">'
             . '<div class="error invalid-value" data-custom-validity="' . $escapeAttr($translate($validity)) . '"></div>'
-            . $view->formHidden($hiddenValue)
+            . $formHidden($hiddenValue)
             . '<div class="field-geometry-number">'
-            . $view->formLabel($latitudeElement)
-            . $view->formNumber($latitudeElement)
+            . $formLabel($latitudeElement)
+            . $formNumber($latitudeElement)
             . '</div>'
             . '<div class="field-geometry-number">'
-            . $view->formLabel($longitudeElement)
-            . $view->formNumber($longitudeElement)
+            . $formLabel($longitudeElement)
+            . $formNumber($longitudeElement)
             . '</div>'
             . '</div>'
         ;
@@ -147,9 +152,13 @@ class GeographyCoordinates extends Geography
         }
         if (is_string($value)) {
             $matches = [];
-            $value = preg_match($this->regexLatitudeLongitude, (string) $value, $matches)
+            $value = preg_match($this->regexLatitudeLongitude, $value, $matches)
                 ? 'POINT (' . $matches['longitude'] . ' ' . $matches['latitude'] . ')'
-                : strtoupper((string) $value);
+                : strtoupper($value);
+        } elseif (is_array($value) && isset($value['@value'])) {
+            $value = (string) $value['@value'];
+        } elseif (is_object($value) && $value instanceof ValueRepresentation) {
+            $value = (string) $value->value();
         }
         try {
             return (new GenericGeography($value))->getGeometry();

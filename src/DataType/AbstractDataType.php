@@ -82,11 +82,11 @@ abstract class AbstractDataType extends BaseAbstractDataType implements DataType
             $string = trim(substr($string, strpos(';') + 1));
         }
         $result = [];
+        $result['@value'] = $string;
         // Append the @type (keep the omeka "type").
         // Deprecated.
         // $result['@type'] = 'http://geovocab.org/geometry#asWKT';
         $result['@type'] = 'http://www.opengis.net/ont/geosparql#wktLiteral';
-        $result['@value'] = $string;
         if ($srid) {
             $result['srid'] = $srid;
         }

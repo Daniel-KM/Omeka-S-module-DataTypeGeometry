@@ -28,8 +28,13 @@ class GeometryCoordinates extends Geometry
 
     public function form(PhpRenderer $view)
     {
-        $translate = $view->plugin('translate');
-        $escapeAttr = $view->plugin('escapeHtmlAttr');
+        $plugins = $view->getHelperPluginManager();
+        $translate = $plugins->get('translate');
+        $escapeAttr = $plugins->get('escapeHtmlAttr');
+        $formLabel = $plugins->get('formLabel');
+        $formHidden = $plugins->get('formHidden');
+        $formNumber = $plugins->get('formNumber');
+
         $validity = 'Value must be valid coordinates (x and y)'; // @translate
 
         $hiddenValue = (new Element\Hidden('@value'))
@@ -52,14 +57,14 @@ class GeometryCoordinates extends Geometry
 
         return '<div class="field-geometry">'
             . '<div class="error invalid-value" data-custom-validity="' . $escapeAttr($translate($validity)) . '"></div>'
-            . $view->formHidden($hiddenValue)
+            . $formHidden($hiddenValue)
             . '<div class="field-geometry-number">'
-            . $view->formLabel($xElement)
-            . $view->formNumber($xElement)
+            . $formLabel($xElement)
+            . $formNumber($xElement)
             . '</div>'
             . '<div class="field-geometry-number">'
-            . $view->formLabel($yElement)
-            . $view->formNumber($yElement)
+            . $formLabel($yElement)
+            . $formNumber($yElement)
             . '</div>'
             . '</div>'
         ;
@@ -141,9 +146,13 @@ class GeometryCoordinates extends Geometry
         }
         if (is_string($value)) {
             $matches = [];
-            $value = preg_match($this->regexCoordinates, (string) $value, $matches)
+            $value = preg_match($this->regexCoordinates, $value, $matches)
                 ? 'POINT (' . $matches['x'] . ' ' . $matches['y'] . ')'
-                : strtoupper((string) $value);
+                : strtoupper($value);
+        } elseif (is_array($value) && isset($value['@value'])) {
+            $value = (string) $value['@value'];
+        } elseif (is_object($value) && $value instanceof ValueRepresentation) {
+            $value = (string) $value->value();
         }
         try {
             return (new GenericGeometry($value))->getGeometry();

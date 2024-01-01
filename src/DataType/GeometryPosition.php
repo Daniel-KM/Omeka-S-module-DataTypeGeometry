@@ -28,8 +28,13 @@ class GeometryPosition extends Geometry
 
     public function form(PhpRenderer $view)
     {
-        $translate = $view->plugin('translate');
-        $escapeAttr = $view->plugin('escapeHtmlAttr');
+        $plugins = $view->getHelperPluginManager();
+        $translate = $plugins->get('translate');
+        $escapeAttr = $plugins->get('escapeHtmlAttr');
+        $formLabel = $plugins->get('formLabel');
+        $formHidden = $plugins->get('formHidden');
+        $formNumber = $plugins->get('formNumber');
+
         $validity = 'Value must be a valid integer position from the top left corner'; // @translate
 
         $hiddenValue = (new Element\Hidden('@value'))
@@ -54,14 +59,14 @@ class GeometryPosition extends Geometry
 
         return '<div class="field-geometry">'
             . '<div class="error invalid-value" data-custom-validity="' . $escapeAttr($translate($validity)) . '"></div>'
-            . $view->formHidden($hiddenValue)
+            . $formHidden($hiddenValue)
             . '<div class="field-geometry-number">'
-            . $view->formLabel($xElement)
-            . $view->formNumber($xElement)
+            . $formLabel($xElement)
+            . $formNumber($xElement)
             . '</div>'
             . '<div class="field-geometry-number">'
-            . $view->formLabel($yElement)
-            . $view->formNumber($yElement)
+            . $formLabel($yElement)
+            . $formNumber($yElement)
             . '</div>'
             . '</div>'
         ;
@@ -132,7 +137,8 @@ class GeometryPosition extends Geometry
     /**
      * Convert a string into a geometry representation.
      *
-     * @todo Check if y should be from bottom left.
+     * Warning:
+     * unlike image postion, the geometry is bottom left based, so y is -y.
      *
      * @param string $value Accept AbstractGeometry and geometry array too.
      * @throws \InvalidArgumentException
@@ -145,9 +151,13 @@ class GeometryPosition extends Geometry
         }
         if (is_string($value)) {
             $matches = [];
-            $value = preg_match($this->regexPosition, (string) $value, $matches)
+            $value = preg_match($this->regexPosition, $value, $matches)
                 ? 'POINT (' . $matches['x'] . ' ' . ($matches['y'] ? '-' : '') . $matches['y'] . ')'
                 : strtoupper((string) $value);
+        } elseif (is_array($value) && isset($value['@value'])) {
+            $value = (string) $value['@value'];
+        } elseif (is_object($value) && $value instanceof ValueRepresentation) {
+            $value = (string) $value->value();
         }
         try {
             return (new GenericGeometry($value))->getGeometry();

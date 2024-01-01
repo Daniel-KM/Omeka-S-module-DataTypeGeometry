@@ -5,6 +5,7 @@ namespace DataTypeGeometry\DataType;
 use DataTypeGeometry\Doctrine\PHP\Types\Geography\Geography as GenericGeography;
 use Laminas\Form\Element;
 use Laminas\View\Renderer\PhpRenderer;
+use Omeka\Api\Representation\ValueRepresentation;
 
 class Geography extends AbstractDataType
 {
@@ -34,8 +35,10 @@ class Geography extends AbstractDataType
 
     public function form(PhpRenderer $view)
     {
-        $translate = $view->plugin('translate');
-        $escapeAttr = $view->plugin('escapeHtmlAttr');
+        $plugins = $view->getHelperPluginManager();
+        $translate = $plugins->get('translate');
+        $escapeAttr = $plugins->get('escapeHtmlAttr');
+
         $validity = 'Please enter a valid wkt for the geography.'; // @translate
 
         $element = new Element\Textarea('geography');
@@ -81,6 +84,10 @@ class Geography extends AbstractDataType
         }
         if (is_string($value)) {
             $value = strtoupper((string) $value);
+        } elseif (is_array($value) && isset($value['@value'])) {
+            $value = (string) $value['@value'];
+        } elseif (is_object($value) && $value instanceof ValueRepresentation) {
+            $value = (string) $value->value();
         }
         try {
             return (new GenericGeography($value))->getGeometry();

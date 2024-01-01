@@ -23,8 +23,10 @@ class Geometry extends AbstractDataType
 
     public function form(PhpRenderer $view)
     {
-        $translate = $view->plugin('translate');
-        $escapeAttr = $view->plugin('escapeHtmlAttr');
+        $plugins = $view->getHelperPluginManager();
+        $translate = $plugins->get('translate');
+        $escapeAttr = $plugins->get('escapeHtmlAttr');
+
         $validity = 'Please enter a valid wkt for the geometry.'; // @translate
 
         $element = new Element\Textarea('geometry');
@@ -57,6 +59,10 @@ class Geometry extends AbstractDataType
         }
         if (is_string($value)) {
             $value = strtoupper((string) $value);
+        } elseif (is_array($value) && isset($value['@value'])) {
+            $value = (string) $value['@value'];
+        } elseif (is_object($value) && $value instanceof ValueRepresentation) {
+            $value = (string) $value->value();
         }
         try {
             return (new GenericGeometry($value))->getGeometry();
