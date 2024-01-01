@@ -2,25 +2,24 @@
 
 namespace DataTypeGeometry;
 
-if (!class_exists(\Generic\AbstractModule::class)) {
-    require file_exists(dirname(__DIR__) . '/Generic/AbstractModule.php')
-        ? dirname(__DIR__) . '/Generic/AbstractModule.php'
-        : __DIR__ . '/src/Generic/AbstractModule.php';
+if (!class_exists(\Common\TraitModule::class)) {
+    require_once dirname(__DIR__) . '/Common/TraitModule.php';
 }
 
+use Common\TraitModule;
 use DataTypeGeometry\DataType\Geography;
 use DataTypeGeometry\Form\BatchEditFieldset;
 use DataTypeGeometry\Form\ConfigForm;
 use DataTypeGeometry\Form\SearchFieldset;
 use DataTypeGeometry\Job\IndexGeometries;
 use Doctrine\Common\Collections\Criteria;
-use Generic\AbstractModule;
 use Laminas\EventManager\Event;
 use Laminas\EventManager\SharedEventManagerInterface;
 use Laminas\Mvc\Controller\AbstractController;
 use Laminas\Mvc\MvcEvent;
 use Laminas\ServiceManager\ServiceLocatorInterface;
 use Laminas\View\Renderer\PhpRenderer;
+use Omeka\Module\AbstractModule;
 use Omeka\Stdlib\Message;
 
 /**
@@ -29,12 +28,14 @@ use Omeka\Stdlib\Message;
  * Adds a data type Geometry to properties of resources and allows to manage
  * values in Omeka or an an external database.
  *
- * @copyright Daniel Berthereau, 2018-2023
+ * @copyright Daniel Berthereau, 2018-2024
  * @license http://www.cecill.info/licences/Licence_CeCILL_V2.1-en.txt
  */
 class Module extends AbstractModule
 {
     const NAMESPACE = __NAMESPACE__;
+
+    use TraitModule;
 
     public function onBootstrap(MvcEvent $event): void
     {
@@ -219,7 +220,8 @@ class Module extends AbstractModule
     public function getConfigForm(PhpRenderer $view)
     {
         $services = $this->getServiceLocator();
-        $html = parent::getConfigForm($view);
+
+        $html = $this->getConfigFormAuto($view);
 
         /** @var \DataTypeGeometry\View\Helper\DatabaseVersion $databaseVersion */
         $databaseVersion = $services->get('ViewHelperManager')->get('databaseVersion');
@@ -241,7 +243,7 @@ class Module extends AbstractModule
     public function handleConfigForm(AbstractController $controller)
     {
         // Save the srid.
-        parent::handleConfigForm($controller);
+        $this->handleConfigFormAuto($controller);
 
         $services = $this->getServiceLocator();
         $form = $services->get('FormElementManager')->get(ConfigForm::class);
@@ -474,10 +476,13 @@ class Module extends AbstractModule
             return;
         }
 
+        /** @var \Common\Stdlib\EasyMeta $easyMeta */
+        $easyMeta = $this->getServiceLocator()->get('EasyMeta');
+
         if (empty($post['geometry']['from_properties']) || $post['geometry']['from_properties'] === 'all') {
             $from = null;
         } else {
-            $from = $this->getPropertyIds($post['geometry']['from_properties']);
+            $from = $easyMeta->propertyIds($post['geometry']['from_properties']);
             if (!$from) {
                 unset($data['geometry']);
                 $event->setParam('data', $data);
@@ -488,7 +493,7 @@ class Module extends AbstractModule
         if (empty($post['geometry']['to_property'])) {
             $to = null;
         } else {
-            $to = $this->getPropertyId($post['geometry']['to_property']);
+            $to = $easyMeta->propertyId($post['geometry']['to_property']);
             if (!$to) {
                 unset($data['geometry']);
                 $event->setParam('data', $data);
@@ -541,9 +546,11 @@ class Module extends AbstractModule
         }
 
         if (!array_key_exists('srid', $data['geometry'])) {
+            /** @var \Common\Stdlib\EasyMeta $easyMeta */
+            $easyMeta = $this->getServiceLocator()->get('EasyMeta');
             $data['geometry']['convert_literal_to_coordinates'] = !empty($data['geometry']['convert_literal_to_coordinates']);
-            $data['geometry']['from_properties_ids'] = $this->getPropertyIds($data['geometry']['from_properties']);
-            $data['geometry']['to_property_id'] = $this->getPropertyId($data['geometry']['to_property']);
+            $data['geometry']['from_properties_ids'] = $easyMeta->propertyIds($data['geometry']['from_properties']);
+            $data['geometry']['to_property_id'] = $easyMeta->propertyId($data['geometry']['to_property']);
             $data['geometry']['srid'] = $this->getServiceLocator()->get('Omeka\Settings')
                 ->get('datatypegeometry_locate_srid', Geography::DEFAULT_SRID);
         }
@@ -888,49 +895,5 @@ SQL;
             'geometry:coordinates' => $dataTypes->get('geometry:coordinates'),
             'geometry:position' => $dataTypes->get('geometry:position'),
         ];
-    }
-
-    /**
-     * Get a property id by term.
-     */
-    protected function getPropertyId(?string $id): ?int
-    {
-        if (!$id) {
-            return null;
-        }
-        $result = $this->getPropertyIds([$id]);
-        return $result ? reset($result) : null;
-    }
-
-    /**
-     * Get all property ids by term, or the specified ones.
-     *
-     * @return array Filtered associative array of ids by term.
-     */
-    protected function getPropertyIds(?array $terms = null): array
-    {
-        static $properties;
-
-        if (is_null($properties)) {
-            $connection = $this->getServiceLocator()->get('Omeka\Connection');
-            $qb = $connection->createQueryBuilder();
-            $qb
-                ->select(
-                    'DISTINCT CONCAT(vocabulary.prefix, ":", property.local_name) AS term',
-                    'property.id AS id',
-                    // Required with only_full_group_by.
-                    'vocabulary.id'
-                )
-                ->from('property', 'property')
-                ->innerJoin('property', 'vocabulary', 'vocabulary', 'property.vocabulary_id = vocabulary.id')
-                ->orderBy('vocabulary.id', 'asc')
-                ->addOrderBy('property.id', 'asc')
-            ;
-            $properties = array_map('intval', $connection->executeQuery($qb)->fetchAllKeyValue());
-        }
-
-        return $terms
-            ? array_intersect_key($properties, array_flip($terms))
-            : $properties;
     }
 }
