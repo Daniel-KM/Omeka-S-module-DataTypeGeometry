@@ -469,7 +469,7 @@ class Module extends AbstractModule
         $easyMeta = $this->getServiceLocator()->get('EasyMeta');
 
         if (empty($post['geometry']['from_properties'])
-            || $post['geometry']['from_properties'] === 'all'
+            || in_array('all', $post['geometry']['from_properties'])
         ) {
             $from = null;
         } else {
@@ -500,8 +500,6 @@ class Module extends AbstractModule
 
         $data['geometry'] = $post['geometry'];
         $data['geometry']['convert_literal_to_coordinates'] = !empty($data['geometry']['convert_literal_to_coordinates']);
-        $data['geometry']['from_properties_ids'] = $from;
-        $data['geometry']['to_property_id'] = $to;
         $data['geometry']['srid'] = $this->getServiceLocator()->get('Omeka\Settings')
             ->get('datatypegeometry_locate_srid', Geography::DEFAULT_SRID);
 
@@ -540,8 +538,10 @@ class Module extends AbstractModule
             /** @var \Common\Stdlib\EasyMeta $easyMeta */
             $easyMeta = $this->getServiceLocator()->get('EasyMeta');
             $data['geometry']['convert_literal_to_coordinates'] = !empty($data['geometry']['convert_literal_to_coordinates']);
-            $data['geometry']['from_properties_ids'] = $easyMeta->propertyIds($data['geometry']['from_properties']);
-            $data['geometry']['to_property_id'] = $easyMeta->propertyId($data['geometry']['to_property']);
+            $data['geometry']['from_properties_ids'] = empty($data['geometry']['from_properties']) || in_array('all', $data['geometry']['from_properties'])
+                ? []
+                : $easyMeta->propertyIds($data['geometry']['from_properties']);
+            $data['geometry']['to_property_id'] = $easyMeta->propertyId($data['geometry']['to_property'] ?? null);
             $data['geometry']['srid'] = $this->getServiceLocator()->get('Omeka\Settings')
                 ->get('datatypegeometry_locate_srid', Geography::DEFAULT_SRID);
         }
