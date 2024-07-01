@@ -16,6 +16,7 @@ use Omeka\Entity\Value;
  * They are all xsd:decimal values.
  *
  * @see https://opengeospatial.github.io/ogc-geosparql/geosparql11/spec.html#geo:kmlLiteral
+ * @see https://www.w3.org/TR/geolocation/#position_interface
  */
 class GeographyCoordinates extends Geography
 {
@@ -106,9 +107,18 @@ class GeographyCoordinates extends Geography
 
     public function getJsonLd(ValueRepresentation $value)
     {
+        $matches = [];
+        preg_match($this->regexLatitudeLongitude, (string) $value->value(), $matches);
         return [
             '@value' => (string) $value->value(),
             '@type' => 'http://www.opengis.net/ont/geosparql#kmlLiteral',
+            // Compatibility with https://www.w3.org/TR/geolocation/#position_interface
+            'geolocation_position' => [
+                'coords' => [
+                    'latitude' => (float) $matches['latitude'],
+                    'longitude' => (float) $matches['longitude'],
+                ],
+            ],
         ];
     }
 
