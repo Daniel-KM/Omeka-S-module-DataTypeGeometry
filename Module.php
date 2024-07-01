@@ -464,19 +464,21 @@ class Module extends AbstractModule
             return;
         }
 
+        /**
+         * @var \Laminas\Log\Logger $logger
+         * @var \Common\Stdlib\EasyMeta $easyMeta
+         * @var \Omeka\Mvc\Controller\Plugin\Messenger $messenger
+         */
         $services = $this->getServiceLocator();
+        $logger = $services->get('Omeka\Logger');
+        $easyMeta = $services->get('EasyMeta');
+        $messenger = $services->get('ControllerPluginManager')->get('messenger');
 
         if (!empty($post['geometry']['convert_literal_to_coordinates'])
             && empty($post['geometry']['convert_literal_strict'])
             /** @see \DataTypeGeometry\View\Helper\DatabaseVersion::supportRegexpExt() */
             && !$services->get('ViewHelperManager')->get('databaseVersion')->supportRegexpExt()
         ) {
-            /**
-             * @var \Laminas\Log\Logger $logger
-             * @var \Omeka\Mvc\Controller\Plugin\Messenger $messenger
-             */
-            $logger = $services->get('Omeka\Logger');
-            $messenger = $services->get('ControllerPluginManager')->get('messenger');
             $message = new Message('Your database does not support the function `regexp_substr`. Upgrade it to MariaDB 10.0.5 or MySQL 8.0.'); // @translate
             $logger->err($message);
             $messenger->addError($message);
@@ -486,43 +488,51 @@ class Module extends AbstractModule
         }
 
         $manage = $post['geometry']['manage_coordinates_features'] ?? null;
-        if (!in_array($manage, ['sync', 'coordinates_to_features', 'features_to_coordinates'])) {
+        if ($manage && !in_array($manage, ['sync', 'coordinates_to_features', 'features_to_coordinates'])) {
             unset($data['geometry']);
             $event->setParam('data', $data);
             return;
         }
 
-        /** @var \Common\Stdlib\EasyMeta $easyMeta */
-        $easyMeta = $services->get('EasyMeta');
-
-        if (empty($post['geometry']['from_properties'])
-            || in_array('all', $post['geometry']['from_properties'])
-        ) {
-            $from = null;
-        } else {
-            $from = $easyMeta->propertyIds($post['geometry']['from_properties']);
-            if (!$from) {
-                unset($data['geometry']);
-                $event->setParam('data', $data);
-                return;
-            }
+        if (empty($post['geometry']['from_properties'])) {
+            $message = new Message('No source property set for conversion of geometric or geographic data.'); // @translate
+            $logger->err($message);
+            $messenger->addError($message);
+            unset($data['geometry']);
+            $event->setParam('data', $data);
+            return;
+        } elseif (!in_array('all', $post['geometry']['from_properties'])
+            && !$easyMeta->propertyIds($post['geometry']['from_properties']
+        )) {
+            $message = new Message('Invalid source properties set for conversion of geometric or geographic data.'); // @translate
+            $logger->err($message);
+            $messenger->addError($message);
+            unset($data['geometry']);
+            $event->setParam('data', $data);
+            return;
         }
 
-        if (empty($post['geometry']['to_property'])) {
-            $to = null;
-        } else {
+        if (in_array($manage, ['sync', 'features_to_coordinates'])
+            && !empty($post['geometry']['to_property'])
+        ) {
+            $message = new Message('A destination property is needed to convert geometric or geographic data.'); // @translate
+            $logger->err($message);
+            $messenger->addError($message);
+            unset($data['geometry']);
+            $event->setParam('data', $data);
+            return;
+        }
+
+        if (!empty($post['geometry']['to_property'])) {
             $to = $easyMeta->propertyId($post['geometry']['to_property']);
             if (!$to) {
+                $message = new Message('Invalid destination property set for conversion of geometric or geographic data.'); // @translate
+                $logger->err($message);
+                $messenger->addError($message);
                 unset($data['geometry']);
                 $event->setParam('data', $data);
                 return;
             }
-        }
-
-        if (in_array($manage, ['sync', 'features_to_coordinates']) && !$to) {
-            unset($data['geometry']);
-            $event->setParam('data', $data);
-            return;
         }
 
         $data['geometry'] = $post['geometry'];
