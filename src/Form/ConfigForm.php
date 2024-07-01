@@ -99,6 +99,10 @@ class ConfigForm extends Form
                 'required' => false,
             ])
             ->add([
+                'name' => 'datatypegeometry_support_geographic_search',
+                'required' => false,
+            ])
+            ->add([
                 'name' => 'process_mode',
                 'required' => false,
             ]);
