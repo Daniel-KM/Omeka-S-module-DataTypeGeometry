@@ -1,4 +1,3 @@
-
 Data type Geometry (module for Omeka S)
 =======================================
 
@@ -7,13 +6,14 @@ Data type Geometry (module for Omeka S)
 > than the previous repository.__
 
 [Data type Geometry] is a module for [Omeka S] that adds five new data types for
-the properties: `geography`, `geometry`, `geography:coordinates`, `geometry:coordinates`,
-`geometry:position`. It allows to manage points and areas on images and maps.
+the values of properties: `geography`, `geometry`, `geography:coordinates`,
+`geometry:coordinates`, `geometry:position`. It allows to manage points and
+areas on images and maps.
+
+The data types are managed with the standard [WKT] format.
 
 The datatype for geographic coordinates uses the standard latitude/longitude,
 that is called nowadays "GPS" or even "Google coordinates".
-
-The data types are managed with the standard [WKT] format.
 
 The geometric position and geometric coordinates are similar, but the first uses
 the top left corner as base and allows only integer values, so it is adapted to
@@ -74,21 +74,29 @@ browse quicker too.
 By default, related to minimal database versions, Omeka support spatial search,
 but not spatial indexing.
 
+#### Before Omeka S v4.1
+
 To support searches of geometries, (distance around a point, geometries
 contained inside another geometry), the version of the database should be
 minimum [mySql 5.6.1] (2011-02) or [mariaDB 5.3.3] (2011-12-21). Note that the
 minimum Omeka version until version 4.0 are [mySql 5.6.4] (2011-11-20), and
-[MariaDB 10.0.5] (2013-11-07)). For Omeka S v4.1, the new minimum versions are
-[mySql 5.7.9], and [MariaDB 10.2.6] and is now fine to support spatial indexing.
+[MariaDB 10.0.5] (2013-11-07)).
+
+So you need to check if the database supports spatial indexing. The database
+must be equal or greater than [MariaDB 10.2.2] (2016-09-27) or [mySql 5.7.5]
+(2014-09-25), for the engine InnoDB. Prior database releases can support spatial
+index too, but only with the engine MyIsam (that does not support referential
+integrity and is not used by Omeka). The choice between InnoDB and MyIsam is
+done automatically.
+
+#### Since Omeka S v4.1
+
+For Omeka S v4.1, the new minimum versions are [mySql 5.7.9], and [MariaDB 10.2.6],
+so Omeka is now fine to support spatial indexing.
 
 For a precise support of geometry, see the [spatial support matrix].
 
-So if your install is lower than Omeka S v4.1, check if the database supports
-spatial indexing. It must be equal or greater than [MariaDB 10.2.2] (2016-09-27)
-or [mySql 5.7.5] (2014-09-25), for the engine InnoDB. Prior database releases
-can support spatial index too, but only with the engine MyIsam (that does not
-support referential integrity and is not used by Omeka). The choice between
-InnoDB and MyIsam is done automatically.
+#### External database
 
 You may prefer to use an external database. To config it, set the parameters in
 the file `config/database-cartography.ini`, beside your main `config/database.ini`.
@@ -98,7 +106,8 @@ Furthermore, if PostgreSql is used, the `config/local.config.php` should
 indicate it in `[entity_manager][functions][numeric]`, by overriding keys of the
 mysql functions.
 
-The support for MariaDB, mySql and PostgreSql is provided though [doctrine2-spatial].
+The support for MariaDB, mySql and PostgreSql is provided though [longitude-one/doctrine-spatial],
+an active fork of [creof/doctrine2-spatial].
 
 
 Usage
@@ -140,8 +149,8 @@ kilometers.
 
 Most of the time, the srid is [`4326`], because it’s the Mercator projection
 used by default in many expert geographic systems, included GPS. It is not the
-one used by OpenStreetMap and derivative web maps, that uses [`3857`]. The
-module [Annotate Cartography] uses 4326 too.
+one used by OpenStreetMap and derivative web maps, that uses the code [`3857`].
+The module [Annotate Cartography] uses `4326` too.
 
 Another value can be set in the main settings, and each value can set a specific
 one with the ewkt format: `SRID=4326; POINT (2.294497 48.858252)`. It is not
@@ -158,8 +167,10 @@ A geographic point is the latitude and longitude coordinates: `48.858252,2.29449
 In the user interface, this value is composed with two decimal values (`xsd:decimal`),
 separated by a `,`. In the database, it is stored the same and as a geographic
 WKT point. In the api, the value is a string compliant with [geo:kmlLiteral].
-Note: to avoid issues with json implementations of clients, check the cast to
-float when extracting it, in particular to be compatible with [w3c geolocation api].
+
+Furthermore, the geolocation position is appended to be compatible with the
+[w3c geolocation api]. It avoids issues with json implementations of clients
+when casting to float when extracting it.
 
 ***Important***: Unlike the data type Geography, the order of values is latitude
 then longitude. WKT uses `Point(x y)`, so the representation of a geographic
@@ -178,15 +189,15 @@ WKT point. In the api, the value is a simple string.
 
 ### Geometric position
 
-A geometric position is a `x,y` pair: `2,48`.
+A geometric position is a `x,y` pair with two positive integers values: `2,48`,
+representing a point from the top left corner and usually describes the position
+of a pixel in a image.
 
-In the user interface, this value is composed with two positive integer values,
-separated by a `,`. In the database, it is stored the same and as a geometric
-WKT point.
+In the api, the value is a simple string. In the database, it is stored the same
+in the table `value` but as a geometric  WKT point in the specific table `data_type_geometry`.
 
-**Warning**: This point is based on bottom left corner, so the y is negated.
-
-In the api, the value is a simple string.
+**Warning**: In database, the point is based on bottom left corner, according to
+the standard x/y axis, so the y is negated.
 
 ### JSON-LD and GeoJSON
 
@@ -196,8 +207,11 @@ GeoJson cannot be used in all cases inside a JSON-LD.
 So the representation uses Omeka types and appends the data type `http://www.opengis.net/ont/geosparql#wktLiteral`
 of the [OGC standard]. The deprecated datatype `http://geovocab.org/geometry#asWKT`
 is no more used. For geometric coordinates and position, no "@type" is appended.
-It appends the data type `http://www.opengis.net/ont/geosparql#kmlLiteral too `
+It appends the data type `http://www.opengis.net/ont/geosparql#kmlLiteral` too
 for coordinates.
+
+Furthemore, for compatibility with [w3c geolocation api], the position is
+appended for geography coordinates.
 
 ```json
 {
@@ -210,7 +224,13 @@ for coordinates.
         {
             "type": "geography:coordinates",
             "@value": "48.858252,2.294497",
-            "@type": "http://www.opengis.net/ont/geosparql#kmlLiteral"
+            "@type": "http://www.opengis.net/ont/geosparql#kmlLiteral",
+            "position": {
+                "coords": {
+                    "latitude": 48.858252,
+                    "longitude": 2.294497
+                },
+            },
         }
     ],
     "curation:data": [
@@ -265,6 +285,8 @@ See online issues on the [module issues] page on GitLab.
 License
 -------
 
+### Module
+
 This module is published under the [CeCILL v2.1] license, compatible with
 [GNU/GPL] and approved by [FSF] and [OSI].
 
@@ -301,7 +323,7 @@ Copyright
 ---------
 
 * See `asset/vendor/` and `vendor/` for the copyright of the libraries.
-* Some portions are adapted from the modules [Numeric data types] and [Neatline].
+* Some portions were initially adapted from the modules [Numeric data types] and [Neatline].
 * Copyright Daniel Berthereau, 2018-2024, (see [Daniel-KM] on GitLab)
 
 This module was built first for the French École des hautes études en sciences
@@ -314,7 +336,7 @@ sociales [EHESS]. The improvements were developed for the digital library of the
 [WKT]: https://wikipedia.org/wiki/Well-known_text
 [Annotate Cartography]: https://gitlab.com/Daniel-KM/Omeka-S-module-Cartography
 [Mapping]: https://github.com/Omeka-S-modules/Mapping
-[Installing a module]: https://omeka.org/s/docs/user-manual/modules/#installing-modules
+[installing a module]: https://omeka.org/s/docs/user-manual/modules/#installing-modules
 [mySql 5.6.1]: https://dev.mysql.com/doc/relnotes/mysql/5.6/en/news-5-6-1.html
 [MariaDB 5.3.3]: https://mariadb.com/kb/en/library/mariadb-533-release-notes/
 [mySql 5.6.4]: https://dev.mysql.com/doc/relnotes/mysql/5.6/en/news-5-6-4.html
@@ -328,7 +350,8 @@ sociales [EHESS]. The improvements were developed for the digital library of the
 [`data_type_geography`]: https://gitlab.com/Daniel-KM/Omeka-S-module-DataTypeGeometry/-/blob/master/data/install/schema.sql#L11-20
 [DataTypeGeometry.zip]: https://gitlab.com/Daniel-KM/Omeka-S-module-DataTypeGeometry/-/releases
 [Common]: https://gitlab.com/Daniel-KM/Omeka-S-module-Common
-[doctrine2-spatial]: https://github.com/creof/doctrine2-spatial/blob/HEAD/doc/index.md
+[longitude-one/doctrine-spatial]: https://github.com/longitude-one/doctrine-spatial
+[creof/doctrine2-spatial]: https://github.com/creof/doctrine2-spatial/blob/HEAD/doc/index.md
 [search a point in a polygon for a sphere]: https://dev.mysql.com/doc/mysql-errors/8.0/en/server-error-reference.html
 [supports only flat geometric queries]: https://mariadb.com/kb/en/st_srid
 [`4326`]: https://epsg.io/4326
@@ -336,7 +359,7 @@ sociales [EHESS]. The improvements were developed for the digital library of the
 [discussion]: https://github.com/json-ld/json-ld.org/issues/397
 [geo:kmlLiteral]: http://www.opengis.net/ont/geosparql#kmlLiteral
 [OGC standard]: https://www.ogc.org/standards/geosparql
-[w3c geolocation api]: https://www.w3.org/TR/geolocation/#dom-geolocationcoordinates
+[w3c geolocation api]: https://www.w3.org/TR/geolocation/#position_interface
 [module issues]: https://gitlab.com/Daniel-KM/Omeka-S-module-DataTypeGeometry/-/issues
 [CeCILL v2.1]: https://www.cecill.info/licences/Licence_CeCILL_V2.1-en.html
 [GNU/GPL]: https://www.gnu.org/licenses/gpl-3.0.html
