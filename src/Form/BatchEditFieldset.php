@@ -41,8 +41,8 @@ class BatchEditFieldset extends Fieldset
                     'label' => 'Manage geographic coordinates', // @translate
                     'value_options' => [
                         'sync' => 'Synchronize coordinates and mapping markers', // @translate
-                        'coordinates_to_markers' => 'Copy coordinates to mapping markers', // @translate
-                        'markers_to_coordinates' => 'Copy mapping markers to coordinates', // @translate
+                        'coordinates_to_features' => 'Copy coordinates to mapping markers', // @translate
+                        'features_to_coordinates' => 'Copy mapping markers to coordinates', // @translate
                     ],
                     'empty_option' => '[No change]', // @translate
                 ],

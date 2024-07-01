@@ -554,26 +554,51 @@ class Module extends AbstractModule
             return;
         }
 
+        $isOldMapping = !$this->isModuleVersionAtLeast('Mapping', '2.0');
+
         // TODO Use the adapter to update values/mapping markers.
         // $adapter = $event->getTarget();
 
         $manage = $data['geometry']['manage_coordinates_features'] ?? null;
+
+        if ($isOldMapping) {
+            switch ($manage) {
+                default:
+                    return;
+
+                case 'sync':
+                    $this->copyCoordinatesToMarkers($ids, $data);
+                    $this->copyMarkersToCoordinates($ids, $data);
+                    break;
+
+                case 'coordinates_to_markers':
+                case 'coordinates_to_features':
+                    $this->copyCoordinatesToMarkers($ids, $data);
+                    break;
+
+                case 'markers_to_coordinates':
+                case 'features_to_coordinates':
+                    $this->copyMarkersToCoordinates($ids, $data);
+                    break;
+            }
+            return;
+        }
 
         switch ($manage) {
             default:
                 return;
 
             case 'sync':
-                $this->copyCoordinatesToMarkers($ids, $data);
-                $this->copyMarkersToCoordinates($ids, $data);
+                $this->copyCoordinatesToFeatures($ids, $data);
+                $this->copyFeaturesToCoordinates($ids, $data);
                 break;
 
-            case 'coordinates_to_markers':
-                $this->copyCoordinatesToMarkers($ids, $data);
+            case 'coordinates_to_features':
+                $this->copyCoordinatesToFeatures($ids, $data);
                 break;
 
-            case 'markers_to_coordinates':
-                $this->copyMarkersToCoordinates($ids, $data);
+            case 'features_to_coordinates':
+                $this->copyFeaturesToCoordinates($ids, $data);
                 break;
         }
     }
@@ -596,6 +621,9 @@ class Module extends AbstractModule
         } else {
             $sqlWhere = '';
         }
+
+        // TODO Manage other formats and order of literal coordinates: NSEW, long/lat, etc.
+        // TODO Manage geometry coordinates and position.
 
         // The single quote simplifies escaping of regex.
         // TODO Don't use (?:xxx|yyy) for compatibility with mysql 5.6.
@@ -639,6 +667,56 @@ SQL;
         $connection->executeStatement($sql, $bind, $types);
     }
 
+    protected function copyCoordinatesToFeatures(array $ids, array $data): void
+    {
+        /** @var \Doctrine\DBAL\Connection $connection */
+        $connection = $this->getServiceLocator()->get('Omeka\Connection');
+
+        $bind = ['resource_ids' => $ids];
+        $types = ['resource_ids' => $connection::PARAM_INT_ARRAY];
+        $from = $data['geometry']['from_properties_ids'] ?? null;
+        if ($from) {
+            $sqlWhere = 'AND `value`.`property_id` IN (:property_ids)';
+            $bind['property_ids'] = array_map('intval', $from);
+            $types['property_ids'] = $connection::PARAM_INT_ARRAY;
+        } else {
+            $sqlWhere = '';
+        }
+
+        $sql = <<<SQL
+INSERT INTO `mapping_feature`
+    (`item_id`, `media_id`, `label`, `geography`)
+SELECT DISTINCT
+    `value`.`resource_id`,
+    NULL,
+    NULL,
+    ST_GeomFromText(CONCAT(
+        "POINT(",
+        SUBSTRING_INDEX(`value`.`value`, ",", -1),
+        " ",
+        SUBSTRING_INDEX(`value`.`value`, ",", 1),
+        ")"
+    ))
+FROM `value`
+LEFT JOIN `mapping_feature`
+    ON `mapping_feature`.`item_id` = `value`.`resource_id`
+        AND ST_AsText(`mapping_feature`.`geography`) = CONCAT(
+            "POINT(",
+            SUBSTRING_INDEX(`value`.`value`, ",", -1),
+            " ",
+            SUBSTRING_INDEX(`value`.`value`, ",", 1),
+            ")"
+        )
+WHERE
+    `value`.`resource_id` IN (:resource_ids)
+    AND `value`.`type` = "geography:coordinates"
+    AND `mapping_feature`.`id` IS NULL
+    $sqlWhere
+;
+SQL;
+        $connection->executeStatement($sql, $bind, $types);
+    }
+
     protected function copyCoordinatesToMarkers(array $ids, array $data): void
     {
         /** @var \Doctrine\DBAL\Connection $connection */
@@ -674,6 +752,69 @@ WHERE
     AND `mapping_marker`.`id` IS NULL
     $sqlWhere
 ;
+SQL;
+        $connection->executeStatement($sql, $bind, $types);
+    }
+
+    protected function copyFeaturesToCoordinates(array $ids, array $data): void
+    {
+        /** @var \Doctrine\DBAL\Connection $connection */
+        $connection = $this->getServiceLocator()->get('Omeka\Connection');
+
+        // The srid is no more needed because mapping features are geography.
+        // Nevertheless, multiple srid cannot be managed.
+        // $srid = $data['geometry']['srid'] ?? Geography::DEFAULT_SRID;
+
+        $bind = [
+            'resource_ids' => $ids,
+            'property_id' => (int) $data['geometry']['to_property_id'],
+        ];
+        $types = ['resource_ids' => $connection::PARAM_INT_ARRAY];
+
+        $fromSql = <<<SQL
+FROM `mapping_feature`
+LEFT JOIN `value`
+    ON `value`.`resource_id` = `mapping_feature`.`item_id`
+        AND `value`.`type` = "geography:coordinates"
+        AND ST_AsText(`mapping_feature`.`geography`) = CONCAT(
+            "POINT(",
+            SUBSTRING_INDEX(`value`.`value`, ",", -1),
+            " ",
+            SUBSTRING_INDEX(`value`.`value`, ",", 1),
+            ")"
+        )
+WHERE
+    `mapping_feature`.`item_id` IN (:resource_ids)
+    AND `value`.`id` IS NULL
+;
+SQL;
+
+        // The update of the table `data_type_geometry` should be done first in
+        // order to keep same results from the database.
+        $sql = <<<SQL
+INSERT INTO `data_type_geography`
+    (`resource_id`, `property_id`, `value`)
+SELECT DISTINCT
+    `mapping_feature`.`item_id`,
+    :property_id,
+    `mapping_feature`.`geography`
+$fromSql
+SQL;
+        $connection->executeStatement($sql, $bind, $types);
+
+$sql = <<<SQL
+INSERT INTO `value`
+    (`resource_id`, `property_id`, `value_resource_id`, `type`, `lang`, `value`, `uri`, `is_public`)
+SELECT DISTINCT
+    `mapping_feature`.`item_id`,
+    :property_id,
+    NULL,
+    'geography:coordinates',
+    NULL,
+    CONCAT(ST_Y(`mapping_feature`.`geography`), ",", ST_X(`mapping_feature`.`geography`)),
+    NULL,
+    1
+$fromSql
 SQL;
         $connection->executeStatement($sql, $bind, $types);
     }
@@ -877,7 +1018,7 @@ SQL;
      *
      * @return \Omeka\DataType\AbstractDataType[]
      */
-    public function getGeometryDataTypes()
+    protected function getGeometryDataTypes()
     {
         $dataTypes = $this->getServiceLocator()->get('Omeka\DataTypeManager');
         return [
