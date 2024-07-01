@@ -456,6 +456,14 @@ class Module extends AbstractModule
             return;
         }
 
+        if (!empty($post['geometry']['convert_literal_order'])
+            && !in_array($post['geometry']['convert_literal_order'], ['latitude_longitude', 'longitude_latitude'])
+        ) {
+            unset($data['geometry']);
+            $event->setParam('data', $data);
+            return;
+        }
+
         $manage = $post['geometry']['manage_coordinates_features'] ?? null;
         if (!in_array($manage, ['sync', 'coordinates_to_features', 'features_to_coordinates'])) {
             unset($data['geometry']);
@@ -498,6 +506,7 @@ class Module extends AbstractModule
 
         $data['geometry'] = $post['geometry'];
         $data['geometry']['convert_literal_to_coordinates'] = !empty($data['geometry']['convert_literal_to_coordinates']);
+        $data['geometry']['convert_literal_order'] = $data['geometry']['convert_literal_order'] ?? null;
         $data['geometry']['srid'] = $this->getServiceLocator()->get('Omeka\Settings')
             ->get('datatypegeometry_locate_srid', Geography::DEFAULT_SRID);
 
@@ -536,6 +545,7 @@ class Module extends AbstractModule
             /** @var \Common\Stdlib\EasyMeta $easyMeta */
             $easyMeta = $this->getServiceLocator()->get('EasyMeta');
             $data['geometry']['convert_literal_to_coordinates'] = !empty($data['geometry']['convert_literal_to_coordinates']);
+            $data['geometry']['convert_literal_order'] = $data['geometry']['convert_literal_order'] ?? null;
             $data['geometry']['from_properties_ids'] = empty($data['geometry']['from_properties']) || in_array('all', $data['geometry']['from_properties'])
                 ? []
                 : $easyMeta->propertyIds($data['geometry']['from_properties']);
@@ -620,18 +630,48 @@ class Module extends AbstractModule
             $sqlWhere = '';
         }
 
-        // TODO Manage other formats and order of literal coordinates: NSEW, long/lat, etc.
+        // TODO Manage traditional coordinates NSEW with degrees.
         // TODO Manage geometry coordinates and position.
 
-        // The single quote simplifies escaping of regex.
         // TODO Don't use (?:xxx|yyy) for compatibility with mysql 5.6.
-        $whereSql = <<<'SQL'
+        // The single quote simplifies escaping of regex. Use nowdoc to avoid
+        // issues with backslashes.
+        $isLongLat = $data['geometry']['convert_literal_order'] === 'longitude_latitude';
+        if ($isLongLat) {
+            $selectSql = <<<'SQL'
+CONCAT(
+    "POINT(",
+    TRIM(SUBSTRING_INDEX(TRIM(`value`.`value`), ",", 1)),
+    " ",
+    TRIM(SUBSTRING_INDEX(TRIM(`value`.`value`), ",", -1)),
+    ")"
+)
+SQL;
+            $regexSql = <<<'REGEX_SQL'
+^\\s*(?<longitude>[+-]?(?:180(?:\\.0+)?|(?:(?:1[0-7]\\d)|(?:[1-9]?\\d))(?:\\.\\d+)?))\\s*,\\s*(?<latitude>[+-]?(?:[1-8]?\\d(?:\\.\\d+)?|90(?:\\.0+)?))\\s*$
+REGEX_SQL;
+        } else {
+            $selectSql = <<<'SQL'
+CONCAT(
+    "POINT(",
+    TRIM(SUBSTRING_INDEX(TRIM(`value`.`value`), ",", -1)),
+    " ",
+    TRIM(SUBSTRING_INDEX(TRIM(`value`.`value`), ",", 1)),
+    ")"
+)
+SQL;
+            $regexSql = <<<'REGEX_SQL'
+^\\s*(?<latitude>[+-]?(?:[1-8]?\\d(?:\\.\\d+)?|90(?:\\.0+)?))\\s*,\\s*(?<longitude>[+-]?(?:180(?:\\.0+)?|(?:(?:1[0-7]\\d)|(?:[1-9]?\\d))(?:\\.\\d+)?))\\s*$
+REGEX_SQL;
+        }
+
+        $whereSql = <<<SQL
 WHERE
     `value`.`resource_id` IN (:resource_ids)
     AND `value`.`type` = "literal"
-    AND `value`.`value` REGEXP '^\\s*(?<latitude>[+-]?(?:[1-8]?\\d(?:\\.\\d+)?|90(?:\\.0+)?))\\s*,\\s*(?<longitude>[+-]?(?:180(?:\\.0+)?|(?:(?:1[0-7]\\d)|(?:[1-9]?\\d))(?:\\.\\d+)?))\\s*$'
+    AND `value`.`value` REGEXP '$regexSql'
 SQL;
-        $whereSql .= '    ' . $sqlWhere;
+        $whereSql .= "\n    " . $sqlWhere;
 
         // The update of the table `data_type_geometry` should be done first in
         // order to keep same results from the database.
@@ -641,13 +681,7 @@ INSERT INTO `data_type_geography`
 SELECT DISTINCT
     `value`.`resource_id`,
     `value`.`property_id`,
-    ST_GeomFromText(CONCAT(
-        "POINT(",
-        TRIM(SUBSTRING_INDEX(TRIM(`value`.`value`), ",", -1)),
-        " ",
-        TRIM(SUBSTRING_INDEX(TRIM(`value`.`value`), ",", 1)),
-        ")"
-    ), $srid)
+    ST_GeomFromText($selectSql, $srid)
 FROM `value`
 $whereSql
 ON DUPLICATE KEY UPDATE

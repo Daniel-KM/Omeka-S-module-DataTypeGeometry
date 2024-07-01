@@ -2,6 +2,7 @@
 
 namespace DataTypeGeometry\Form;
 
+use Common\Form\Element as CommonElement;
 use Laminas\Form\Element;
 use Laminas\Form\Fieldset;
 use Omeka\Form\Element\PropertySelect;
@@ -30,6 +31,23 @@ class BatchEditFieldset extends Fieldset
                 ],
                 'attributes' => [
                     'id' => 'geometry_convert_literal_to_coordinates',
+                    // This attribute is required to make "batch edit all" working.
+                    'data-collection-action' => 'replace',
+                ],
+            ])
+            ->add([
+                'name' => 'convert_literal_order',
+                'type' => CommonElement\OptionalRadio::class,
+                'options' => [
+                    'label' => 'Order of literal value', // @translate
+                    'value_options' => [
+                        'latitude_longitude' => 'Latitude then longitude (most frequent)', // @translate
+                        'longitude_latitude' => 'Longitude then latitude', // @translate
+                    ],
+                ],
+                'attributes' => [
+                    'id' => 'geometry_convert_literal_order',
+                    'value' => 'latitude_longitude',
                     // This attribute is required to make "batch edit all" working.
                     'data-collection-action' => 'replace',
                 ],
