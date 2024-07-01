@@ -5,6 +5,7 @@ namespace DataTypeGeometry\DataType;
 use DataTypeGeometry\Doctrine\PHP\Types\Geometry\Geometry as GenericGeometry;
 use Laminas\Form\Element;
 use Laminas\View\Renderer\PhpRenderer;
+use Omeka\Api\Representation\ValueRepresentation;
 
 /**
  * Geometry is a geography on a flat plane (srid = 0).
