@@ -3,12 +3,13 @@
 namespace DataTypeGeometry\Doctrine\PHP\Types\Geography;
 
 use CrEOF\Geo\WKT\Parser as GeoWktParser;
-use CrEOF\Spatial\DBAL\Types\GeographyType;
-use CrEOF\Spatial\PHP\Types\AbstractGeometry;
-use CrEOF\Spatial\PHP\Types\Geography\GeographyInterface;
-use CrEOF\Spatial\PHP\Types\Geography\LineString;
-use CrEOF\Spatial\PHP\Types\Geography\Point;
-use CrEOF\Spatial\PHP\Types\Geography\Polygon;
+use LongitudeOne\Spatial\DBAL\Types\GeographyType;
+use LongitudeOne\Spatial\Exception as LongitudeOneException;
+use LongitudeOne\Spatial\PHP\Types\AbstractGeometry;
+use LongitudeOne\Spatial\PHP\Types\Geography\GeographyInterface;
+use LongitudeOne\Spatial\PHP\Types\Geography\LineString;
+use LongitudeOne\Spatial\PHP\Types\Geography\Point;
+use LongitudeOne\Spatial\PHP\Types\Geography\Polygon;
 
 /**
  * Generic geography that can manage all geometries, individual or multiple.
@@ -19,40 +20,23 @@ use CrEOF\Spatial\PHP\Types\Geography\Polygon;
 class Geography extends AbstractGeometry implements GeographyInterface
 {
     /**
-     * @var AbstractGeometry
      * The name cannot be the same than constant Geometry of GeometryInterface.
+     *
+     * @var AbstractGeometry
      */
     protected $geometryObject;
-
-    /**
-     * @param AbstractGeometry|array|string|null A geometry, or a wkt.
-     * @throws \CrEOF\Spatial\Exception\InvalidValueException
-     * @param int|null $srid
-     */
-    public function __construct($geometry = null, $srid = null)
-    {
-        if ($geometry) {
-            $this
-                ->setGeometry($geometry)
-                ->setSrid($srid);
-        }
-    }
 
     /**
      * Check if a variable is a valid geometry.
      *
      * @param AbstractGeometry|array|string $geometry
-     * @return bool
      */
-    public static function isValid($geometry)
+    public static function isValid($geometry): bool
     {
         return (new self)->validateGeometryValue($geometry) !== null;
     }
 
-    /**
-     * @return string
-     */
-    public function getType()
+    public function getType(): string
     {
         return is_null($this->geometryObject)
             ? self::GEOGRAPHY
@@ -60,23 +44,25 @@ class Geography extends AbstractGeometry implements GeographyInterface
     }
 
     /**
-     * @param AbstractGeometry|array|string $geometry
-     * @throws \CrEOF\Spatial\Exception\InvalidValueException
-     * @return self
+     * @param AbstractGeometry|array|string|null $geometry A geometry or a wkt.
+     *
+     * @throws \LongitudeOne\Spatial\Exception\InvalidValueException
      */
-    public function setGeometry($geometry)
+    public function setGeometry($geometry): self
     {
         $this->geometryObject = $this->validateGeometryValue($geometry);
         if (empty($this->geometryObject)) {
-            throw new \CrEOF\Spatial\Exception\InvalidValueException('Invalid geometry.'); // @translate
+            throw new LongitudeOneException\InvalidValueException('Invalid geometry.'); // @translate
         }
         return $this;
     }
 
     /**
      * @return GeographyType An object manageable by the database.
+     *
+     * @throws \LongitudeOne\Spatial\Exception\InvalidValueException
      */
-    public function getGeometry()
+    public function getGeometry(): ?AbstractGeometry
     {
         $this->isReady();
         return $this->geometryObject;
@@ -84,8 +70,10 @@ class Geography extends AbstractGeometry implements GeographyInterface
 
     /**
      * @return array A representation of the values of the geometry as an array.
+     *
+     * @throws \LongitudeOne\Spatial\Exception\InvalidValueException
      */
-    public function toArray()
+    public function toArray(): array
     {
         $this->isReady();
         return $this->geometryObject->toArray();
@@ -95,34 +83,34 @@ class Geography extends AbstractGeometry implements GeographyInterface
      * To GeoJSON Specification (RFC 7946).
      * @link https://tools.ietf.org/html/rfc7946
      *
+     * @throws \LongitudeOne\Spatial\Exception\InvalidValueException
+     *
      * {@inheritDoc}
-     * @see \CrEOF\Spatial\PHP\Types\AbstractGeometry::toJson()
+     * @see \LongitudeOne\Spatial\PHP\Types\AbstractGeometry::toJson()
      */
     public function toJson()
     {
         // TODO Manage geometry collection.
         $this->isReady();
-        $geo = [];
-        $geo['type'] = $this->geometryObject->getType();
-        $geo['coordinates'] = $this->geometryObject->toArray();
-        $geo['srid'] = $this->geometryObject->getSrid();
-        return json_encode($geo);
+        $json = [];
+        $json['type'] = $this->geometryObject->getType();
+        $json['coordinates'] = $this->geometryObject->toArray();
+        $json['srid'] = $this->geometryObject->getSrid();
+        return json_encode($json);
     }
 
     /**
      * Convert a valid geometry into a database manageable geometry.
      *
-     * @param AbstractGeometry|array|string $geometry
-     * @return AbstractGeometry|null
+     * @param AbstractGeometry|array|string|null $geometry A geometry or a wkt.
      */
-    protected function validateGeometryValue($geometry)
+    protected function validateGeometryValue($geometry): ?AbstractGeometry
     {
         if (is_object($geometry)) {
             return $geometry instanceof AbstractGeometry
                 ? $geometry
                 : null;
-        }
-        if (is_string($geometry)) {
+        } elseif (is_string($geometry)) {
             try {
                 $geometry = new GeoWktParser($geometry);
                 $geometry = $geometry->parse();
@@ -147,6 +135,7 @@ class Geography extends AbstractGeometry implements GeographyInterface
         } else {
             return null;
         }
+
         $srid = empty($geometry['srid']) ? null : $geometry['srid'];
 
         switch ($type) {
@@ -170,21 +159,21 @@ class Geography extends AbstractGeometry implements GeographyInterface
 
     /**
      * Check if the geometry is ready (not null, so not the type "Geometry").
+     *
+     * @throws \LongitudeOne\Spatial\Exception\InvalidValueException
      */
-    private function isReady(): void
+    private function isReady(): bool
     {
         if (empty($this->geometryObject)) {
-            throw new \CrEOF\Spatial\Exception\InvalidValueException('Empty geometry.'); // @translate
+            throw new LongitudeOneException\InvalidValueException('Empty geometry.'); // @translate
         }
+        return true;
     }
 
     /**
      * Must not call this: it means an empty geometry.
-     *
-     * @param array $geometry
-     * @return string
      */
-    private function toStringGeography(array $geometry)
+    private function toStringGeography(array $geometry): string
     {
         // Null is not allowed here, neither exception.
         return '';

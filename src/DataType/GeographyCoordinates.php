@@ -2,9 +2,10 @@
 
 namespace DataTypeGeometry\DataType;
 
-use DataTypeGeometry\Doctrine\PHP\Types\Geography\Geography as GenericGeography;
+use DataTypeGeometry\Doctrine\PHP\Types\Geography\Geography as GeographyType;
 use Laminas\Form\Element;
 use Laminas\View\Renderer\PhpRenderer;
+use LongitudeOne\Spatial\PHP\Types\Geography\GeographyInterface;
 use Omeka\Api\Adapter\AbstractEntityAdapter;
 use Omeka\Api\Representation\ValueRepresentation;
 use Omeka\Entity\Value;
@@ -124,10 +125,10 @@ class GeographyCoordinates extends Geography
      * Convert a string into a geography representation.
      *
      * @param string $value Accept AbstractGeometry and geometry array too.
+     *
      * @throws \InvalidArgumentException
-     * @return \CrEOF\Spatial\PHP\Types\Geography\GeographyInterface
      */
-    public function getGeometryFromValue($value): \CrEOF\Spatial\PHP\Types\Geography\GeographyInterface
+    public function getGeometryFromValue($value): GeographyInterface
     {
         if (empty($value)) {
             throw new \InvalidArgumentException('Empty geographic coordinates.'); // @translate
@@ -143,7 +144,10 @@ class GeographyCoordinates extends Geography
             $value = (string) $value->value();
         }
         try {
-            return (new GenericGeography($value))->getGeometry();
+            $geo = new GeographyType();
+            return $geo
+                ->setGeometry($value)
+                ->getGeometry();
         } catch (\Exception $e) {
             throw new \InvalidArgumentException(sprintf(
                 'Invalid geographic coordinates: %s', // @translate

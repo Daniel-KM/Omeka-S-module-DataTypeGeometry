@@ -15,10 +15,12 @@ use DataTypeGeometry\Job\IndexGeometries;
 use Doctrine\Common\Collections\Criteria;
 use Laminas\EventManager\Event;
 use Laminas\EventManager\SharedEventManagerInterface;
+use Laminas\ModuleManager\ModuleManager;
 use Laminas\Mvc\Controller\AbstractController;
 use Laminas\Mvc\MvcEvent;
 use Laminas\ServiceManager\ServiceLocatorInterface;
 use Laminas\View\Renderer\PhpRenderer;
+use LongitudeOne\Spatial\PHP\Types\Geography\GeographyInterface;
 use Omeka\Module\AbstractModule;
 use Omeka\Stdlib\Message;
 
@@ -33,26 +35,13 @@ use Omeka\Stdlib\Message;
  */
 class Module extends AbstractModule
 {
-    const NAMESPACE = __NAMESPACE__;
-
     use TraitModule;
 
-    public function onBootstrap(MvcEvent $event): void
+    const NAMESPACE = __NAMESPACE__;
+
+    public function init(ModuleManager $moduleManager)
     {
-        parent::onBootstrap($event);
-
-        // Load composer dependencies. No need to use init().
         require_once __DIR__ . '/vendor/autoload.php';
-
-        // TODO It is possible to register each geometry separately (line, point…). Is it useful? Or a Omeka type is enough (geometry:point…)? Or a column in the table (no)?
-        \Doctrine\DBAL\Types\Type::addType(
-            'geometry',
-            \CrEOF\Spatial\DBAL\Types\GeometryType::class
-        );
-        \Doctrine\DBAL\Types\Type::addType(
-            'geography',
-            \CrEOF\Spatial\DBAL\Types\GeographyType::class
-        );
     }
 
     public function install(ServiceLocatorInterface $services): void
@@ -432,7 +421,7 @@ class Module extends AbstractModule
         $inputFilter = $event->getParam('inputFilter');
         $inputFilter->get('geometry')
             ->add([
-                'name' => 'manage_coordinates_markers',
+                'name' => 'manage_coordinates_features',
                 'required' => false,
             ])
             ->add([
@@ -455,22 +444,22 @@ class Module extends AbstractModule
         $post = $request->getContent();
         $data = $event->getParam('data');
 
-        if (empty($data['geometry']) || !array_filter($data['geometry'])) {
+        if (empty($post['geometry']) || !array_filter($post['geometry'])) {
             unset($data['geometry']);
             $event->setParam('data', $data);
             return;
         }
 
         if (empty($post['geometry']['convert_literal_to_coordinates'])
-            && empty($post['geometry']['manage_coordinates_markers'])
+            && empty($post['geometry']['manage_coordinates_features'])
         ) {
             unset($data['geometry']);
             $event->setParam('data', $data);
             return;
         }
 
-        $manage = $post['geometry']['manage_coordinates_markers'];
-        if (!in_array($manage, ['sync', 'coordinates_to_markers', 'markers_to_coordinates'])) {
+        $manage = $post['geometry']['manage_coordinates_features'];
+        if (!in_array($manage, ['sync', 'coordinates_to_features', 'features_to_coordinates'])) {
             unset($data['geometry']);
             $event->setParam('data', $data);
             return;
@@ -479,7 +468,9 @@ class Module extends AbstractModule
         /** @var \Common\Stdlib\EasyMeta $easyMeta */
         $easyMeta = $this->getServiceLocator()->get('EasyMeta');
 
-        if (empty($post['geometry']['from_properties']) || $post['geometry']['from_properties'] === 'all') {
+        if (empty($post['geometry']['from_properties'])
+            || $post['geometry']['from_properties'] === 'all'
+        ) {
             $from = null;
         } else {
             $from = $easyMeta->propertyIds($post['geometry']['from_properties']);
@@ -501,7 +492,7 @@ class Module extends AbstractModule
             }
         }
 
-        if (in_array($manage, ['sync', 'markers_to_coordinates']) && !$to) {
+        if (in_array($manage, ['sync', 'features_to_coordinates']) && !$to) {
             unset($data['geometry']);
             $event->setParam('data', $data);
             return;
@@ -533,7 +524,7 @@ class Module extends AbstractModule
         if (empty($data['geometry'])
             || !array_filter($data['geometry'])
             || (empty($data['geometry']['convert_literal_to_coordinates'])
-                && empty($data['geometry']['manage_coordinates_markers'])
+                && empty($data['geometry']['manage_coordinates_features'])
             )
         ) {
             return;
@@ -566,7 +557,8 @@ class Module extends AbstractModule
         // TODO Use the adapter to update values/mapping markers.
         // $adapter = $event->getTarget();
 
-        $manage = $data['geometry']['manage_coordinates_markers'] ?? null;
+        $manage = $data['geometry']['manage_coordinates_features'] ?? null;
+
         switch ($manage) {
             default:
                 return;
@@ -827,9 +819,9 @@ SQL;
                 }
 
                 // Set the default srid for geographies in all cases.
-                /** @var \CrEOF\Spatial\PHP\Types\Geography\GeographyInterface|\CrEOF\Spatial\PHP\Types\Geometry\GeometryInterface $geometry */
+                /** @var \LongitudeOne\Spatial\PHP\Types\Geography\GeographyInterface|\LongitudeOne\Spatial\PHP\Types\Geometry\GeometryInterface $geometry */
                 $geometry = $dataType->getGeometryFromValue($value->getValue());
-                if ($geometry instanceof \CrEOF\Spatial\PHP\Types\Geography\GeographyInterface) {
+                if ($geometry instanceof GeographyInterface) {
                     $geometry->setSrid($currentSrid);
                 }
 

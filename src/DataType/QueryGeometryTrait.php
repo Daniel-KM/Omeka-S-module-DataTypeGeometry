@@ -13,7 +13,7 @@ trait QueryGeometryTrait
     /**
      * @var bool
      */
-    protected $isMysqlRecent = null;
+    protected $isMysqlRecent = false;
 
     /**
      * @var bool
@@ -36,6 +36,8 @@ trait QueryGeometryTrait
      * - ST_Distance_Sphere = ST_DistanceSphere => specific alias
      * - No ST_SetSRID = ST_SRID = ST_SetSRID
      *
+     * @todo Check internal dql fixes with the new dependency LongitudeOne Doctrine/spatial.
+     *
      * @param AbstractEntityAdapter $adapter
      * @param QueryBuilder $qb
      * @param array $query
@@ -54,7 +56,9 @@ trait QueryGeometryTrait
             $isMysqlRecent = $services->get('ViewHelperManager')->get('databaseVersion')->isDatabaseRecent();
             $defaultSrid = (int) $services->get('Omeka\Settings')->get('datatypegeometry_locate_srid', \DataTypeGeometry\DataType\Geography::DEFAULT_SRID);
         }
+
         $this->isMysqlRecent = $isMysqlRecent;
+        $this->isPosgreSql = false;
 
         $geos = $query['geo'];
         $first = reset($geos);
@@ -110,19 +114,25 @@ trait QueryGeometryTrait
     {
         $point = $adapter->createNamedParameter(
             $qb,
+            // Here, the point is a wkt, not a function.
             'POINT(' . preg_replace('~[^\d.-]~', '', $around['x']) . ' ' . preg_replace('~[^\d.-]~', '', $around['y']) . ')'
         );
         $srid = $adapter->createNamedParameter($qb, $srid);
-        $qb->andWhere($qb->expr()->lte(
-            // Note: 'ST_GeomFromText("Point(49 2)")' is not correct, so use single quote.
-            "ST_Distance(ST_GeomFromText($point, $srid), $geometryAlias.value)",
-            $adapter->createNamedParameter($qb, $around['radius'])
-        ));
+        $qb
+            ->andWhere($qb->expr()->lte(
+                // Note: 'ST_GeomFromText("Point(49 2)")' is not correct, so use single quote.
+                "ST_Distance(ST_GeomFromText($point, $srid), $geometryAlias.value)",
+                $adapter->createNamedParameter($qb, $around['radius'])
+            ));
     }
 
     /**
-     * Disabled by default: General mysql error
+     * Get the geography inside a circle on a sphere.
+     *
+     * Some versions of mysql throw a general mysql error.
      * (3618): st_distance_sphere(POINT, POLYGON) has not been implemented for geographic spatial reference systems.
+     *
+     * @todo Check if ST_Intersects(ST_Buffer(ST_GeomFromText("Point(48 2)", "4326"), 0.00001), d2_.value) = 1 but not implemented in mysql.
      *
      * @param AbstractEntityAdapter $adapter
      * @param QueryBuilder $qb
@@ -149,21 +159,23 @@ trait QueryGeometryTrait
                     $adapter->createNamedParameter($qb, $radiusMetre)
                 ));
         } else {
+            $stPoint = $this->isPosgreSql ? 'ST_Point' : 'Point';
             $xLong = $adapter->createNamedParameter($qb, $around['longitude']);
             $yLat = $adapter->createNamedParameter($qb, $around['latitude']);
             $radiusDegree = $radiusMetre / 111133;
             $radius = $adapter->createNamedParameter($qb, $radiusDegree);
             $qb
                 ->andWhere($expr->eq(
-                    "ST_Contains(ST_Buffer(Point($xLong, $yLat), $radius), $geometryAlias.value)",
+                    "ST_Contains(ST_Buffer($stPoint($xLong, $yLat), $radius), $geometryAlias.value)",
                     $expr->literal(true)
                 ));
             /*
             // Flat or small map.
-            $qb->andWhere($expr->lte(
-                "ST_Distance(Point($xLong, $yLat), $geometryAlias.value)",
-                $adapter->createNamedParameter($qb, $radiusMetre)
-            ));
+            $qb
+                ->andWhere($expr->lte(
+                    "ST_Distance($stPoint($xLong, $yLat), $geometryAlias.value)",
+                    $adapter->createNamedParameter($qb, $radiusMetre)
+                ));
             // Ok but only for points.
             // @see https://stackoverflow.com/questions/1973878/sql-search-using-haversine-in-doctrine#2102375
             $qb
@@ -194,18 +206,21 @@ trait QueryGeometryTrait
         $expr = $qb->expr();
         if ($this->isPosgreSql) {
             // Or use an enveloppe or a box.
-            $qb->andWhere($expr->eq(
-                "ST_Contains(ST_GeomFromText($mbr, $srid), $geometryAlias.value)",
-                $expr->literal(true)
-            ));
+            $qb
+                ->andWhere($expr->eq(
+                    "ST_Contains(ST_GeomFromText($mbr, $srid), $geometryAlias.value)",
+                    $expr->literal(true)
+                ));
             return;
         }
 
         // "= true" is needed only to avoid an issue when converting dql to sql.
-        $qb->andWhere($expr->eq(
-            "MBRContains(ST_GeomFromText($mbr, $srid), $geometryAlias.value)",
-            $expr->literal(true)
-        ));
+        $stMbrContains = $this->isPosgreSql ? 'ST_MbrContains' : 'MbrContains';
+        $qb
+            ->andWhere($expr->eq(
+                "$stMbrContains(ST_GeomFromText($mbr, $srid), $geometryAlias.value)",
+                $expr->literal(true)
+            ));
     }
 
     /**
@@ -235,10 +250,11 @@ trait QueryGeometryTrait
 
         // "= true" is needed only to avoid an issue when converting dql to sql.
         $expr = $qb->expr();
-        $qb->andWhere($expr->eq(
-            "ST_Contains(ST_GeomFromText($geometry, $srid), $geometryAlias.value)",
-            $expr->literal(true)
-        ));
+        $qb
+            ->andWhere($expr->eq(
+                "ST_Contains(ST_GeomFromText($geometry, $srid), $geometryAlias.value)",
+                $expr->literal(true)
+            ));
     }
 
     /**
@@ -283,22 +299,24 @@ trait QueryGeometryTrait
         $expr = $qb->expr();
         if ($property) {
             $propertyId = $this->getPropertyId($adapter, $property);
-            $qb->leftJoin(
-                $dataTypeClass,
-                $alias,
-                \Doctrine\ORM\Query\Expr\Join::WITH,
-                $qb->expr()->andX(
-                    $expr->eq($alias . '.resource', 'omeka_root.id'),
-                    $expr->eq($alias . '.property', $propertyId)
-                )
-            );
+            $qb
+                ->leftJoin(
+                    $dataTypeClass,
+                    $alias,
+                    \Doctrine\ORM\Query\Expr\Join::WITH,
+                    $expr->andX(
+                        $expr->eq($alias . '.resource', 'omeka_root.id'),
+                        $expr->eq($alias . '.property', $propertyId)
+                    )
+                );
         } else {
-            $qb->leftJoin(
-                $dataTypeClass,
-                $alias,
-                \Doctrine\ORM\Query\Expr\Join::WITH,
-                $expr->eq($alias . '.resource', 'omeka_root.id')
-            );
+            $qb
+                ->leftJoin(
+                    $dataTypeClass,
+                    $alias,
+                    \Doctrine\ORM\Query\Expr\Join::WITH,
+                    $expr->eq($alias . '.resource', 'omeka_root.id')
+                );
         }
         return $alias;
     }

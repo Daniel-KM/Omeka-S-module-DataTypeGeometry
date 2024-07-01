@@ -2,7 +2,7 @@
 
 namespace DataTypeGeometry\Entity;
 
-use CrEOF\Spatial\PHP\Types\Geography\GeographyInterface;
+use LongitudeOne\Spatial\PHP\Types\Geography\GeographyInterface;
 use Omeka\Entity\AbstractEntity;
 use Omeka\Entity\Property;
 use Omeka\Entity\Resource;
@@ -53,7 +53,7 @@ class DataTypeGeography extends AbstractEntity
     protected $property;
 
     /**
-     * @var GeographyInterface
+     * @var \LongitudeOne\Spatial\PHP\Types\Geography\GeographyInterface
      *
      * @Column(
      *     type="geography",
@@ -75,7 +75,7 @@ class DataTypeGeography extends AbstractEntity
         return $this;
     }
 
-    public function getResource(): \Omeka\Entity\Resource
+    public function getResource(): Resource
     {
         return $this->resource;
     }
@@ -86,18 +86,24 @@ class DataTypeGeography extends AbstractEntity
         return $this;
     }
 
-    public function getProperty(): \Omeka\Entity\Property
+    public function getProperty(): Property
     {
         return $this->property;
     }
 
-    public function setValue(GeographyInterface $value): self
+    /**
+     * @param \LongitudeOne\Spatial\PHP\Types\Geography\GeographyInterface $value
+     */
+    public function setValue($value): self
     {
         $this->value = $value;
         return $this;
     }
 
-    public function getValue(): \CrEOF\Spatial\PHP\Types\Geography\GeographyInterface
+    /**
+     * @return \LongitudeOne\Spatial\PHP\Types\Geography\GeographyInterface
+     */
+    public function getValue()
     {
         return $this->value;
     }

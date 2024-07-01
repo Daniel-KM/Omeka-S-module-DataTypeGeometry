@@ -19,9 +19,10 @@ interface DataTypeInterface
      *
      * Should throw \InvalidArgumentException if the passed value is invalid.
      *
-     * @throws \InvalidArgumentException
      * @param string $value
-     * @return \CrEOF\Spatial\PHP\Types\Geography\GeographyInterface|\CrEOF\Spatial\PHP\Types\Geometry\GeometryInterface
+     * @return \LongitudeOne\Spatial\PHP\Types\Geography\GeographyInterface|\LongitudeOne\Spatial\PHP\Types\Geometry\GeometryInterface
+     *
+     * @throws \InvalidArgumentException
      */
     public function getGeometryFromValue($value);
 

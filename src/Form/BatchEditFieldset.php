@@ -35,7 +35,7 @@ class BatchEditFieldset extends Fieldset
                 ],
             ])
             ->add([
-                'name' => 'manage_coordinates_markers',
+                'name' => 'manage_coordinates_features',
                 'type' => Element\Select::class,
                 'options' => [
                     'label' => 'Manage geographic coordinates', // @translate
@@ -47,7 +47,7 @@ class BatchEditFieldset extends Fieldset
                     'empty_option' => '[No change]', // @translate
                 ],
                 'attributes' => [
-                    'id' => 'geometry_manage_coordinates_markers',
+                    'id' => 'geometry_manage_coordinates_features',
                     'class' => 'chosen-select',
                     // This attribute is required to make "batch edit all" working.
                     'data-collection-action' => 'replace',

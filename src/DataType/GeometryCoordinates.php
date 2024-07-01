@@ -2,9 +2,10 @@
 
 namespace DataTypeGeometry\DataType;
 
-use DataTypeGeometry\Doctrine\PHP\Types\Geometry\Geometry as GenericGeometry;
+use DataTypeGeometry\Doctrine\PHP\Types\Geometry\Geometry as GeometryType;
 use Laminas\Form\Element;
 use Laminas\View\Renderer\PhpRenderer;
+use LongitudeOne\Spatial\PHP\Types\Geometry\GeometryInterface;
 use Omeka\Api\Adapter\AbstractEntityAdapter;
 use Omeka\Api\Representation\ValueRepresentation;
 use Omeka\Entity\Value;
@@ -115,10 +116,10 @@ class GeometryCoordinates extends Geometry
      * Convert a string into a geometry representation.
      *
      * @param string $value Accept AbstractGeometry and geometry array too.
+     *
      * @throws \InvalidArgumentException
-     * @return \CrEOF\Spatial\PHP\Types\Geometry\GeometryInterface
      */
-    public function getGeometryFromValue($value): \CrEOF\Spatial\PHP\Types\Geometry\GeometryInterface
+    public function getGeometryFromValue($value): GeometryInterface
     {
         if (empty($value)) {
             throw new \InvalidArgumentException('Empty geometric coordinates.'); // @translate
@@ -134,7 +135,10 @@ class GeometryCoordinates extends Geometry
             $value = (string) $value->value();
         }
         try {
-            return (new GenericGeometry($value))->getGeometry();
+            $geo = new GeometryType();
+            return $geo
+                ->setGeometry($value)
+                ->getGeometry();
         } catch (\Exception $e) {
             throw new \InvalidArgumentException(sprintf(
                 'Invalid geometric coordinates: %s', // @translate
