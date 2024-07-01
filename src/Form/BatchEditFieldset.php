@@ -53,6 +53,19 @@ class BatchEditFieldset extends Fieldset
                 ],
             ])
             ->add([
+                'name' => 'convert_literal_strict',
+                'type' => Element\Checkbox::class,
+                'options' => [
+                    'label' => 'Check format strictly ("," as separator)', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'geometry_convert_literal_strict',
+                    'value' => 'latitude_longitude',
+                    // This attribute is required to make "batch edit all" working.
+                    'data-collection-action' => 'replace',
+                ],
+            ])
+            ->add([
                 'name' => 'manage_coordinates_features',
                 'type' => Element\Select::class,
                 'options' => [

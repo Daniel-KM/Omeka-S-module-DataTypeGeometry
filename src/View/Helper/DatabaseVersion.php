@@ -72,6 +72,21 @@ class DatabaseVersion extends AbstractHelper
     }
 
     /**
+     * Check if Omeka database has minimum requirements to use `regexp_substr`.
+     */
+    public function supportRegexpExt(): bool
+    {
+        switch ($this->db['db']) {
+            case 'mysql':
+                return version_compare($this->db['version'], '8.0', '>=');
+            case 'mariadb':
+                return version_compare($this->db['version'], '10.0.5', '>=');
+            default:
+                return false;
+        }
+    }
+
+    /**
      * Check if the Omeka database requires myIsam to support Geometry.
      *
      * @see readme.md.

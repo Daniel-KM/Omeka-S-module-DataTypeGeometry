@@ -464,6 +464,27 @@ class Module extends AbstractModule
             return;
         }
 
+        $services = $this->getServiceLocator();
+
+        if (!empty($post['geometry']['convert_literal_to_coordinates'])
+            && empty($post['geometry']['convert_literal_strict'])
+            /** @see \DataTypeGeometry\View\Helper\DatabaseVersion::supportRegexpExt() */
+            && !$services->get('ViewHelperManager')->get('databaseVersion')->supportRegexpExt()
+        ) {
+            /**
+             * @var \Laminas\Log\Logger $logger
+             * @var \Omeka\Mvc\Controller\Plugin\Messenger $messenger
+             */
+            $logger = $services->get('Omeka\Logger');
+            $messenger = $services->get('ControllerPluginManager')->get('messenger');
+            $message = new Message('Your database does not support the function `regexp_substr`. Upgrade it to MariaDB 10.0.5 or MySQL 8.0.'); // @translate
+            $logger->err($message);
+            $messenger->addError($message);
+            unset($data['geometry']);
+            $event->setParam('data', $data);
+            return;
+        }
+
         $manage = $post['geometry']['manage_coordinates_features'] ?? null;
         if (!in_array($manage, ['sync', 'coordinates_to_features', 'features_to_coordinates'])) {
             unset($data['geometry']);
@@ -472,7 +493,7 @@ class Module extends AbstractModule
         }
 
         /** @var \Common\Stdlib\EasyMeta $easyMeta */
-        $easyMeta = $this->getServiceLocator()->get('EasyMeta');
+        $easyMeta = $services->get('EasyMeta');
 
         if (empty($post['geometry']['from_properties'])
             || in_array('all', $post['geometry']['from_properties'])
@@ -507,7 +528,8 @@ class Module extends AbstractModule
         $data['geometry'] = $post['geometry'];
         $data['geometry']['convert_literal_to_coordinates'] = !empty($data['geometry']['convert_literal_to_coordinates']);
         $data['geometry']['convert_literal_order'] = $data['geometry']['convert_literal_order'] ?? null;
-        $data['geometry']['srid'] = $this->getServiceLocator()->get('Omeka\Settings')
+        $data['geometry']['convert_literal_strict'] = !empty($data['geometry']['convert_literal_strict']);
+        $data['geometry']['srid'] = $services->get('Omeka\Settings')
             ->get('datatypegeometry_locate_srid', Geography::DEFAULT_SRID);
 
         $event->setParam('data', $data);
@@ -516,21 +538,24 @@ class Module extends AbstractModule
     /**
      * Process action on batch update (all or partial) via direct sql.
      *
-     * Data may need to be reindexed if a module like Search is used, even if
-     * the results are probably the same with a simple trimming.
+     * Data should be reindexed.
      *
      * @param Event $event
      */
     public function handleResourceBatchUpdatePost(Event $event): void
     {
+        // TODO Event data is not available here, so use request content.
+        // $data = $event->getParam('data');
         /** @var \Omeka\Api\Request $request */
         $request = $event->getParam('request');
         $data = $request->getContent();
+
         if (empty($data['geometry'])
             || !array_filter($data['geometry'])
             || (empty($data['geometry']['convert_literal_to_coordinates'])
                 && empty($data['geometry']['manage_coordinates_features'])
             )
+            || empty($data['geometry']['from_properties'])
         ) {
             return;
         }
@@ -546,6 +571,7 @@ class Module extends AbstractModule
             $easyMeta = $this->getServiceLocator()->get('EasyMeta');
             $data['geometry']['convert_literal_to_coordinates'] = !empty($data['geometry']['convert_literal_to_coordinates']);
             $data['geometry']['convert_literal_order'] = $data['geometry']['convert_literal_order'] ?? null;
+            $data['geometry']['convert_literal_strict'] = !empty($data['geometry']['convert_literal_strict']);
             $data['geometry']['from_properties_ids'] = empty($data['geometry']['from_properties']) || in_array('all', $data['geometry']['from_properties'])
                 ? []
                 : $easyMeta->propertyIds($data['geometry']['from_properties']);
@@ -636,35 +662,51 @@ class Module extends AbstractModule
         // TODO Don't use (?:xxx|yyy) for compatibility with mysql 5.6.
         // The single quote simplifies escaping of regex. Use nowdoc to avoid
         // issues with backslashes.
+        // Regex sql requires double backslashs, so check variables and nowdocs.
         $isLongLat = $data['geometry']['convert_literal_order'] === 'longitude_latitude';
-        if ($isLongLat) {
-            $selectSql = <<<'SQL'
-CONCAT(
-    "POINT(",
-    TRIM(SUBSTRING_INDEX(TRIM(`value`.`value`), ",", 1)),
-    " ",
-    TRIM(SUBSTRING_INDEX(TRIM(`value`.`value`), ",", -1)),
-    ")"
-)
-SQL;
+        $isStrictLiteral = !empty($data['geometry']['convert_literal_strict']);
+        if ($isLongLat && $isStrictLiteral) {
             $regexSql = <<<'REGEX_SQL'
 ^\\s*(?<longitude>[+-]?(?:180(?:\\.0+)?|(?:(?:1[0-7]\\d)|(?:[1-9]?\\d))(?:\\.\\d+)?))\\s*,\\s*(?<latitude>[+-]?(?:[1-8]?\\d(?:\\.\\d+)?|90(?:\\.0+)?))\\s*$
 REGEX_SQL;
-        } else {
-            $selectSql = <<<'SQL'
-CONCAT(
-    "POINT(",
-    TRIM(SUBSTRING_INDEX(TRIM(`value`.`value`), ",", -1)),
-    " ",
-    TRIM(SUBSTRING_INDEX(TRIM(`value`.`value`), ",", 1)),
-    ")"
-)
-SQL;
+        } elseif ($isLongLat && !$isStrictLiteral) {
+            $regexSql = <<<'REGEX_SQL'
+^\\s*(?<longitude>[+-]?(?:180(?:\\.0+)?|(?:(?:1[0-7]\\d)|(?:[1-9]?\\d))(?:\\.\\d+)?))[^\\d.+-]+(?<latitude>[+-]?(?:[1-8]?\\d(?:\\.\\d+)?|90(?:\\.0+)?))\\s*$
+REGEX_SQL;
+        } elseif ($isStrictLiteral) {
             $regexSql = <<<'REGEX_SQL'
 ^\\s*(?<latitude>[+-]?(?:[1-8]?\\d(?:\\.\\d+)?|90(?:\\.0+)?))\\s*,\\s*(?<longitude>[+-]?(?:180(?:\\.0+)?|(?:(?:1[0-7]\\d)|(?:[1-9]?\\d))(?:\\.\\d+)?))\\s*$
 REGEX_SQL;
+        } else {
+            $regexSql = <<<'REGEX_SQL'
+^\\s*(?<latitude>[+-]?(?:[1-8]?\\d(?:\\.\\d+)?|90(?:\\.0+)?))[^\\d.+-]+(?<longitude>[+-]?(?:180(?:\\.0+)?|(?:(?:1[0-7]\\d)|(?:[1-9]?\\d))(?:\\.\\d+)?))\\s*$
+REGEX_SQL;
         }
 
+        if ($isStrictLiteral) {
+            // Process is quicker than regex here.
+            $first = 'TRIM(SUBSTRING_INDEX(TRIM(`value`.`value`), ",", 1))';
+            $second = 'TRIM(SUBSTRING_INDEX(TRIM(`value`.`value`), ",", -1))';
+        } else {
+            // The whole value is already checked, so a basic pattern is enough.
+            // "[0-9]" instead of "\d" avoids a quadruple backslashes variable.
+            $first = "REGEXP_SUBSTR(`value`.`value`, '[0-9.+-]+')";
+            $second = "REGEXP_SUBSTR(REGEXP_SUBSTR(`value`.`value`, '[^0-9.+-]+[0-9.+-]+'), '[0-9.+-]+')";
+        }
+
+        if ($isLongLat) {
+            $x = $first;
+            $y = $second;
+        } else {
+            $x = $second;
+            $y = $first;
+        }
+
+        $selectSql = <<<SQL
+CONCAT("POINT(", $x, " ", $y, ")")
+SQL;
+
+        // Process only literal strings to avoid to reprocess geometric data.
         $whereSql = <<<SQL
 WHERE
     `value`.`resource_id` IN (:resource_ids)
@@ -690,10 +732,12 @@ ON DUPLICATE KEY UPDATE
 SQL;
         $connection->executeStatement($sql, $bind, $types);
 
+        // Normalize existing values when needed.
         $sql = <<<SQL
 UPDATE `value`
 SET
-    `value`.`type` = "geography:coordinates"
+    `value`.`type` = "geography:coordinates",
+    `value`.`value` = CONCAT($y, ",", $x)
 $whereSql
 SQL;
         $connection->executeStatement($sql, $bind, $types);
