@@ -202,13 +202,6 @@
 
     $(document).ready(function() {
 
-        // Batch edit form.
-
-        $('#geometry_manage_coordinates_features, #geometry_convert_literal_to_coordinates, #geometry_convert_literal_order, #geometry_convert_literal_strict, #geometry_from_property, #geometry_to_property').closest('.field')
-            .wrapAll('<fieldset id="geometry" class="field-container">');
-        $('#geometry')
-            .prepend('<legend>' + Omeka.jsTranslate('Geographic coordinates') + '</legend>');
-
         // Resource form.
 
         $(document).on('keyup change', '.geography-coordinates', function(e) {

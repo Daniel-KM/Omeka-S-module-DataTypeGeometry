@@ -187,11 +187,6 @@ class Module extends AbstractModule
             'form.add_elements',
             [$this, 'formAddElementsResourceBatchUpdateForm']
         );
-        $sharedEventManager->attach(
-            \Omeka\Form\ResourceBatchUpdateForm::class,
-            'form.add_input_filters',
-            [$this, 'formAddInputFiltersResourceBatchUpdateForm']
-        );
 
         // TODO The conversion to coordinates can be done for other resources but the module Mapping doesn't manage them.
         $sharedEventManager->attach(
@@ -403,33 +398,19 @@ class Module extends AbstractModule
         $formElementManager = $services->get('FormElementManager');
         // $resourceType = $form->getOption('resource_type');
 
+        /** @var \DataTypeGeometry\Form\BatchEditFieldset $fieldset */
         $fieldset = $formElementManager->get(BatchEditFieldset::class);
         $form->add($fieldset);
+
+        $groups = $form->getOption('element_groups');
+        $groups['geometry'] = 'Geometry and geography'; // @translate
+        $form->setOption('element_groups', $groups);
 
         if (!$this->isModuleActive('Mapping')) {
             $fieldset->remove('manage_coordinates_features');
             $fieldset->get('from_properties')->setLabel('Properties to convert from literal to geometric data'); // @translate
             $fieldset->remove('to_property');
         }
-    }
-
-    public function formAddInputFiltersResourceBatchUpdateForm(Event $event): void
-    {
-        /** @var \Laminas\InputFilter\InputFilterInterface $inputFilter */
-        $inputFilter = $event->getParam('inputFilter');
-        $inputFilter->get('geometry')
-            ->add([
-                'name' => 'manage_coordinates_features',
-                'required' => false,
-            ])
-            ->add([
-                'name' => 'from_properties',
-                'required' => false,
-            ])
-            ->add([
-                'name' => 'to_property',
-                'required' => false,
-            ]);
     }
 
     /**

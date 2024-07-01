@@ -5,7 +5,6 @@ namespace DataTypeGeometry\Form;
 use Common\Form\Element as CommonElement;
 use Laminas\Form\Element;
 use Laminas\Form\Fieldset;
-use Omeka\Form\Element\PropertySelect;
 
 class BatchEditFieldset extends Fieldset
 {
@@ -14,8 +13,9 @@ class BatchEditFieldset extends Fieldset
         $this
             ->setName('geometry')
             ->setOptions([
-                    'label' => 'Geometry and geography', // @translate
-                ])
+                'element_group' => 'geometry',
+                'label' => 'Geometry and geography', // @translate
+            ])
             ->setAttributes([
                 'id' => 'geometry',
                 'class' => 'field-container',
@@ -27,6 +27,7 @@ class BatchEditFieldset extends Fieldset
                 'name' => 'convert_literal_to_coordinates',
                 'type' => Element\Checkbox::class,
                 'options' => [
+                    'element_group' => 'geometry',
                     'label' => 'Convert literal values to coordinates', // @translate
                 ],
                 'attributes' => [
@@ -39,6 +40,7 @@ class BatchEditFieldset extends Fieldset
                 'name' => 'convert_literal_order',
                 'type' => CommonElement\OptionalRadio::class,
                 'options' => [
+                    'element_group' => 'geometry',
                     'label' => 'Order of literal value', // @translate
                     'value_options' => [
                         'latitude_longitude' => 'Latitude then longitude (most frequent)', // @translate
@@ -56,6 +58,7 @@ class BatchEditFieldset extends Fieldset
                 'name' => 'convert_literal_strict',
                 'type' => Element\Checkbox::class,
                 'options' => [
+                    'element_group' => 'geometry',
                     'label' => 'Check format strictly ("," as separator)', // @translate
                 ],
                 'attributes' => [
@@ -67,9 +70,10 @@ class BatchEditFieldset extends Fieldset
             ])
             ->add([
                 'name' => 'manage_coordinates_features',
-                'type' => Element\Select::class,
+                'type' => CommonElement\OptionalSelect::class,
                 'options' => [
-                    'label' => 'Manage geographic coordinates', // @translate
+                    'element_group' => 'geometry',
+                    'label' => 'Manage geographic coordinates for module Mapping', // @translate
                     'value_options' => [
                         'sync' => 'Synchronize coordinates and mapping markers', // @translate
                         'coordinates_to_features' => 'Copy coordinates to mapping markers', // @translate
@@ -86,8 +90,9 @@ class BatchEditFieldset extends Fieldset
             ])
             ->add([
                 'name' => 'from_properties',
-                'type' => PropertySelect::class,
+                'type' => CommonElement\OptionalPropertySelect::class,
                 'options' => [
+                    'element_group' => 'geometry',
                     'label' => 'Source properties to create markers or to convert from literal', // @translate
                     'term_as_value' => true,
                     'prepend_value_options' => [
@@ -108,8 +113,9 @@ class BatchEditFieldset extends Fieldset
             ])
             ->add([
                 'name' => 'to_property',
-                'type' => PropertySelect::class,
+                'type' => CommonElement\OptionalPropertySelect::class,
                 'options' => [
+                    'element_group' => 'geometry',
                     'label' => 'Property where to copy markers', // @translate
                     'term_as_value' => true,
                     'empty_option' => '',
