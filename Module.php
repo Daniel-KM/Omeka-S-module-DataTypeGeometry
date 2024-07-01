@@ -397,10 +397,6 @@ class Module extends AbstractModule
 
     public function formAddElementsResourceBatchUpdateForm(Event $event): void
     {
-        if (!$this->isModuleActive('Mapping')) {
-            return;
-        }
-
         /** @var \Omeka\Form\ResourceBatchUpdateForm $form */
         $form = $event->getTarget();
         $services = $this->getServiceLocator();
@@ -409,14 +405,16 @@ class Module extends AbstractModule
 
         $fieldset = $formElementManager->get(BatchEditFieldset::class);
         $form->add($fieldset);
+
+        if (!$this->isModuleActive('Mapping')) {
+            $fieldset->remove('manage_coordinates_features');
+            $fieldset->get('from_properties')->setLabel('Properties to convert from literal to geometric data'); // @translate
+            $fieldset->remove('to_property');
+        }
     }
 
     public function formAddInputFiltersResourceBatchUpdateForm(Event $event): void
     {
-        if (!$this->isModuleActive('Mapping')) {
-            return;
-        }
-
         /** @var \Laminas\InputFilter\InputFilterInterface $inputFilter */
         $inputFilter = $event->getParam('inputFilter');
         $inputFilter->get('geometry')
@@ -458,7 +456,7 @@ class Module extends AbstractModule
             return;
         }
 
-        $manage = $post['geometry']['manage_coordinates_features'];
+        $manage = $post['geometry']['manage_coordinates_features'] ?? null;
         if (!in_array($manage, ['sync', 'coordinates_to_features', 'features_to_coordinates'])) {
             unset($data['geometry']);
             $event->setParam('data', $data);
