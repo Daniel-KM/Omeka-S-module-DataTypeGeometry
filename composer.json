@@ -17,15 +17,13 @@
     "keywords": [
         "Omeka S",
         "Omeka S module",
+        "geolocation",
         "geographic coordinates",
         "geography",
-        "geometry"
+        "geometry",
+        "wkt"
     ],
     "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/Daniel-KM/doctrine2-spatial"
-        },
         {
             "type": "package",
             "package": {
@@ -67,13 +65,13 @@
         }
     ],
     "require": {
+        "longitude-one/doctrine-spatial": "^3.0",
         "oomphinc/composer-installers-extender": "^2.0",
-        "creof/doctrine2-spatial": "dev-mysql-80-support-with-st-functions-compat",
         "terraformer/terraformer": "1.0.12",
         "terraformer/terraformer-arcgis-parser": "1.1.0",
         "terraformer/terraformer-wkt-parser": "1.2.1"
     },
-    "replace": {
+    "provide": {
         "doctrine/lexer": "*",
         "doctrine/orm": "*"
     },
@@ -86,6 +84,9 @@
         }
     },
     "config": {
+        "platform": {
+            "php": "7.4"
+        },
         "allow-plugins": {
             "composer/installers": true,
             "oomphinc/composer-installers-extender": true
