@@ -298,7 +298,8 @@ trait QueryGeometryTrait
         $property = $query['geo'][0]['property'] ?? null;
         $expr = $qb->expr();
         if ($property) {
-            $propertyId = $this->getPropertyId($adapter, $property);
+            $services = $adapter->getServiceLocator();
+            $propertyId = $services->get('EasyMeta')->propertyId($adapter, $property);
             $qb
                 ->leftJoin(
                     $dataTypeClass,
@@ -319,41 +320,5 @@ trait QueryGeometryTrait
                 );
         }
         return $alias;
-    }
-
-    /**
-     * Get a property id from a property term or an integer.
-     *
-     * @param AbstractEntityAdapter $adapter
-     * @param string|int property
-     * @return int
-     */
-    protected function getPropertyId(AbstractEntityAdapter $adapter, $property): int
-    {
-        if (empty($property)) {
-            return 0;
-        }
-        if (is_numeric($property)) {
-            return (int) $property;
-        }
-        if (!preg_match('/^[a-z0-9-_]+:[a-z0-9-_]+$/i', $property)) {
-            return 0;
-        }
-        [$prefix, $localName] = explode(':', $property);
-        $dql = <<<'DQL'
-SELECT p.id
-FROM Omeka\Entity\Property p
-JOIN p.vocabulary v
-WHERE p.localName = :localName
-AND v.prefix = :prefix
-DQL;
-        return (int) $adapter
-            ->getEntityManager()
-            ->createQuery($dql)
-            ->setParameters(new ArrayCollection([
-                new Parameter('localName', $localName, ParameterType::STRING),
-                new Parameter('prefix', $prefix, ParameterType::STRING),
-            ]))
-            ->getOneOrNullResult(\Doctrine\ORM\Query::HYDRATE_SINGLE_SCALAR);
     }
 }

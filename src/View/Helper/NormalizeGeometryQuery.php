@@ -2,6 +2,7 @@
 
 namespace DataTypeGeometry\View\Helper;
 
+use Common\Stdlib\EasyMeta;
 use CrEOF\Geo\WKT\Parser as GeoWktParser;
 use Doctrine\ORM\EntityManager;
 use Laminas\View\Helper\AbstractHelper;
@@ -9,15 +10,20 @@ use Laminas\View\Helper\AbstractHelper;
 class NormalizeGeometryQuery extends AbstractHelper
 {
     /**
+     * @var EasyMeta
+     */
+    protected $easyMeta;
+
+    /**
      * @var EntityManager
      */
     protected $entityManager;
 
-    /**
-     * @param EntityManager $entityManager
-     */
-    public function __construct(EntityManager $entityManager)
-    {
+    public function __construct(
+        EasyMeta $easyMeta,
+        EntityManager $entityManager
+    ) {
+        $this->easyMeta = $easyMeta;
         $this->entityManager = $entityManager;
     }
 
@@ -101,7 +107,7 @@ class NormalizeGeometryQuery extends AbstractHelper
             $result = [];
             $geo += $defaults;
 
-            $property = $this->getPropertyId($geo['property']);
+            $property = $this->easyMeta->propertyId($geo['property']);
             if (is_int($property)) {
                 $result['property'] = $property;
             }
@@ -312,42 +318,5 @@ class NormalizeGeometryQuery extends AbstractHelper
             return;
         }
         return $area;
-    }
-
-    /**
-     * Get a property id from a property term or an integer.
-     */
-    protected function getPropertyId($propertyIdOrTerm): ?int
-    {
-        static $properties;
-
-        if (is_null($properties)) {
-            $connection = $this->entityManager->getConnection();
-            $qb = $connection->createQueryBuilder();
-            $qb
-                ->select(
-                    'DISTINCT CONCAT(vocabulary.prefix, ":", property.local_name) AS term',
-                    'property.id AS id',
-                    // Required with only_full_group_by.
-                    'vocabulary.id'
-                )
-                ->from('property', 'property')
-                ->innerJoin('property', 'vocabulary', 'vocabulary', 'property.vocabulary_id = vocabulary.id')
-                ->orderBy('vocabulary.id', 'asc')
-                ->addOrderBy('property.id', 'asc')
-            ;
-            $properties = array_map('intval', $connection->executeQuery($qb)->fetchAllKeyValue());
-        }
-
-        if (!$propertyIdOrTerm) {
-            return null;
-        }
-
-        if (is_numeric($propertyIdOrTerm)) {
-            $propertyIdOrTerm = (int) $propertyIdOrTerm;
-            return in_array($propertyIdOrTerm, $properties) ? $propertyIdOrTerm : null;
-        }
-
-        return $properties[$propertyIdOrTerm] ?? null;
     }
 }

@@ -3,7 +3,6 @@
 namespace DataTypeGeometry\Job;
 
 use Omeka\Job\AbstractJob;
-use Omeka\Stdlib\Message;
 
 class IndexGeometries extends AbstractJob
 {
@@ -46,9 +45,9 @@ class IndexGeometries extends AbstractJob
             'truncate',
         ];
         if (!in_array($processMode, $processModes)) {
-            $this->logger->info(new Message(
+            $this->logger->info(
                 'Indexing geometries stopped: no mode selected.' // @translate
-            ));
+            );
             return;
         }
 
@@ -160,10 +159,10 @@ WHERE `resource`.`resource_type` IN ($resourceTypes)
 AND `value`.`type` IN ("geometry", "geography");
 SQL;
             $connection->executeStatement($sql);
-            $logger->info(new Message(
-                'All geometric values for %s have now the data type "%s".', // @translate
-                $resourceType, $dataType
-            ));
+            $logger->info(
+                'All geometric values for {resource_type} have now the data type "{data_type}".', // @translate
+                ['resource_type' => $resourceType, 'data_type' => $dataType]
+            );
         }
 
         $tables = [
@@ -231,9 +230,9 @@ SQL;
             $connection->executeStatement($sql);
         }
 
-        $logger->info(new Message(
+        $logger->info(
             'Geometries were indexed.' // @translate
-        ));
+        );
     }
 
     protected function indexCartographyTargets(): void
@@ -248,9 +247,9 @@ SQL;
         $property = 'rdf:value';
         $rdfValue = $api->searchOne('properties', ['term' => $property])->getContent();
         if (!$rdfValue) {
-            $this->logger->err(new Message(
+            $this->logger->err(
                 'The property "rdf:value" was not found. Resinstall vocabulary "rdf".' // @translate
-            ));
+            );
             return;
         }
         $rdfValue = $rdfValue->id();
@@ -258,9 +257,9 @@ SQL;
         $property = 'oa:hasSelector';
         $oaHasSelector = $api->searchOne('properties', ['term' => $property])->getContent();
         if (!$oaHasSelector) {
-            $this->logger->err(new Message(
+            $this->logger->err(
                 'The property "oa:hasSelector" was not found. Resinstall vocabulary "OpenAnnotation".' // @translate
-            ));
+            );
             return;
         }
         $oaHasSelector = $oaHasSelector->id();
@@ -301,9 +300,9 @@ AND value.resource_id IN (
 );
 SQL;
         $connection->executeStatement($sql);
-        $logger->info(new Message(
+        $logger->info(
             'All geometric values for cartographic annotation targets were updated according to their type (describe or locate).' // @translate
-        ));
+        );
 
         $tables = [
             'geography' => 'data_type_geography' ,
@@ -356,9 +355,9 @@ SQL;
             $connection->executeStatement($sql);
         }
 
-        $logger->info(new Message(
+        $logger->info(
             'Geometries were indexed for annotation targets.' // @translate
-        ));
+        );
     }
 
     /**
@@ -368,9 +367,9 @@ SQL;
     {
         $success = $this->check($options);
         if (!$success) {
-            $this->logger->err(new Message(
+            $this->logger->err(
                 'Cannot process: there are errors in your original values. Try to fix them first.' // @translate
-            ));
+            );
         }
         return $success;
     }
@@ -415,10 +414,10 @@ SQL;
             $total = $connection->executeQuery($sql)->fetchOne();
 
             if (!$total) {
-                $logger->notice(new Message(
-                    'There seems no issues in %s.', // @translate
-                    in_array($dataType, ['geography', 'geography:coordinates']) ? 'geographies' : 'geometries'
-                ));
+                $logger->notice(
+                    'There seems no issues in {data_type}.', // @translate
+                    ['data_type' => in_array($dataType, ['geography', 'geography:coordinates']) ? 'geographies' : 'geometries']
+                );
                 continue;
             }
 
@@ -446,16 +445,16 @@ AND (
 ORDER BY value.id ASC;
 SQL;
 
-            $logger->warn(new Message(
-                'These %d %s have issues.', // @translate
-                $total, in_array($dataType, ['geography', 'geography:coordinates']) ? 'geographies' : 'geometries'
-            ));
+            $logger->warn(
+                'These {count} {data_type} have issues.', // @translate
+                ['count' => $total, 'data_type' => in_array($dataType, ['geography', 'geography:coordinates']) ? 'geographies' : 'geometries']
+            );
 
             $stmt = $connection->query($sql);
             while ($row = $stmt->fetch()) {
-                $logger->warn(new Message(
+                $logger->warn(
                     json_encode($row)
-                ));
+                );
             }
         }
 
@@ -482,14 +481,14 @@ SQL;
 
                     $total = $connection->executeStatement($sql);
                     if ($total) {
-                        $logger->notice(new Message(
-                            '%d bad "linestring()" were replaced by "point()".', // @translate
-                            $total
-                        ));
+                        $logger->notice(
+                            '{count} bad "linestring()" were replaced by "point()".', // @translate
+                            ['count' => $total]
+                        );
                     } else {
-                        $logger->notice(new Message(
+                        $logger->notice(
                             'No bad "linestring()" found.' // @translate
-                        ));
+                        );
                     }
                     break;
             }

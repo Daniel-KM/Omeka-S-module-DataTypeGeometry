@@ -6,6 +6,7 @@ if (!class_exists(\Common\TraitModule::class)) {
     require_once dirname(__DIR__) . '/Common/TraitModule.php';
 }
 
+use Common\Stdlib\PsrMessage;
 use Common\TraitModule;
 use DataTypeGeometry\DataType\Geography;
 use DataTypeGeometry\Form\BatchEditFieldset;
@@ -22,13 +23,12 @@ use Laminas\ServiceManager\ServiceLocatorInterface;
 use Laminas\View\Renderer\PhpRenderer;
 use LongitudeOne\Spatial\PHP\Types\Geography\GeographyInterface;
 use Omeka\Module\AbstractModule;
-use Omeka\Stdlib\Message;
 
 /**
  * Data type Geometry
  *
  * Adds a data type Geometry to properties of resources and allows to manage
- * values in Omeka or an an external database.
+ * values in Omeka or an external database.
  *
  * @copyright Daniel Berthereau, 2018-2024
  * @license http://www.cecill.info/licences/Licence_CeCILL_V2.1-en.txt
@@ -44,10 +44,30 @@ class Module extends AbstractModule
         require_once __DIR__ . '/vendor/autoload.php';
     }
 
+    protected function preInstall(): void
+    {
+        $services = $this->getServiceLocator();
+        $translate = $services->get('ControllerPluginManager')->get('translate');
+
+        if (!method_exists($this, 'checkModuleActiveVersion') || !$this->checkModuleActiveVersion('Common', '3.4.60')) {
+            $message = new \Omeka\Stdlib\Message(
+                $translate('The module %1$s should be upgraded to version %2$s or later.'), // @translate
+                'Common', '3.4.60'
+            );
+            throw new \Omeka\Module\Exception\ModuleCannotInstallException((string) $message);
+        }
+    }
+
+    /**
+     * This method overrides TraitModule because the sql file depends on the
+     * engine used for sql.
+     */
     public function install(ServiceLocatorInterface $services): void
     {
         $this->setServiceLocator($services);
-        $messenger = $services->get('ControllerPluginManager')->get('messenger');
+
+        $this->initTranslations();
+        $this->preInstall();
 
         // In case of upgrade of a recent version of Cartography, the database
         // may exist.
@@ -60,6 +80,21 @@ class Module extends AbstractModule
             $this->execSqlFromFile($this->modulePath() . '/data/install/uninstall-cartography.sql');
         }
 
+        $databaseVersion = $this->getDatabaseVersion();
+        $useMyIsam = $databaseVersion->requireMyIsamToSupportGeometry();
+
+        $filepath = $useMyIsam
+            ? $this->modulePath() . '/data/install/schema-myisam.sql'
+            : $this->modulePath() . '/data/install/schema.sql';
+        $this->execSqlFromFile($filepath);
+
+        $this->postInstall();
+    }
+
+    protected function getDatabaseVersion(): \DataTypeGeometry\View\Helper\DatabaseVersion
+    {
+        $services = $this->getServiceLocator();
+
         // The module is not available during install.
         require_once __DIR__ . '/src/View/Helper/DatabaseVersion.php';
         require_once __DIR__ . '/src/Service/ViewHelper/DatabaseVersionFactory.php';
@@ -67,21 +102,28 @@ class Module extends AbstractModule
         /** @var \DataTypeGeometry\View\Helper\DatabaseVersion $databaseVersion */
         // $databaseVersion = $services->get('ViewHelperManager')->get('databaseVersion');
         $databaseVersion = new \DataTypeGeometry\Service\ViewHelper\DatabaseVersionFactory;
-        $databaseVersion = $databaseVersion($services, 'databaseVersion', []);
+
+        return $databaseVersion($services, 'databaseVersion', []);
+    }
+
+    protected function postInstall(): void
+    {
+        $services = $this->getServiceLocator();
+        $messenger = $services->get('ControllerPluginManager')->get('messenger');
+        $databaseVersion = $this->getDatabaseVersion();
 
         if (!$databaseVersion->supportGeographicSearch()) {
-            $messenger->addWarning('Your database does not support advanced spatial search. See the minimum requirements in readme.'); // @translate
+            $messenger->addWarning(
+                'Your database does not support advanced spatial search. See the minimum requirements in readme.' // @translate
+            );
         }
 
         $useMyIsam = $databaseVersion->requireMyIsamToSupportGeometry();
         if ($useMyIsam) {
-            $messenger->addWarning('Your database does not support modern spatial indexing. It has no impact in common cases. See the minimum requirements in readme.'); // @translate
+            $messenger->addWarning(
+                'Your database does not support modern spatial indexing. It has no impact in common cases. See the minimum requirements in readme.' // @translate
+            );
         }
-
-        $filepath = $useMyIsam
-            ? $this->modulePath() . '/data/install/schema-myisam.sql'
-            : $this->modulePath() . '/data/install/schema.sql';
-        $this->execSqlFromFile($filepath);
     }
 
     public function attachListeners(SharedEventManagerInterface $sharedEventManager): void
@@ -254,13 +296,15 @@ class Module extends AbstractModule
 
         $dispatcher = $services->get(\Omeka\Job\Dispatcher::class);
         $job = $dispatcher->dispatch(IndexGeometries::class, $params);
-        $message = new Message(
-            'Processing in the background (%sjob #%d%s)', // @translate
-            sprintf('<a href="%s">',
-                htmlspecialchars($controller->url()->fromRoute('admin/id', ['controller' => 'job', 'id' => $job->getId()]))
-            ),
-            $job->getId(),
-            '</a>'
+        $message = new PsrMessage(
+            'Processing in the background ({link}job #{job_id}{link_end})', // @translate
+            [
+                'link' => sprintf('<a href="%s">',
+                    htmlspecialchars($controller->url()->fromRoute('admin/id', ['controller' => 'job', 'id' => $job->getId()]))
+                ),
+                'job_id' => $job->getId(),
+                'link_end' => '</a>',
+            ]
         );
         $message->setEscapeHtml(false);
         $controller->messenger()->addSuccess($message);
@@ -460,8 +504,8 @@ class Module extends AbstractModule
             /** @see \DataTypeGeometry\View\Helper\DatabaseVersion::supportRegexpExt() */
             && !$services->get('ViewHelperManager')->get('databaseVersion')->supportRegexpExt()
         ) {
-            $message = new Message('Your database does not support the function `regexp_substr`. Upgrade it to MariaDB 10.0.5 or MySQL 8.0.'); // @translate
-            $logger->err($message);
+            $message = new PsrMessage('Your database does not support the function `regexp_substr`. Upgrade it to MariaDB 10.0.5 or MySQL 8.0.'); // @translate
+            $logger->err($message->getMessage());
             $messenger->addError($message);
             unset($data['geometry']);
             $event->setParam('data', $data);
@@ -476,8 +520,8 @@ class Module extends AbstractModule
         }
 
         if (empty($post['geometry']['from_properties'])) {
-            $message = new Message('No source property set for conversion of geometric or geographic data.'); // @translate
-            $logger->err($message);
+            $message = new PsrMessage('No source property set for conversion of geometric or geographic data.'); // @translate
+            $logger->err($message->getMessage());
             $messenger->addError($message);
             unset($data['geometry']);
             $event->setParam('data', $data);
@@ -485,8 +529,8 @@ class Module extends AbstractModule
         } elseif (!in_array('all', $post['geometry']['from_properties'])
             && !$easyMeta->propertyIds($post['geometry']['from_properties']
         )) {
-            $message = new Message('Invalid source properties set for conversion of geometric or geographic data.'); // @translate
-            $logger->err($message);
+            $message = new PsrMessage('Invalid source properties set for conversion of geometric or geographic data.'); // @translate
+            $logger->err($message->getMessage());
             $messenger->addError($message);
             unset($data['geometry']);
             $event->setParam('data', $data);
@@ -496,8 +540,8 @@ class Module extends AbstractModule
         if (in_array($manage, ['sync', 'features_to_coordinates'])
             && !empty($post['geometry']['to_property'])
         ) {
-            $message = new Message('A destination property is needed to convert geometric or geographic data.'); // @translate
-            $logger->err($message);
+            $message = new PsrMessage('A destination property is needed to convert geometric or geographic data.'); // @translate
+            $logger->err($message->getMessage());
             $messenger->addError($message);
             unset($data['geometry']);
             $event->setParam('data', $data);
@@ -507,8 +551,8 @@ class Module extends AbstractModule
         if (!empty($post['geometry']['to_property'])) {
             $to = $easyMeta->propertyId($post['geometry']['to_property']);
             if (!$to) {
-                $message = new Message('Invalid destination property set for conversion of geometric or geographic data.'); // @translate
-                $logger->err($message);
+                $message = new PsrMessage('Invalid destination property set for conversion of geometric or geographic data.'); // @translate
+                $logger->err($message->getMessage());
                 $messenger->addError($message);
                 unset($data['geometry']);
                 $event->setParam('data', $data);
