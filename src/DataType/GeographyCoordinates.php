@@ -107,16 +107,18 @@ class GeographyCoordinates extends Geography
 
     public function getJsonLd(ValueRepresentation $value)
     {
-        $matches = [];
-        preg_match($this->regexLatitudeLongitude, (string) $value->value(), $matches);
+        // The value is already checked, so no need to use preg_match() again.
+        $val = (string) $value->value();
+        $latitude = strtok($val, ',');
+        $longitude = strtok(',');
         return [
-            '@value' => (string) $value->value(),
+            '@value' => $val,
             '@type' => 'http://www.opengis.net/ont/geosparql#kmlLiteral',
             // Compatibility with https://www.w3.org/TR/geolocation/#position_interface
             'geolocation_position' => [
                 'coords' => [
-                    'latitude' => (float) $matches['latitude'],
-                    'longitude' => (float) $matches['longitude'],
+                    'latitude' => (float) $latitude,
+                    'longitude' => (float) $longitude,
                 ],
             ],
         ];
