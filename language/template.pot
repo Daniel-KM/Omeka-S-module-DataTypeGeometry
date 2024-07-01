@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-02 00:00+0000\n"
+"POT-Creation-Date: 2024-07-01 00:00+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,428 +17,488 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: Module.php:201
+#: data/scripts/upgrade.php:29 Module.php:54
+#, php-format
+msgid "The module %1$s should be upgraded to version %2$s or later."
+msgstr ""
+
+#: Module.php:258
 msgid ""
 "Use \"Batch edit items\" to convert coordinates to/from mapping markers "
 "(require module Mapping)."
 msgstr ""
 
-#: Module.php:204
+#: Module.php:261
 msgid "The jobs below are useless without module Cartography."
 msgstr ""
 
-#: Module.php:206
+#: Module.php:263
 msgid ""
 "Reindex geometries or resources and annotations as geometry or geography."
 msgstr ""
 
-#: Module.php:229
+#: Module.php:286
 msgid "Process"
 msgstr ""
 
-#: Module.php:327
+#: Module.php:391
 msgid "Geographic coordinates"
 msgstr ""
 
-#: Module.php:329
+#: Module.php:393
 #, php-format
 msgid "Within %1$s %2$s of point %3$s %4$s"
 msgstr ""
 
-#: Module.php:333
+#: Module.php:397
 msgid "Geometric coordinates"
 msgstr ""
 
-#: Module.php:335
+#: Module.php:399
 #, php-format
-msgid "Within %1$s pixels of point x: %2$s, y: %3$s)"
+msgid "Within %1$s pixels of point x: %2$s, y: %3$s"
 msgstr ""
 
-#: Module.php:339
+#: Module.php:403
 msgid "Map box"
 msgstr ""
 
-#: Module.php:341 Module.php:347
+#: Module.php:405 Module.php:411
 #, php-format
 msgid "Within box %1$s,%2$s/%3$s,%4$s"
 msgstr ""
 
-#: Module.php:345
+#: Module.php:409
 msgid "Box"
 msgstr ""
 
-#: Module.php:351
+#: Module.php:415
 msgid "Within area"
 msgstr ""
 
-#: Module.php:354
+#: Module.php:418
 msgid "Within zone"
 msgstr ""
 
-#: src/Generic/AbstractModule.php:81 src/Generic/AbstractModule.php:761
-#, php-format
-msgid "This module requires the module \"%s\"."
-msgstr ""
-
-#: src/Generic/AbstractModule.php:86
-#, php-format
-msgid "This module requires modules \"%s\"."
-msgstr ""
-
-#: src/Generic/AbstractModule.php:94
-msgid "This module has resources that cannot be installed."
-msgstr ""
-
-#: src/Generic/AbstractModule.php:101
-msgid ""
-"This module cannot install its tables, because they exist already. Try to "
-"remove them first."
-msgstr ""
-
-#: src/Generic/AbstractModule.php:362
-#, php-format
-msgid "The module removed tables \"%s\" from a previous broken install."
-msgstr ""
-
-#: src/Generic/AbstractModule.php:756
-#, php-format
-msgid "This module requires the module \"%1$s\", version %2$s or above."
-msgstr ""
-
-#: src/Generic/AbstractModule.php:853
-#, php-format
-msgid ""
-"The module \"%s\" was automatically deactivated because the dependencies are "
-"unavailable."
-msgstr ""
-
-#: data/scripts/upgrade.php:38
+#: data/scripts/upgrade.php:47
 msgid "You should reindex your geometries in the config of this module."
 msgstr ""
 
-#: data/scripts/upgrade.php:55
+#: data/scripts/upgrade.php:64
 msgid ""
 "A new datatype has been added to manage geographic coordinates (latitude/"
 "longitude). It can manage be used as a source for the markers for the module "
 "Mapping too. A batch edit process is added to convert them."
 msgstr ""
 
-#: data/scripts/upgrade.php:59
+#: data/scripts/upgrade.php:68
 msgid ""
 "The data types of this module are no longer automatically appended to "
 "resource forms. They should be added to selected properties via a template."
 msgstr ""
 
-#: data/scripts/upgrade.php:90
+#: data/scripts/upgrade.php:109
+msgid ""
+"Your database is not compatible with geographic search: only flat geometry "
+"is supported."
+msgstr ""
+
+#: data/scripts/upgrade.php:115
 msgid ""
 "Datatype names were simplified: \"geometry\", \"geography\", \"geography:"
 "coordinates\"."
 msgstr ""
 
-#: data/scripts/upgrade.php:94
+#: data/scripts/upgrade.php:120
 msgid ""
 "Two new datatypes have been added to manage geometries: x/y coordinates "
-"(\"geometry:coordinates\") and position from top left (\"geometry:position"
-"\")."
+"(\"geometry:coordinates\") and position from top left (\"geometry:"
+"position\")."
 msgstr ""
 
-#: Module.php:74
+#: data/scripts/upgrade.php:127
+msgid ""
+"WARNING: the value representation has been normalized in the api to follow "
+"the opengis specifications for geography:coordinates, geometry:coordinates "
+"and geometry:position. The rdf value is now always a string, no more an "
+"array. Check compatibility with your external tools if needed."
+msgstr ""
+
+#: Module.php:115
 msgid ""
 "Your database does not support advanced spatial search. See the minimum "
 "requirements in readme."
 msgstr ""
 
-#: Module.php:79
+#: Module.php:122
 msgid ""
 "Your database does not support modern spatial indexing. It has no impact in "
 "common cases. See the minimum requirements in readme."
 msgstr ""
 
-#: Module.php:230
+#: Module.php:254
+msgid ""
+"Your database does not support full advanced spatial search. See the minimum "
+"requirements in readme."
+msgstr ""
+
+#: Module.php:287
 msgid "No job launched."
 msgstr ""
 
-#: Module.php:241
-#, php-format
-msgid "Processing in the background (%sjob #%d%s)"
+#: Module.php:298
+msgid "Processing in the background ({link}job #{job_id}{link_end})"
 msgstr ""
 
-#: src/Job/IndexGeometries.php:50
+#: Module.php:448 src/Form/BatchEditFieldset.php:17
+msgid "Geometry and geography"
+msgstr ""
+
+#: Module.php:453
+msgid "Properties to convert from literal to geometric data"
+msgstr ""
+
+#: Module.php:505
+msgid ""
+"Your database does not support the function `regexp_substr`. Upgrade it to "
+"MariaDB 10.0.5 or MySQL 8.0."
+msgstr ""
+
+#: Module.php:521
+msgid "No source property set for conversion of geometric or geographic data."
+msgstr ""
+
+#: Module.php:530
+msgid ""
+"Invalid source properties set for conversion of geometric or geographic data."
+msgstr ""
+
+#: Module.php:541
+msgid ""
+"A destination property is needed to convert geometric or geographic data."
+msgstr ""
+
+#: Module.php:552
+msgid ""
+"Invalid destination property set for conversion of geometric or geographic "
+"data."
+msgstr ""
+
+#: src/Job/IndexGeometries.php:49
 msgid "Indexing geometries stopped: no mode selected."
 msgstr ""
 
-#: src/Job/IndexGeometries.php:125
+#: src/Job/IndexGeometries.php:124
 msgid ""
 "Tables \"data_type_geometry\" and \"data_type_geography\" were truncated."
 msgstr ""
 
-#: src/Job/IndexGeometries.php:164
-#, php-format
-msgid "All geometric values for %s have now the data type \"%s\"."
+#: src/Job/IndexGeometries.php:163
+msgid ""
+"All geometric values for {resource_type} have now the data type "
+"\"{data_type}\"."
 msgstr ""
 
-#: src/Job/IndexGeometries.php:235
+#: src/Job/IndexGeometries.php:234
 msgid "Geometries were indexed."
 msgstr ""
 
-#: src/Job/IndexGeometries.php:252
+#: src/Job/IndexGeometries.php:251
 msgid ""
 "The property \"rdf:value\" was not found. Resinstall vocabulary \"rdf\"."
 msgstr ""
 
-#: src/Job/IndexGeometries.php:262
+#: src/Job/IndexGeometries.php:261
 msgid ""
 "The property \"oa:hasSelector\" was not found. Resinstall vocabulary "
 "\"OpenAnnotation\"."
 msgstr ""
 
-#: src/Job/IndexGeometries.php:305
+#: src/Job/IndexGeometries.php:304
 msgid ""
 "All geometric values for cartographic annotation targets were updated "
 "according to their type (describe or locate)."
 msgstr ""
 
-#: src/Job/IndexGeometries.php:360
+#: src/Job/IndexGeometries.php:359
 msgid "Geometries were indexed for annotation targets."
 msgstr ""
 
-#: src/Job/IndexGeometries.php:372
+#: src/Job/IndexGeometries.php:371
 msgid ""
 "Cannot process: there are errors in your original values. Try to fix them "
 "first."
 msgstr ""
 
-#: src/Job/IndexGeometries.php:419
-#, php-format
-msgid "There seems no issues in %s."
+#: src/Job/IndexGeometries.php:418
+msgid "There seems no issues in {data_type}."
 msgstr ""
 
-#: src/Job/IndexGeometries.php:450
-#, php-format
-msgid "These %d %s have issues."
+#: src/Job/IndexGeometries.php:449
+msgid "These {count} {data_type} have issues."
 msgstr ""
 
-#: src/Job/IndexGeometries.php:486
-#, php-format
-msgid "%d bad \"linestring()\" were replaced by \"point()\"."
+#: src/Job/IndexGeometries.php:485
+msgid "{count} bad \"linestring()\" were replaced by \"point()\"."
 msgstr ""
 
-#: src/Job/IndexGeometries.php:491
+#: src/Job/IndexGeometries.php:490
 msgid "No bad \"linestring()\" found."
 msgstr ""
 
-#: src/Doctrine/PHP/Types/Geometry/Geometry.php:73
-#: src/Doctrine/PHP/Types/Geography/Geography.php:71
+#: src/Doctrine/PHP/Types/Geometry/Geometry.php:57
+#: src/Doctrine/PHP/Types/Geography/Geography.php:55
 msgid "Invalid geometry."
 msgstr ""
 
-#: src/Doctrine/PHP/Types/Geometry/Geometry.php:187
-#: src/Doctrine/PHP/Types/Geography/Geography.php:177
-#: src/DataType/Geometry.php:56
+#: src/Doctrine/PHP/Types/Geometry/Geometry.php:181
+#: src/Doctrine/PHP/Types/Geography/Geography.php:168
+#: src/DataType/Geometry.php:61
 msgid "Empty geometry."
 msgstr ""
 
-#: src/Form/ConfigForm.php:17
+#: src/Form/ConfigForm.php:24
 msgid "Spatial reference id (Srid) for Locate"
 msgstr ""
 
-#: src/Form/ConfigForm.php:18
+#: src/Form/ConfigForm.php:25
 msgid ""
 "The Srid allows to take the curvature of the Earth into account for map.\n"
-"Recommended: 0 or 4326.\n"
-"It is displayed in the json-ld output."
-msgstr ""
-
-#: src/Form/ConfigForm.php:35
-msgid "Process job in background"
-msgstr ""
-
-#: src/Form/ConfigForm.php:38
-msgid "Reindex resources without update of values"
-msgstr ""
-
-#: src/Form/ConfigForm.php:39
-msgid "Set resources as geometry"
-msgstr ""
-
-#: src/Form/ConfigForm.php:40
-msgid "Set resources as geography"
+"    Recommended: 3857 (OpenStreetMap and web maps) or 4326 (default, used by "
+"gps and expert tools).\n"
+"    It is displayed in the json-ld output."
 msgstr ""
 
 #: src/Form/ConfigForm.php:41
+msgid "Database support search on a geographic sphere"
+msgstr ""
+
+#: src/Form/ConfigForm.php:57
+msgid "Process job in background"
+msgstr ""
+
+#: src/Form/ConfigForm.php:60
+msgid "Reindex resources without update of values"
+msgstr ""
+
+#: src/Form/ConfigForm.php:61
+msgid "Set resources as geometry"
+msgstr ""
+
+#: src/Form/ConfigForm.php:62
+msgid "Set resources as geography"
+msgstr ""
+
+#: src/Form/ConfigForm.php:63
 msgid "Reindex annotations without update of values"
 msgstr ""
 
-#: src/Form/ConfigForm.php:42
+#: src/Form/ConfigForm.php:64
 msgid "Set annotations as geometry"
 msgstr ""
 
-#: src/Form/ConfigForm.php:43
+#: src/Form/ConfigForm.php:65
 msgid "Set annotations as geography"
 msgstr ""
 
-#: src/Form/ConfigForm.php:44
+#: src/Form/ConfigForm.php:66
 msgid "Annotation targets (geometry if image, geography if map)"
 msgstr ""
 
-#: src/Form/ConfigForm.php:45
+#: src/Form/ConfigForm.php:67
 msgid "Basic check any geo value well-formedness"
 msgstr ""
 
-#: src/Form/ConfigForm.php:46
+#: src/Form/ConfigForm.php:68
 msgid "Basic check geometries well-formedness"
 msgstr ""
 
-#: src/Form/ConfigForm.php:47
+#: src/Form/ConfigForm.php:69
 msgid "Basic check geographies well-formedness"
 msgstr ""
 
-#: src/Form/ConfigForm.php:48
+#: src/Form/ConfigForm.php:70
 msgid "Replace bad linestrings by points"
 msgstr ""
 
-#: src/Form/ConfigForm.php:49
+#: src/Form/ConfigForm.php:71
 msgid "Remove all indexes"
 msgstr ""
 
-#: src/Form/ConfigForm.php:64
+#: src/Form/ConfigForm.php:87
 msgid "Run in background"
 msgstr ""
 
-#: src/Form/BatchEditFieldset.php:16
-msgid "Geometry and geography"
-msgstr ""
-
-#: src/Form/BatchEditFieldset.php:29
+#: src/Form/BatchEditFieldset.php:31
 msgid "Convert literal values to coordinates"
 msgstr ""
 
-#: src/Form/BatchEditFieldset.php:41
-msgid "Manage geographic coordinates"
+#: src/Form/BatchEditFieldset.php:44
+msgid "Order of literal value"
 msgstr ""
 
-#: src/Form/BatchEditFieldset.php:43
+#: src/Form/BatchEditFieldset.php:46
+msgid "Latitude then longitude (most frequent)"
+msgstr ""
+
+#: src/Form/BatchEditFieldset.php:47
+msgid "Longitude then latitude"
+msgstr ""
+
+#: src/Form/BatchEditFieldset.php:62
+msgid "Check format strictly (\",\" as separator)"
+msgstr ""
+
+#: src/Form/BatchEditFieldset.php:76
+msgid "Manage geographic coordinates for module Mapping"
+msgstr ""
+
+#: src/Form/BatchEditFieldset.php:78
 msgid "Synchronize coordinates and mapping markers"
 msgstr ""
 
-#: src/Form/BatchEditFieldset.php:44
+#: src/Form/BatchEditFieldset.php:79
 msgid "Copy coordinates to mapping markers"
 msgstr ""
 
-#: src/Form/BatchEditFieldset.php:45
+#: src/Form/BatchEditFieldset.php:80
 msgid "Copy mapping markers to coordinates"
 msgstr ""
 
-#: src/Form/BatchEditFieldset.php:60
+#: src/Form/BatchEditFieldset.php:96
 msgid "Source properties to create markers or to convert from literal"
 msgstr ""
 
-#: src/Form/BatchEditFieldset.php:63
+#: src/Form/BatchEditFieldset.php:99
 msgid "[All properties]"
 msgstr ""
 
-#: src/Form/BatchEditFieldset.php:73
+#: src/Form/BatchEditFieldset.php:109
 msgid "Select properties…"
 msgstr ""
 
-#: src/Form/BatchEditFieldset.php:82
+#: src/Form/BatchEditFieldset.php:119
 msgid "Property where to copy markers"
 msgstr ""
 
-#: src/Form/SearchFieldset.php:24
+#: src/Form/SearchFieldset.php:41 src/DataType/Geometry.php:23
+#: config/module.config.php:211 config/module.config.php:235
+msgid "Geometry"
+msgstr ""
+
+#: src/Form/SearchFieldset.php:42 src/DataType/Geography.php:34
+#: config/module.config.php:208 config/module.config.php:227
+msgid "Geography"
+msgstr ""
+
+#: src/Form/SearchFieldset.php:73
 msgid "Around a point"
 msgstr ""
 
-#: src/Form/SearchFieldset.php:33 src/Form/SearchFieldset.php:41
+#: src/Form/SearchFieldset.php:87
+msgid "x"
+msgstr ""
+
+#: src/Form/SearchFieldset.php:95 src/Form/SearchFieldset.php:100
+msgid "y"
+msgstr ""
+
+#: src/Form/SearchFieldset.php:111 src/Form/SearchFieldset.php:119
 msgid "Latitude"
 msgstr ""
 
-#: src/Form/SearchFieldset.php:50 src/Form/SearchFieldset.php:58
-#: src/Form/SearchFieldset.php:59
+#: src/Form/SearchFieldset.php:127 src/Form/SearchFieldset.php:135
 msgid "Longitude"
 msgstr ""
 
-#: src/Form/SearchFieldset.php:67 src/Form/SearchFieldset.php:75
-#: src/Form/SearchFieldset.php:76
+#: src/Form/SearchFieldset.php:145 src/Form/SearchFieldset.php:153
+#: src/Form/SearchFieldset.php:154
 msgid "Radius"
 msgstr ""
 
-#: src/Form/SearchFieldset.php:84 src/Form/SearchFieldset.php:93
+#: src/Form/SearchFieldset.php:163 src/Form/SearchFieldset.php:172
 msgid "Unit"
 msgstr ""
 
-#: src/Form/SearchFieldset.php:86
+#: src/Form/SearchFieldset.php:165
 msgid "kilometres"
 msgstr ""
 
-#: src/Form/SearchFieldset.php:87
+#: src/Form/SearchFieldset.php:166
 msgid "metres"
 msgstr ""
 
-#: src/Form/SearchFieldset.php:94
+#: src/Form/SearchFieldset.php:173
 msgid "Unit of the radius for geographic point"
 msgstr ""
 
-#: src/Form/SearchFieldset.php:102
+#: src/Form/SearchFieldset.php:184 src/Form/SearchFieldset.php:216
 msgid "Inside a box"
 msgstr ""
 
-#: src/Form/SearchFieldset.php:107
-msgid "Top left latitude longitude Bottom right latitude longitude"
+#: src/Form/SearchFieldset.php:189 src/Form/SearchFieldset.php:222
+msgid "Top left x y Bottom right x y"
 msgstr ""
 
-#: src/Form/SearchFieldset.php:108
-msgid "Rectangle box with two opposite geo-coordinates"
+#: src/Form/SearchFieldset.php:190
+msgid "Rectangle box with two opposite coordinates"
 msgstr ""
 
-#: src/Form/SearchFieldset.php:116
-msgid "Within an area"
+#: src/Form/SearchFieldset.php:198
+msgid "Within a zone"
 msgstr ""
 
-#: src/Form/SearchFieldset.php:122
+#: src/Form/SearchFieldset.php:204 src/Form/SearchFieldset.php:238
 msgid "WKT (well-known text that represents a geometry)"
 msgstr ""
 
-#: src/DataType/GeometryCoordinates.php:33
+#: src/Form/SearchFieldset.php:221 src/Form/SearchFieldset.php:223
+msgid "Top left latitude longitude Bottom right latitude longitude"
+msgstr ""
+
+#: src/Form/SearchFieldset.php:224
+msgid "Rectangle box with two opposite geo-coordinates"
+msgstr ""
+
+#: src/Form/SearchFieldset.php:232
+msgid "Within an area"
+msgstr ""
+
+#: src/DataType/GeometryCoordinates.php:39
 msgid "Value must be valid coordinates (x and y)"
 msgstr ""
 
-#: src/DataType/GeometryCoordinates.php:129
+#: src/DataType/GeometryCoordinates.php:125
 msgid "Empty geometric coordinates."
 msgstr ""
 
-#: src/DataType/GeometryCoordinates.php:141
+#: src/DataType/GeometryCoordinates.php:144
 #, php-format
 msgid "Invalid geometric coordinates: %s"
 msgstr ""
 
-#: src/DataType/GeographyCoordinates.php:35
+#: src/DataType/GeographyCoordinates.php:44
 msgid "Value must be valid coordinates (latitude and longitude)"
 msgstr ""
 
-#: src/DataType/GeographyCoordinates.php:135
+#: src/DataType/GeographyCoordinates.php:146
 msgid "Empty geographic coordinates."
 msgstr ""
 
-#: src/DataType/GeographyCoordinates.php:147
+#: src/DataType/GeographyCoordinates.php:165
 #, php-format
 msgid "Invalid geographic coordinates: %s"
 msgstr ""
 
-#: src/DataType/Geography.php:28 config/module.config.php:202
-#: config/module.config.php:221
-msgid "Geography"
-msgstr ""
-
-#: src/DataType/Geography.php:35
+#: src/DataType/Geography.php:43
 msgid "Please enter a valid wkt for the geography."
 msgstr ""
 
-#: src/DataType/Geography.php:76
+#: src/DataType/Geography.php:85
 msgid "Empty geography."
 msgstr ""
 
-#: src/DataType/Geography.php:85
+#: src/DataType/Geography.php:101
 #, php-format
 msgid "Invalid geography: %s"
 msgstr ""
@@ -447,76 +507,71 @@ msgstr ""
 msgid "Geography / geometry"
 msgstr ""
 
-#: src/DataType/Geometry.php:21 config/module.config.php:205
-#: config/module.config.php:229
-msgid "Geometry"
-msgstr ""
-
-#: src/DataType/Geometry.php:28 config/module.config.php:214
+#: src/DataType/Geometry.php:32 config/module.config.php:220
 msgid "Please enter a valid wkt for the geometry."
 msgstr ""
 
-#: src/DataType/Geometry.php:65
+#: src/DataType/Geometry.php:77
 #, php-format
 msgid "Invalid geometry: %s"
 msgstr ""
 
-#: src/DataType/GeometryPosition.php:26 config/module.config.php:204
-#: config/module.config.php:237
+#: src/DataType/GeometryPosition.php:27 config/module.config.php:210
+#: config/module.config.php:243
 msgid "Geometric position"
 msgstr ""
 
-#: src/DataType/GeometryPosition.php:33
+#: src/DataType/GeometryPosition.php:39
 msgid "Value must be a valid integer position from the top left corner"
 msgstr ""
 
-#: src/DataType/GeometryPosition.php:133
+#: src/DataType/GeometryPosition.php:130
 msgid "Empty geometric position."
 msgstr ""
 
-#: src/DataType/GeometryPosition.php:145
+#: src/DataType/GeometryPosition.php:149
 #, php-format
 msgid "Invalid geometric position: %s"
 msgstr ""
 
-#: config/module.config.php:206
+#: config/module.config.php:212
 msgid "Please enter a latitude."
 msgstr ""
 
-#: config/module.config.php:207
+#: config/module.config.php:213
 msgid "Please enter a longitude."
 msgstr ""
 
-#: config/module.config.php:208
+#: config/module.config.php:214
 msgid "Please enter a radius."
 msgstr ""
 
-#: config/module.config.php:209
+#: config/module.config.php:215
 msgid "Please enter a valid latitude."
 msgstr ""
 
-#: config/module.config.php:210
+#: config/module.config.php:216
 msgid "Please enter a valid longitude."
 msgstr ""
 
-#: config/module.config.php:211
+#: config/module.config.php:217
 msgid "Please enter a valid radius."
 msgstr ""
 
-#: config/module.config.php:212
+#: config/module.config.php:218
 msgid "Please enter a valid radius in m."
 msgstr ""
 
-#: config/module.config.php:213
+#: config/module.config.php:219
 msgid "Please enter a valid radius in km."
 msgstr ""
 
-#: config/module.config.php:215
+#: config/module.config.php:221
 msgid ""
 "\"multipoint\", \"multiline\" and \"multipolygon\" are not supported for "
 "now. Use collection instead."
 msgstr ""
 
-#: config/module.config.php:216
+#: config/module.config.php:222
 msgid "Error in input."
 msgstr ""
