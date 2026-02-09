@@ -38,7 +38,7 @@ class Geography extends AbstractGeometry implements GeographyInterface
 
     public function getType(): string
     {
-        return is_null($this->geometryObject)
+        return $this->geometryObject === null
             ? self::GEOGRAPHY
             : $this->geometryObject->getNamespace();
     }

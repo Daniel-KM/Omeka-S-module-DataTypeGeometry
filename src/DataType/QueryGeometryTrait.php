@@ -51,7 +51,7 @@ trait QueryGeometryTrait
             return;
         }
 
-        if (is_null($isMysqlRecent)) {
+        if ($isMysqlRecent === null) {
             $services = $adapter->getServiceLocator();
             $isMysqlRecent = $services->get('ViewHelperManager')->get('databaseVersion')->isDatabaseRecent();
             $defaultSrid = (int) $services->get('Omeka\Settings')->get('datatypegeometry_locate_srid', \DataTypeGeometry\DataType\Geography::DEFAULT_SRID);

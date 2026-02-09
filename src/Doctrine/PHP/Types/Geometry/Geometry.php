@@ -40,7 +40,7 @@ class Geometry extends AbstractGeometry
 
     public function getType(): string
     {
-        return is_null($this->geometryObject)
+        return $this->geometryObject === null
             ? self::GEOMETRY
             : $this->geometryObject->getNamespace();
     }

@@ -384,7 +384,7 @@ SQL;
         $connection = $this->connection;
 
         $isGeography = $options['isGeography'];
-        if (is_null($isGeography)) {
+        if ($isGeography === null) {
             $dataTypes = [
                 'geography',
                 'geometry',
