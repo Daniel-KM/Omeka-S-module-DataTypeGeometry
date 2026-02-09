@@ -677,7 +677,7 @@ class Module extends AbstractModule
 
         $srid = $data['geometry']['srid'] ?? Geography::DEFAULT_SRID;
 
-        $bind = ['resource_ids' => $ids];
+        $bind = ['resource_ids' => array_values($ids)];
         $types = ['resource_ids' => $connection::PARAM_INT_ARRAY];
 
         $from = $data['geometry']['from_properties_ids'] ?? null;
@@ -781,12 +781,12 @@ SQL;
         /** @var \Doctrine\DBAL\Connection $connection */
         $connection = $this->getServiceLocator()->get('Omeka\Connection');
 
-        $bind = ['resource_ids' => $ids];
+        $bind = ['resource_ids' => array_values($ids)];
         $types = ['resource_ids' => $connection::PARAM_INT_ARRAY];
         $from = $data['geometry']['from_properties_ids'] ?? null;
         if ($from) {
             $sqlWhere = 'AND `value`.`property_id` IN (:property_ids)';
-            $bind['property_ids'] = array_map('intval', $from);
+            $bind['property_ids'] = array_values(array_map('intval', $from));
             $types['property_ids'] = $connection::PARAM_INT_ARRAY;
         } else {
             $sqlWhere = '';
@@ -831,12 +831,12 @@ SQL;
         /** @var \Doctrine\DBAL\Connection $connection */
         $connection = $this->getServiceLocator()->get('Omeka\Connection');
 
-        $bind = ['resource_ids' => $ids];
+        $bind = ['resource_ids' => array_values($ids)];
         $types = ['resource_ids' => $connection::PARAM_INT_ARRAY];
         $from = $data['geometry']['from_properties_ids'] ?? null;
         if ($from) {
             $sqlWhere = 'AND `value`.`property_id` IN (:property_ids)';
-            $bind['property_ids'] = array_map('intval', $from);
+            $bind['property_ids'] = array_values(array_map('intval', $from));
             $types['property_ids'] = $connection::PARAM_INT_ARRAY;
         } else {
             $sqlWhere = '';
@@ -875,7 +875,7 @@ SQL;
         // $srid = $data['geometry']['srid'] ?? Geography::DEFAULT_SRID;
 
         $bind = [
-            'resource_ids' => $ids,
+            'resource_ids' => array_values($ids),
             'property_id' => (int) $data['geometry']['to_property_id'],
         ];
         $types = ['resource_ids' => $connection::PARAM_INT_ARRAY];
@@ -936,7 +936,7 @@ SQL;
         $srid = $data['geometry']['srid'] ?? Geography::DEFAULT_SRID;
 
         $bind = [
-            'resource_ids' => $ids,
+            'resource_ids' => array_values($ids),
             'property_id' => (int) $data['geometry']['to_property_id'],
         ];
         $types = ['resource_ids' => $connection::PARAM_INT_ARRAY];
