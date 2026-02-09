@@ -77,7 +77,7 @@ abstract class AbstractDataType extends BaseAbstractDataType implements DataType
         $srid = $geometry->getSrid();
         $string = preg_replace('/\s+/', ' ', $value->value());
         if ($srid && stripos($string, 'srid') !== false) {
-            $string = trim(substr($string, strpos(';') + 1));
+            $string = trim(substr($string, strpos($string, ';') + 1));
         }
         $result = [];
         $result['@value'] = $string;

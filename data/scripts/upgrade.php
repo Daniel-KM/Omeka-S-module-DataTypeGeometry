@@ -36,11 +36,11 @@ if (version_compare($oldVersion, '3.0.1', '<')) {
     // This is a full reinstall.
     $this->install($services);
 
-    $sql = <<<SQL
-UPDATE value
-SET type = "geometry:geometry"
-WHERE type = "geometry";
-SQL;
+    $sql = <<<'SQL'
+        UPDATE value
+        SET type = "geometry:geometry"
+        WHERE type = "geometry";
+        SQL;
     $connection->executeStatement($sql);
 
     $message = new PsrMessage(
@@ -50,12 +50,12 @@ SQL;
 }
 
 if (version_compare($oldVersion, '3.3.1.6', '<')) {
-    $sql = <<<SQL
-DROP INDEX `idx_value` ON `data_type_geography`;
-CREATE SPATIAL INDEX `idx_value` ON `data_type_geography` (`value`);
-DROP INDEX `idx_value` ON `data_type_geometry`;
-CREATE SPATIAL INDEX `idx_value` ON `data_type_geometry` (`value`);
-SQL;
+    $sql = <<<'SQL'
+        DROP INDEX `idx_value` ON `data_type_geography`;
+        CREATE SPATIAL INDEX `idx_value` ON `data_type_geography` (`value`);
+        DROP INDEX `idx_value` ON `data_type_geometry`;
+        CREATE SPATIAL INDEX `idx_value` ON `data_type_geometry` (`value`);
+        SQL;
     $connection->executeStatement($sql);
 
     $settings->delete('datatypegeometry_buttons');
@@ -72,25 +72,24 @@ SQL;
 
 if (version_compare($oldVersion, '3.4.2-beta', '<')) {
     $sqls = <<<'SQL'
-UPDATE value
-SET type = "geography"
-WHERE type = "geometry:geography";
-UPDATE value
-SET type = "geometry"
-WHERE type = "geometry:geometry";
-UPDATE value
-SET type = "geography:coordinates"
-WHERE type = "geometry:geography:coordinates";
-UPDATE value
-SET type = "geometry:coordinates"
-WHERE type = "geometry:geometry:coordinates";
-UPDATE value
-SET type = "geometry:position"
-WHERE type = "geometry:geometry:position";
-
-ALTER TABLE `data_type_geography` CHANGE `value` `value` GEOMETRY NOT NULL COMMENT '(DC2Type:geography)';
-ALTER TABLE `data_type_geometry` CHANGE `value` `value` GEOMETRY NOT NULL COMMENT '(DC2Type:geometry)';
-SQL;
+        UPDATE value
+        SET type = "geography"
+        WHERE type = "geometry:geography";
+        UPDATE value
+        SET type = "geometry"
+        WHERE type = "geometry:geometry";
+        UPDATE value
+        SET type = "geography:coordinates"
+        WHERE type = "geometry:geography:coordinates";
+        UPDATE value
+        SET type = "geometry:coordinates"
+        WHERE type = "geometry:geometry:coordinates";
+        UPDATE value
+        SET type = "geometry:position"
+        WHERE type = "geometry:geometry:position";
+        ALTER TABLE `data_type_geography` CHANGE `value` `value` GEOMETRY NOT NULL COMMENT '(DC2Type:geography)';
+        ALTER TABLE `data_type_geometry` CHANGE `value` `value` GEOMETRY NOT NULL COMMENT '(DC2Type:geometry)';
+        SQL;
     foreach (array_filter(explode(";\n", $sqls)) as $sql) {
         $connection->executeStatement($sql);
     }
@@ -98,10 +97,10 @@ SQL;
     // \DataTypeGeometry\DataType\Geography::DEFAULT_SRID
     $defaultSrid = (int) $settings->get('datatypegeometry_locate_srid', 4326);
     $sql = <<<SQL
-UPDATE `data_type_geography`
-SET `value` = ST_SRID(`value`, $defaultSrid)
-WHERE ST_SRID(`value`) != $defaultSrid;
-SQL;
+        UPDATE `data_type_geography`
+        SET `value` = ST_SRID(`value`, $defaultSrid)
+        WHERE ST_SRID(`value`) != $defaultSrid;
+        SQL;
     try {
         $connection->executeStatement($sql);
     } catch (\Exception $e) {

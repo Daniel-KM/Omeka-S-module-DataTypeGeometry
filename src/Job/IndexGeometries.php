@@ -12,11 +12,6 @@ class IndexGeometries extends AbstractJob
     protected $logger;
 
     /**
-     * @var \Omeka\Mvc\Controller\Plugin\Api $api
-     */
-    protected $api;
-
-    /**
      * @var \Doctrine\DBAL\Connection $connection
      */
     protected $connection;
@@ -25,7 +20,6 @@ class IndexGeometries extends AbstractJob
     {
         $services = $this->getServiceLocator();
         $this->logger = $services->get('Omeka\Logger');
-        $this->api = $services->get('ControllerPluginManager')->get('api');
         $this->connection = $services->get('Omeka\Connection');
 
         $processMode = $this->getArg('process_mode');
@@ -125,7 +119,6 @@ class IndexGeometries extends AbstractJob
     protected function reindex(array $options): void
     {
         $logger = $this->logger;
-        $api = $this->api;
         $connection = $this->connection;
 
         $updateValues = $options['updateValues'];
@@ -144,17 +137,17 @@ class IndexGeometries extends AbstractJob
         $table = $isGeography
             ? 'data_type_geography'
             : 'data_type_geometry';
-        $defaultSrid = $this->getServiceLocator()->get('Omeka\Settings')
+        $defaultSrid = (int) $this->getServiceLocator()->get('Omeka\Settings')
             ->get('datatypegeometry_locate_srid', 4326);
 
         if ($updateValues) {
             $sql = <<<SQL
-UPDATE `value`
-INNER JOIN `resource` ON `resource`.`id` = `value`.`resource_id`
-SET `type` = "$dataType", `lang` = NULL, `value_resource_id` = NULL, `uri` = NULL
-WHERE `resource`.`resource_type` IN ($resourceTypes)
-AND `value`.`type` IN ("geometry", "geography");
-SQL;
+                UPDATE `value`
+                INNER JOIN `resource` ON `resource`.`id` = `value`.`resource_id`
+                SET `type` = "$dataType", `lang` = NULL, `value_resource_id` = NULL, `uri` = NULL
+                WHERE `resource`.`resource_type` IN ($resourceTypes)
+                AND `value`.`type` IN ("geometry", "geography");
+                SQL;
             $connection->executeStatement($sql);
             $logger->info(
                 'All geometric values for {resource_type} have now the data type "{data_type}".', // @translate
@@ -175,14 +168,14 @@ SQL;
             $srid = $table === 'data_type_geography' ? $defaultSrid : 0;
 
             $sql = <<<SQL
-DELETE FROM `$table`
-WHERE EXISTS (
-    SELECT 1
-    FROM `resource`
-    WHERE `resource`.`id` = `$table`.`resource_id`
-    AND `resource`.`resource_type` IN ($resourceTypes)
-);
-SQL;
+                DELETE FROM `$table`
+                WHERE EXISTS (
+                    SELECT 1
+                    FROM `resource`
+                    WHERE `resource`.`id` = `$table`.`resource_id`
+                    AND `resource`.`resource_type` IN ($resourceTypes)
+                );
+                SQL;
             $connection->executeStatement($sql);
         }
 
@@ -204,26 +197,26 @@ SQL;
 
             // Keep the existing srid in all cases, even for geometries.
             $sql = <<<SQL
-INSERT INTO `$table` (`resource_id`, `property_id`, `value`)
-SELECT `resource_id`, `property_id`, GeomFromText(`value`, $srid)
-FROM `value`
-INNER JOIN `resource` ON `resource`.`id` = `value`.`resource_id`
-WHERE `resource`.`resource_type` IN ($resourceTypes)
-AND `value`.`type` IN ($dataTypes)
-AND `value`.`value` NOT LIKE "SRID%"
-ORDER BY `value`.`id` ASC;
-SQL;
+                INSERT INTO `$table` (`resource_id`, `property_id`, `value`)
+                SELECT `resource_id`, `property_id`, GeomFromText(`value`, $srid)
+                FROM `value`
+                INNER JOIN `resource` ON `resource`.`id` = `value`.`resource_id`
+                WHERE `resource`.`resource_type` IN ($resourceTypes)
+                AND `value`.`type` IN ($dataTypes)
+                AND `value`.`value` NOT LIKE "SRID%"
+                ORDER BY `value`.`id` ASC;
+                SQL;
             $connection->executeStatement($sql);
             $sql = <<<SQL
-INSERT INTO `$table` (`resource_id`, `property_id`, `value`)
-SELECT `resource_id`, `property_id`, GeomFromText(TRIM(SUBSTRING_INDEX(`value`, ';', -1)), SUBSTRING_INDEX(SUBSTRING_INDEX(`value`, ';', 1), '=', -1))
-FROM `value`
-INNER JOIN `resource` ON `resource`.`id` = `value`.`resource_id`
-WHERE `resource`.`resource_type` IN ($resourceTypes)
-AND `value`.`type` IN ($dataTypes)
-AND `value`.`value` LIKE "SRID%"
-ORDER BY `value`.`id` ASC;
-SQL;
+                INSERT INTO `$table` (`resource_id`, `property_id`, `value`)
+                SELECT `resource_id`, `property_id`, GeomFromText(TRIM(SUBSTRING_INDEX(`value`, ';', -1)), SUBSTRING_INDEX(SUBSTRING_INDEX(`value`, ';', 1), '=', -1))
+                FROM `value`
+                INNER JOIN `resource` ON `resource`.`id` = `value`.`resource_id`
+                WHERE `resource`.`resource_type` IN ($resourceTypes)
+                AND `value`.`type` IN ($dataTypes)
+                AND `value`.`value` LIKE "SRID%"
+                ORDER BY `value`.`id` ASC;
+                SQL;
             $connection->executeStatement($sql);
         }
 
@@ -235,67 +228,64 @@ SQL;
     protected function indexCartographyTargets(): void
     {
         $logger = $this->logger;
-        $api = $this->api;
         $connection = $this->connection;
 
         // All annotation targets that have wkt and a media as selector are
         // "geometry", and other wkt targets are "geography".
 
-        $property = 'rdf:value';
-        $rdfValue = $api->searchOne('properties', ['term' => $property])->getContent();
+        $easyMeta = $this->getServiceLocator()->get('Common\EasyMeta');
+
+        $rdfValue = $easyMeta->propertyId('rdf:value');
         if (!$rdfValue) {
             $this->logger->err(
-                'The property "rdf:value" was not found. Resinstall vocabulary "rdf".' // @translate
+                'The property "rdf:value" was not found. Reinstall vocabulary "rdf".' // @translate
             );
             return;
         }
-        $rdfValue = $rdfValue->id();
 
-        $property = 'oa:hasSelector';
-        $oaHasSelector = $api->searchOne('properties', ['term' => $property])->getContent();
+        $oaHasSelector = $easyMeta->propertyId('oa:hasSelector');
         if (!$oaHasSelector) {
             $this->logger->err(
-                'The property "oa:hasSelector" was not found. Resinstall vocabulary "OpenAnnotation".' // @translate
+                'The property "oa:hasSelector" was not found. Reinstall vocabulary "OpenAnnotation".' // @translate
             );
             return;
         }
-        $oaHasSelector = $oaHasSelector->id();
 
-        $defaultSrid = $this->getServiceLocator()->get('Omeka\Settings')
+        $defaultSrid = (int) $this->getServiceLocator()->get('Omeka\Settings')
             ->get('datatypegeometry_locate_srid', 4326);
 
         // Set all targets wkt a geography (only for property "rdf:value").
         $sql = <<<SQL
-UPDATE value
-INNER JOIN annotation_target ON annotation_target.id = value.resource_id
-INNER JOIN resource ON resource.id = value.resource_id
-SET type = "geography", lang = NULL, value_resource_id = NULL, uri = NULL
-WHERE resource.resource_type = "Annotate\\\\Entity\\\\AnnotationTarget"
-AND value.type IN ("geometry", "geography")
-AND value.property_id = $rdfValue;
-SQL;
+            UPDATE value
+            INNER JOIN annotation_target ON annotation_target.id = value.resource_id
+            INNER JOIN resource ON resource.id = value.resource_id
+            SET type = "geography", lang = NULL, value_resource_id = NULL, uri = NULL
+            WHERE resource.resource_type = "Annotate\\\\Entity\\\\AnnotationTarget"
+            AND value.type IN ("geometry", "geography")
+            AND value.property_id = $rdfValue;
+            SQL;
 
         $connection->executeStatement($sql);
         // Set all media targets (via oa:hasSelector) wkt a geometry (only for
         // "rdf:value").
         $sql = <<<SQL
-UPDATE `value`
-INNER JOIN `annotation_target` ON annotation_target.id = value.resource_id
-SET type = "geometry", lang = NULL, value_resource_id = NULL, uri = NULL
-WHERE value.type IN ("geometry", "geography")
-AND value.property_id = $rdfValue
-AND value.resource_id IN (
-  SELECT resource_id FROM (
-    SELECT DISTINCT value.resource_id
-    FROM `value`
-    INNER JOIN `annotation_target` ON annotation_target.id = value.resource_id
-    INNER JOIN `resource` ON resource.id = value.value_resource_id
-        AND resource.resource_type = "Omeka\\\\Entity\\\\Media"
-    WHERE value.property_id = $oaHasSelector
-    AND value.value_resource_id IS NOT NULL
-  ) AS w
-);
-SQL;
+            UPDATE `value`
+            INNER JOIN `annotation_target` ON annotation_target.id = value.resource_id
+            SET type = "geometry", lang = NULL, value_resource_id = NULL, uri = NULL
+            WHERE value.type IN ("geometry", "geography")
+            AND value.property_id = $rdfValue
+            AND value.resource_id IN (
+            SELECT resource_id FROM (
+                SELECT DISTINCT value.resource_id
+                FROM `value`
+                INNER JOIN `annotation_target` ON annotation_target.id = value.resource_id
+                INNER JOIN `resource` ON resource.id = value.value_resource_id
+                    AND resource.resource_type = "Omeka\\\\Entity\\\\Media"
+                WHERE value.property_id = $oaHasSelector
+                AND value.value_resource_id IS NOT NULL
+            ) AS w
+            );
+            SQL;
         $connection->executeStatement($sql);
         $logger->info(
             'All geometric values for cartographic annotation targets were updated according to their type (describe or locate).' // @translate
@@ -310,45 +300,45 @@ SQL;
 
             // Remove existing index for annotation targets only.
             $sql = <<<SQL
-DELETE FROM `$table`
-WHERE EXISTS (
-    SELECT 1
-    FROM annotation_target
-    INNER JOIN `resource` ON resource.id = annotation_target.id
-    WHERE resource.resource_type = "Annotate\\\\Entity\\\\AnnotationTarget"
-    AND resource.id = $table.resource_id
-    AND $table.property_id = $rdfValue
-);
-SQL;
+                DELETE FROM `$table`
+                WHERE EXISTS (
+                    SELECT 1
+                    FROM annotation_target
+                    INNER JOIN `resource` ON resource.id = annotation_target.id
+                    WHERE resource.resource_type = "Annotate\\\\Entity\\\\AnnotationTarget"
+                    AND resource.id = $table.resource_id
+                    AND $table.property_id = $rdfValue
+                );
+                SQL;
             $connection->executeStatement($sql);
 
             // Index annotation targets.
             // Keep the existing srid in all cases, even for geometries.
             $sql = <<<SQL
-INSERT INTO `$table` (resource_id, property_id, value)
-SELECT resource_id, property_id, GeomFromText(value, $srid)
-FROM value
-INNER JOIN annotation_target ON annotation_target.id = value.resource_id
-INNER JOIN resource ON resource.id = value.resource_id
-WHERE resource.resource_type = "Annotate\\\\Entity\\\\AnnotationTarget"
-AND value.type = "$dataType"
-AND value.property_id = $rdfValue
-AND value.value NOT LIKE "SRID%"
-ORDER BY value.id ASC;
-SQL;
+                INSERT INTO `$table` (resource_id, property_id, value)
+                SELECT resource_id, property_id, GeomFromText(value, $srid)
+                FROM value
+                INNER JOIN annotation_target ON annotation_target.id = value.resource_id
+                INNER JOIN resource ON resource.id = value.resource_id
+                WHERE resource.resource_type = "Annotate\\\\Entity\\\\AnnotationTarget"
+                AND value.type = "$dataType"
+                AND value.property_id = $rdfValue
+                AND value.value NOT LIKE "SRID%"
+                ORDER BY value.id ASC;
+                SQL;
             $connection->executeStatement($sql);
             $sql = <<<SQL
-INSERT INTO `$table` (resource_id, property_id, value)
-SELECT resource_id, property_id, GeomFromText(TRIM(SUBSTRING_INDEX(value, ';', -1)), SUBSTRING_INDEX(SUBSTRING_INDEX(value, ';', 1), '=', -1))
-FROM value
-INNER JOIN annotation_target ON annotation_target.id = value.resource_id
-INNER JOIN resource ON resource.id = value.resource_id
-WHERE resource.resource_type = "Annotate\\\\Entity\\\\AnnotationTarget"
-AND value.type = "$dataType"
-AND value.property_id = $rdfValue
-AND value.value LIKE "SRID%"
-ORDER BY value.id ASC;
-SQL;
+                INSERT INTO `$table` (resource_id, property_id, value)
+                SELECT resource_id, property_id, GeomFromText(TRIM(SUBSTRING_INDEX(value, ';', -1)), SUBSTRING_INDEX(SUBSTRING_INDEX(value, ';', 1), '=', -1))
+                FROM value
+                INNER JOIN annotation_target ON annotation_target.id = value.resource_id
+                INNER JOIN resource ON resource.id = value.resource_id
+                WHERE resource.resource_type = "Annotate\\\\Entity\\\\AnnotationTarget"
+                AND value.type = "$dataType"
+                AND value.property_id = $rdfValue
+                AND value.value LIKE "SRID%"
+                ORDER BY value.id ASC;
+                SQL;
             $connection->executeStatement($sql);
         }
 
@@ -377,10 +367,9 @@ SQL;
     protected function check(array $options): bool
     {
         $logger = $this->logger;
-        $api = $this->api;
         $connection = $this->connection;
 
-        $isGeography = $options['isGeography'];
+        $isGeography = $options['isGeography'] ?? null;
         if ($isGeography === null) {
             $dataTypes = [
                 'geography',
@@ -396,17 +385,17 @@ SQL;
 
         foreach ($dataTypes as $dataType) {
             $sql = <<<SQL
-SELECT COUNT(value.id)
-FROM value
-INNER JOIN resource ON resource.id = value.resource_id
-WHERE value.type = "$dataType"
-AND (
-    value.value LIKE "POINT%,%"
-    OR (value.value LIKE "LINESTRING%" AND value.value NOT LIKE "%,%")
-    OR (value.value LIKE "POLYGON%" AND value.value NOT LIKE "%,%,%,%")
-)
-ORDER BY value.id ASC;
-SQL;
+                SELECT COUNT(value.id)
+                FROM value
+                INNER JOIN resource ON resource.id = value.resource_id
+                WHERE value.type = "$dataType"
+                AND (
+                    value.value LIKE "POINT%,%"
+                    OR (value.value LIKE "LINESTRING%" AND value.value NOT LIKE "%,%")
+                    OR (value.value LIKE "POLYGON%" AND value.value NOT LIKE "%,%,%,%")
+                )
+                ORDER BY value.id ASC;
+                SQL;
 
             $total = $connection->executeQuery($sql)->fetchOne();
 
@@ -421,26 +410,26 @@ SQL;
             $success = false;
 
             $sql = <<<SQL
-SELECT
-    value.id AS "value id",
-    resource.resource_type as "resource type",
-    value.resource_id as "resource id",
-    CASE
-        WHEN value.value LIKE "POINT%,%" THEN "Bad point"
-        WHEN (value.value LIKE "LINESTRING%" AND value.value NOT LIKE "%,%") THEN "Line requires at least two points"
-        WHEN (value.value LIKE "POLYGON%" AND value.value NOT LIKE "%,%,%,%") THEN "Polygon requires at least four points"
-    END AS "issue",
-    value.value AS "value"
-FROM value
-INNER JOIN resource ON resource.id = value.resource_id
-WHERE value.type = "$dataType"
-AND (
-    value.value LIKE "POINT%,%"
-    OR (value.value LIKE "LINESTRING%" AND value.value NOT LIKE "%,%")
-    OR (value.value LIKE "POLYGON%" AND value.value NOT LIKE "%,%,%,%")
-)
-ORDER BY value.id ASC;
-SQL;
+                SELECT
+                    value.id AS "value id",
+                    resource.resource_type as "resource type",
+                    value.resource_id as "resource id",
+                    CASE
+                        WHEN value.value LIKE "POINT%,%" THEN "Bad point"
+                        WHEN (value.value LIKE "LINESTRING%" AND value.value NOT LIKE "%,%") THEN "Line requires at least two points"
+                        WHEN (value.value LIKE "POLYGON%" AND value.value NOT LIKE "%,%,%,%") THEN "Polygon requires at least four points"
+                    END AS "issue",
+                    value.value AS "value"
+                FROM value
+                INNER JOIN resource ON resource.id = value.resource_id
+                WHERE value.type = "$dataType"
+                AND (
+                    value.value LIKE "POINT%,%"
+                    OR (value.value LIKE "LINESTRING%" AND value.value NOT LIKE "%,%")
+                    OR (value.value LIKE "POLYGON%" AND value.value NOT LIKE "%,%,%,%")
+                )
+                ORDER BY value.id ASC;
+                SQL;
 
             $logger->warn(
                 'These {count} {data_type} have issues.', // @translate
@@ -461,7 +450,6 @@ SQL;
     protected function fix(array $options): void
     {
         $logger = $this->logger;
-        $api = $this->api;
         $connection = $this->connection;
 
         $fixes = $options['fix'];
@@ -469,12 +457,12 @@ SQL;
             switch ($fix) {
                 case 'linestring':
                     $sql = <<<SQL
-UPDATE value
-INNER JOIN resource ON resource.id = value.resource_id
-SET value = REPLACE(value, "LINESTRING", "POINT")
-WHERE
-    value.value LIKE "LINESTRING%" AND value.value NOT LIKE "%,%"
-SQL;
+                        UPDATE value
+                        INNER JOIN resource ON resource.id = value.resource_id
+                        SET value = REPLACE(value, "LINESTRING", "POINT")
+                        WHERE
+                            value.value LIKE "LINESTRING%" AND value.value NOT LIKE "%,%"
+                        SQL;
 
                     $total = $connection->executeStatement($sql);
                     if ($total) {

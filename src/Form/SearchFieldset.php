@@ -216,7 +216,7 @@ class SearchFieldset extends Fieldset
                         'label' => 'Inside a box', // @translate
                     ],
                     'attributes' => [
-                        'id' => 'geo-mapbox',
+                        'id' => 'geo-mapbox-geography',
                         'class' => 'query-geo-mapbox',
                         'placeholder' => 'Top left latitude longitude Bottom right latitude longitude', // @translate
                         'data-geometry-placeholder' => 'Top left x y Bottom right x y', // @translate
@@ -232,7 +232,7 @@ class SearchFieldset extends Fieldset
                         'label' => 'Within an area', // @translate
                     ],
                     'attributes' => [
-                        'id' => 'geo-area',
+                        'id' => 'geo-area-geography',
                         'class' => 'query-geo-area',
                         'placeholder' => 'POLYGON ((2.42 51.34, -5.71 48.51, -1.84 43.04, 3.66 42.15, 7.71 43.54, 8.28 48.95, 2.42 51.34))',
                         'aria-label' => 'WKT (well-known text that represents a geometry)', // @translate

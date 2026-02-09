@@ -2,8 +2,6 @@
 
 namespace DataTypeGeometry\DataType;
 
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\DBAL\ParameterType;
 use Doctrine\ORM\Query\Parameter;
 use Doctrine\ORM\QueryBuilder;
 use Omeka\Api\Adapter\AbstractEntityAdapter;

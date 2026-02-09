@@ -2,7 +2,7 @@
 
 namespace DataTypeGeometry;
 
-if (!class_exists(\Common\TraitModule::class)) {
+if (!class_exists('Common\TraitModule', false)) {
     require_once dirname(__DIR__) . '/Common/TraitModule.php';
 }
 
@@ -535,7 +535,7 @@ class Module extends AbstractModule
         }
 
         if (in_array($manage, ['sync', 'features_to_coordinates'])
-            && !empty($post['geometry']['to_property'])
+            && empty($post['geometry']['to_property'])
         ) {
             $message = new PsrMessage('A destination property is needed to convert geometric or geographic data.'); // @translate
             $logger->err($message->getMessage());
@@ -699,20 +699,20 @@ class Module extends AbstractModule
         $isStrictLiteral = !empty($data['geometry']['convert_literal_strict']);
         if ($isLongLat && $isStrictLiteral) {
             $regexSql = <<<'REGEX_SQL'
-^\\s*(?<longitude>[+-]?(?:180(?:\\.0+)?|(?:(?:1[0-7]\\d)|(?:[1-9]?\\d))(?:\\.\\d+)?))\\s*,\\s*(?<latitude>[+-]?(?:[1-8]?\\d(?:\\.\\d+)?|90(?:\\.0+)?))\\s*$
-REGEX_SQL;
+                ^\\s*(?<longitude>[+-]?(?:180(?:\\.0+)?|(?:(?:1[0-7]\\d)|(?:[1-9]?\\d))(?:\\.\\d+)?))\\s*,\\s*(?<latitude>[+-]?(?:[1-8]?\\d(?:\\.\\d+)?|90(?:\\.0+)?))\\s*$
+                REGEX_SQL;
         } elseif ($isLongLat && !$isStrictLiteral) {
             $regexSql = <<<'REGEX_SQL'
-^\\s*(?<longitude>[+-]?(?:180(?:\\.0+)?|(?:(?:1[0-7]\\d)|(?:[1-9]?\\d))(?:\\.\\d+)?))[^\\d.+-]+(?<latitude>[+-]?(?:[1-8]?\\d(?:\\.\\d+)?|90(?:\\.0+)?))\\s*$
-REGEX_SQL;
+                ^\\s*(?<longitude>[+-]?(?:180(?:\\.0+)?|(?:(?:1[0-7]\\d)|(?:[1-9]?\\d))(?:\\.\\d+)?))[^\\d.+-]+(?<latitude>[+-]?(?:[1-8]?\\d(?:\\.\\d+)?|90(?:\\.0+)?))\\s*$
+                REGEX_SQL;
         } elseif ($isStrictLiteral) {
             $regexSql = <<<'REGEX_SQL'
-^\\s*(?<latitude>[+-]?(?:[1-8]?\\d(?:\\.\\d+)?|90(?:\\.0+)?))\\s*,\\s*(?<longitude>[+-]?(?:180(?:\\.0+)?|(?:(?:1[0-7]\\d)|(?:[1-9]?\\d))(?:\\.\\d+)?))\\s*$
-REGEX_SQL;
+                ^\\s*(?<latitude>[+-]?(?:[1-8]?\\d(?:\\.\\d+)?|90(?:\\.0+)?))\\s*,\\s*(?<longitude>[+-]?(?:180(?:\\.0+)?|(?:(?:1[0-7]\\d)|(?:[1-9]?\\d))(?:\\.\\d+)?))\\s*$
+                REGEX_SQL;
         } else {
             $regexSql = <<<'REGEX_SQL'
-^\\s*(?<latitude>[+-]?(?:[1-8]?\\d(?:\\.\\d+)?|90(?:\\.0+)?))[^\\d.+-]+(?<longitude>[+-]?(?:180(?:\\.0+)?|(?:(?:1[0-7]\\d)|(?:[1-9]?\\d))(?:\\.\\d+)?))\\s*$
-REGEX_SQL;
+                ^\\s*(?<latitude>[+-]?(?:[1-8]?\\d(?:\\.\\d+)?|90(?:\\.0+)?))[^\\d.+-]+(?<longitude>[+-]?(?:180(?:\\.0+)?|(?:(?:1[0-7]\\d)|(?:[1-9]?\\d))(?:\\.\\d+)?))\\s*$
+                REGEX_SQL;
         }
 
         if ($isStrictLiteral) {
@@ -735,43 +735,43 @@ REGEX_SQL;
         }
 
         $selectSql = <<<SQL
-CONCAT("POINT(", $x, " ", $y, ")")
-SQL;
+            CONCAT("POINT(", $x, " ", $y, ")")
+            SQL;
 
         // Process only literal strings to avoid to reprocess geometric data.
         $whereSql = <<<SQL
-WHERE
-    `value`.`resource_id` IN (:resource_ids)
-    AND `value`.`type` = "literal"
-    AND `value`.`value` REGEXP '$regexSql'
-SQL;
+            WHERE
+                `value`.`resource_id` IN (:resource_ids)
+                AND `value`.`type` = "literal"
+                AND `value`.`value` REGEXP '$regexSql'
+            SQL;
         $whereSql .= "\n    " . $sqlWhere;
 
         // The update of the table `data_type_geometry` should be done first in
         // order to keep same results from the database.
         $sql = <<<SQL
-INSERT INTO `data_type_geography`
-    (`resource_id`, `property_id`, `value`)
-SELECT DISTINCT
-    `value`.`resource_id`,
-    `value`.`property_id`,
-    ST_GeomFromText($selectSql, $srid)
-FROM `value`
-$whereSql
-ON DUPLICATE KEY UPDATE
-    `data_type_geography`.`id` = `data_type_geography`.`id`
-;
-SQL;
+            INSERT INTO `data_type_geography`
+                (`resource_id`, `property_id`, `value`)
+            SELECT DISTINCT
+                `value`.`resource_id`,
+                `value`.`property_id`,
+                ST_GeomFromText($selectSql, $srid)
+            FROM `value`
+            $whereSql
+            ON DUPLICATE KEY UPDATE
+                `data_type_geography`.`id` = `data_type_geography`.`id`
+            ;
+            SQL;
         $connection->executeStatement($sql, $bind, $types);
 
         // Normalize existing values when needed.
         $sql = <<<SQL
-UPDATE `value`
-SET
-    `value`.`type` = "geography:coordinates",
-    `value`.`value` = CONCAT($y, ",", $x)
-$whereSql
-SQL;
+            UPDATE `value`
+            SET
+                `value`.`type` = "geography:coordinates",
+                `value`.`value` = CONCAT($y, ",", $x)
+            $whereSql
+            SQL;
         $connection->executeStatement($sql, $bind, $types);
     }
 
@@ -792,36 +792,36 @@ SQL;
         }
 
         $sql = <<<SQL
-INSERT INTO `mapping_feature`
-    (`item_id`, `media_id`, `label`, `geography`)
-SELECT DISTINCT
-    `value`.`resource_id`,
-    NULL,
-    NULL,
-    ST_GeomFromText(CONCAT(
-        "POINT(",
-        SUBSTRING_INDEX(`value`.`value`, ",", -1),
-        " ",
-        SUBSTRING_INDEX(`value`.`value`, ",", 1),
-        ")"
-    ))
-FROM `value`
-LEFT JOIN `mapping_feature`
-    ON `mapping_feature`.`item_id` = `value`.`resource_id`
-        AND ST_AsText(`mapping_feature`.`geography`) = CONCAT(
-            "POINT(",
-            SUBSTRING_INDEX(`value`.`value`, ",", -1),
-            " ",
-            SUBSTRING_INDEX(`value`.`value`, ",", 1),
-            ")"
-        )
-WHERE
-    `value`.`resource_id` IN (:resource_ids)
-    AND `value`.`type` = "geography:coordinates"
-    AND `mapping_feature`.`id` IS NULL
-    $sqlWhere
-;
-SQL;
+            INSERT INTO `mapping_feature`
+                (`item_id`, `media_id`, `label`, `geography`)
+            SELECT DISTINCT
+                `value`.`resource_id`,
+                NULL,
+                NULL,
+                ST_GeomFromText(CONCAT(
+                    "POINT(",
+                    SUBSTRING_INDEX(`value`.`value`, ",", -1),
+                    " ",
+                    SUBSTRING_INDEX(`value`.`value`, ",", 1),
+                    ")"
+                ))
+            FROM `value`
+            LEFT JOIN `mapping_feature`
+                ON `mapping_feature`.`item_id` = `value`.`resource_id`
+                    AND ST_AsText(`mapping_feature`.`geography`) = CONCAT(
+                        "POINT(",
+                        SUBSTRING_INDEX(`value`.`value`, ",", -1),
+                        " ",
+                        SUBSTRING_INDEX(`value`.`value`, ",", 1),
+                        ")"
+                    )
+            WHERE
+                `value`.`resource_id` IN (:resource_ids)
+                AND `value`.`type` = "geography:coordinates"
+                AND `mapping_feature`.`id` IS NULL
+                $sqlWhere
+            ;
+            SQL;
         $connection->executeStatement($sql, $bind, $types);
     }
 
@@ -842,25 +842,25 @@ SQL;
         }
 
         $sql = <<<SQL
-INSERT INTO `mapping_marker`
-    (`item_id`, `media_id`, `lat`, `lng`, `label`)
-SELECT DISTINCT
-    `value`.`resource_id`,
-    NULL,
-    SUBSTRING_INDEX(`value`.`value`, ",", 1),
-    SUBSTRING_INDEX(`value`.`value`, ",", -1),
-    NULL
-FROM `value`
-LEFT JOIN `mapping_marker`
-    ON `mapping_marker`.`item_id` = `value`.`resource_id`
-        AND CONCAT(`mapping_marker`.`lat`, ",", `mapping_marker`.`lng`) = `value`.`value`
-WHERE
-    `value`.`resource_id` IN (:resource_ids)
-    AND `value`.`type` = "geography:coordinates"
-    AND `mapping_marker`.`id` IS NULL
-    $sqlWhere
-;
-SQL;
+            INSERT INTO `mapping_marker`
+                (`item_id`, `media_id`, `lat`, `lng`, `label`)
+            SELECT DISTINCT
+                `value`.`resource_id`,
+                NULL,
+                SUBSTRING_INDEX(`value`.`value`, ",", 1),
+                SUBSTRING_INDEX(`value`.`value`, ",", -1),
+                NULL
+            FROM `value`
+            LEFT JOIN `mapping_marker`
+                ON `mapping_marker`.`item_id` = `value`.`resource_id`
+                    AND CONCAT(`mapping_marker`.`lat`, ",", `mapping_marker`.`lng`) = `value`.`value`
+            WHERE
+                `value`.`resource_id` IN (:resource_ids)
+                AND `value`.`type` = "geography:coordinates"
+                AND `mapping_marker`.`id` IS NULL
+                $sqlWhere
+            ;
+            SQL;
         $connection->executeStatement($sql, $bind, $types);
     }
 
@@ -880,50 +880,50 @@ SQL;
         $types = ['resource_ids' => $connection::PARAM_INT_ARRAY];
 
         $fromSql = <<<SQL
-FROM `mapping_feature`
-LEFT JOIN `value`
-    ON `value`.`resource_id` = `mapping_feature`.`item_id`
-        AND `value`.`type` = "geography:coordinates"
-        AND ST_AsText(`mapping_feature`.`geography`) = CONCAT(
-            "POINT(",
-            SUBSTRING_INDEX(`value`.`value`, ",", -1),
-            " ",
-            SUBSTRING_INDEX(`value`.`value`, ",", 1),
-            ")"
-        )
-WHERE
-    `mapping_feature`.`item_id` IN (:resource_ids)
-    AND `value`.`id` IS NULL
-;
-SQL;
+            FROM `mapping_feature`
+            LEFT JOIN `value`
+                ON `value`.`resource_id` = `mapping_feature`.`item_id`
+                    AND `value`.`type` = "geography:coordinates"
+                    AND ST_AsText(`mapping_feature`.`geography`) = CONCAT(
+                        "POINT(",
+                        SUBSTRING_INDEX(`value`.`value`, ",", -1),
+                        " ",
+                        SUBSTRING_INDEX(`value`.`value`, ",", 1),
+                        ")"
+                    )
+            WHERE
+                `mapping_feature`.`item_id` IN (:resource_ids)
+                AND `value`.`id` IS NULL
+            ;
+            SQL;
 
         // The update of the table `data_type_geometry` should be done first in
         // order to keep same results from the database.
         $sql = <<<SQL
-INSERT INTO `data_type_geography`
-    (`resource_id`, `property_id`, `value`)
-SELECT DISTINCT
-    `mapping_feature`.`item_id`,
-    :property_id,
-    `mapping_feature`.`geography`
-$fromSql
-SQL;
+            INSERT INTO `data_type_geography`
+                (`resource_id`, `property_id`, `value`)
+            SELECT DISTINCT
+                `mapping_feature`.`item_id`,
+                :property_id,
+                `mapping_feature`.`geography`
+            $fromSql
+            SQL;
         $connection->executeStatement($sql, $bind, $types);
 
-$sql = <<<SQL
-INSERT INTO `value`
-    (`resource_id`, `property_id`, `value_resource_id`, `type`, `lang`, `value`, `uri`, `is_public`)
-SELECT DISTINCT
-    `mapping_feature`.`item_id`,
-    :property_id,
-    NULL,
-    'geography:coordinates',
-    NULL,
-    CONCAT(ST_Y(`mapping_feature`.`geography`), ",", ST_X(`mapping_feature`.`geography`)),
-    NULL,
-    1
-$fromSql
-SQL;
+        $sql = <<<SQL
+            INSERT INTO `value`
+                (`resource_id`, `property_id`, `value_resource_id`, `type`, `lang`, `value`, `uri`, `is_public`)
+            SELECT DISTINCT
+                `mapping_feature`.`item_id`,
+                :property_id,
+                NULL,
+                'geography:coordinates',
+                NULL,
+                CONCAT(ST_Y(`mapping_feature`.`geography`), ",", ST_X(`mapping_feature`.`geography`)),
+                NULL,
+                1
+            $fromSql
+            SQL;
         $connection->executeStatement($sql, $bind, $types);
     }
 
@@ -941,44 +941,44 @@ SQL;
         $types = ['resource_ids' => $connection::PARAM_INT_ARRAY];
 
         $fromSql = <<<SQL
-FROM `mapping_marker`
-LEFT JOIN `value`
-    ON `value`.`resource_id` = `mapping_marker`.`item_id`
-        AND `value`.`value` = CONCAT(`mapping_marker`.`lat`, ",", `mapping_marker`.`lng`)
-        AND `value`.`type` = "geography:coordinates"
-WHERE
-    `mapping_marker`.`item_id` IN (:resource_ids)
-    AND `value`.`id` IS NULL
-;
-SQL;
+            FROM `mapping_marker`
+            LEFT JOIN `value`
+                ON `value`.`resource_id` = `mapping_marker`.`item_id`
+                    AND `value`.`value` = CONCAT(`mapping_marker`.`lat`, ",", `mapping_marker`.`lng`)
+                    AND `value`.`type` = "geography:coordinates"
+            WHERE
+                `mapping_marker`.`item_id` IN (:resource_ids)
+                AND `value`.`id` IS NULL
+            ;
+            SQL;
 
         // The update of the table `data_type_geometry` should be done first in
         // order to keep same results from the database.
         $sql = <<<SQL
-INSERT INTO `data_type_geography`
-    (`resource_id`, `property_id`, `value`)
-SELECT DISTINCT
-    `mapping_marker`.`item_id`,
-    :property_id,
-    ST_GeomFromText(CONCAT("POINT(", `mapping_marker`.`lng`, " ", `mapping_marker`.`lat`, ")"), $srid)
-$fromSql
-SQL;
+            INSERT INTO `data_type_geography`
+                (`resource_id`, `property_id`, `value`)
+            SELECT DISTINCT
+                `mapping_marker`.`item_id`,
+                :property_id,
+                ST_GeomFromText(CONCAT("POINT(", `mapping_marker`.`lng`, " ", `mapping_marker`.`lat`, ")"), $srid)
+            $fromSql
+            SQL;
         $connection->executeStatement($sql, $bind, $types);
 
         $sql = <<<SQL
-INSERT INTO `value`
-    (`resource_id`, `property_id`, `value_resource_id`, `type`, `lang`, `value`, `uri`, `is_public`)
-SELECT DISTINCT
-    `mapping_marker`.`item_id`,
-    :property_id,
-    NULL,
-    "geography:coordinates",
-    NULL,
-    CONCAT(`mapping_marker`.`lat`, ",", `mapping_marker`.`lng`),
-    NULL,
-    1
-$fromSql
-SQL;
+            INSERT INTO `value`
+                (`resource_id`, `property_id`, `value_resource_id`, `type`, `lang`, `value`, `uri`, `is_public`)
+            SELECT DISTINCT
+                `mapping_marker`.`item_id`,
+                :property_id,
+                NULL,
+                "geography:coordinates",
+                NULL,
+                CONCAT(`mapping_marker`.`lat`, ",", `mapping_marker`.`lng`),
+                NULL,
+                1
+            $fromSql
+            SQL;
         $connection->executeStatement($sql, $bind, $types);
     }
 
@@ -1109,10 +1109,10 @@ SQL;
         $connection = $services->get('Omeka\Connection');
         $srid = (int) $services->get('Omeka\Settings')->get('datatypegeometry_locate_srid', Geography::DEFAULT_SRID);
         $sql = <<<SQL
-UPDATE `data_type_geography`
-SET `value` = ST_SRID(`value`, $srid)
-WHERE ST_SRID(`value`) != $srid;
-SQL;
+            UPDATE `data_type_geography`
+            SET `value` = ST_SRID(`value`, $srid)
+            WHERE ST_SRID(`value`) != $srid;
+            SQL;
         try {
             $connection->executeStatement($sql);
             $supportGeography = true;

@@ -4,7 +4,6 @@ namespace DataTypeGeometry\View\Helper;
 
 use Common\Stdlib\EasyMeta;
 use CrEOF\Geo\WKT\Parser as GeoWktParser;
-use Doctrine\ORM\EntityManager;
 use Laminas\View\Helper\AbstractHelper;
 
 class NormalizeGeometryQuery extends AbstractHelper
@@ -14,17 +13,10 @@ class NormalizeGeometryQuery extends AbstractHelper
      */
     protected $easyMeta;
 
-    /**
-     * @var EntityManager
-     */
-    protected $entityManager;
-
     public function __construct(
-        EasyMeta $easyMeta,
-        EntityManager $entityManager
+        EasyMeta $easyMeta
     ) {
         $this->easyMeta = $easyMeta;
-        $this->entityManager = $entityManager;
     }
 
     /**
@@ -259,7 +251,7 @@ class NormalizeGeometryQuery extends AbstractHelper
                 $bottom = $box[1][1];
             }
         } else {
-            $box = preg_replace('[^0-9.]', ' ', $box);
+            $box = preg_replace('/[^0-9.]/', ' ', $box);
             $box = preg_replace('/\s+/', ' ', trim($box));
             if (strpos($box, ' ') === false) {
                 return;

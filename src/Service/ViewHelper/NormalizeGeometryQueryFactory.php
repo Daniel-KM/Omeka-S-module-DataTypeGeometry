@@ -11,8 +11,7 @@ class NormalizeGeometryQueryFactory implements FactoryInterface
     public function __invoke(ContainerInterface $services, $requestedName, array $options = null)
     {
         return new NormalizeGeometryQuery(
-            $services->get('Common\EasyMeta'),
-            $services->get('Omeka\EntityManager')
+            $services->get('Common\EasyMeta')
         );
     }
 }
