@@ -40,7 +40,7 @@ abstract class AbstractDataType extends BaseAbstractDataType implements DataType
 
     public function hydrate(array $valueObject, Value $value, AbstractEntityAdapter $adapter): void
     {
-        $string = strtoupper(str_replace('  ', ' ', (trim((string) $valueObject['@value']))));
+        $string = strtoupper(preg_replace('/ {2,}/', ' ', trim((string) $valueObject['@value'])));
         $value->setValue($string);
         $value->setLang(null);
         $value->setUri(null);
