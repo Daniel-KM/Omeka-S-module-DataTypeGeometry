@@ -113,13 +113,10 @@ class IndexGeometries extends AbstractJob
 
     protected function truncate(): void
     {
-        $sql = <<<'SQL'
-SET foreign_key_checks = 0;
-TRUNCATE TABLE `data_type_geography`;
-TRUNCATE TABLE `data_type_geometry`;
-SET foreign_key_checks = 1;
-SQL;
-        $this->connection->executeStatement($sql);
+        $this->connection->executeStatement('SET foreign_key_checks = 0');
+        $this->connection->executeStatement('TRUNCATE TABLE `data_type_geography`');
+        $this->connection->executeStatement('TRUNCATE TABLE `data_type_geometry`');
+        $this->connection->executeStatement('SET foreign_key_checks = 1');
         $this->logger->info(
             'Tables "data_type_geometry" and "data_type_geography" were truncated.' // @translate
         );
@@ -450,8 +447,8 @@ SQL;
                 ['count' => $total, 'data_type' => in_array($dataType, ['geography', 'geography:coordinates']) ? 'geographies' : 'geometries']
             );
 
-            $stmt = $connection->query($sql);
-            while ($row = $stmt->fetch()) {
+            $stmt = $connection->executeQuery($sql);
+            while ($row = $stmt->fetchAssociative()) {
                 $logger->warn(
                     json_encode($row)
                 );
