@@ -1,28 +1,32 @@
 {
     "name": "daniel-km/omeka-s-module-datatypegeometry",
-    "description": "Adds data types to store latitude, longitude, markers and area highlights of images and maps with wkt for modules Cartography and Mapping.",
-    "type": "library",
+    "type": "omeka-s-module",
+    "description": "Module for Omeka S: Adds data types to store latitude, longitude, markers and area highlights of images and maps with wkt.",
+    "keywords": [
+        "Omeka S",
+        "Omeka S module",
+        "geographic coordinates",
+        "geometry",
+        "geography",
+        "annotation",
+        "cartography"
+    ],
     "license": "CECILL-2.1",
+    "homepage": "https://gitlab.com/Daniel-KM/Omeka-S-module-DataTypeGeometry",
     "authors": [
         {
             "name": "Daniel Berthereau",
-            "email": "Daniel.git@Berthereau.net"
+            "email": "Daniel.packagist@Berthereau.net"
         }
     ],
-    "homepage": "https://gitlab.com/Daniel-KM/Omeka-S-module-DataTypeGeometry",
     "support": {
         "issues": "https://gitlab.com/Daniel-KM/Omeka-S-module-DataTypeGeometry/-/issues",
         "forum": "https://forum.omeka.org/"
     },
-    "keywords": [
-        "Omeka S",
-        "Omeka S module",
-        "geolocation",
-        "geographic coordinates",
-        "geography",
-        "geometry",
-        "wkt"
-    ],
+    "_require (not set until Omeka S merges PR #2412)": {
+        "omeka/omeka-s": "^4.0",
+        "daniel-km/omeka-s-module-common": "*"
+    },
     "require": {
         "longitude-one/doctrine-spatial": "^3.0",
         "sempia/external-assets": "^1.0"
@@ -31,12 +35,14 @@
         "doctrine/lexer": "*",
         "doctrine/orm": "*"
     },
-    "extra": {
-        "installer-types": ["omeka-addon-asset"],
-        "installer-paths": {
-            "asset/vendor/{$name}/": [
-                "type:omeka-addon-asset"
-            ]
+    "autoload": {
+        "psr-4": {
+            "DataTypeGeometry\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "DataTypeGeometryTest\\": "tests/DataTypeGeometryTest/"
         }
     },
     "config": {
@@ -48,6 +54,8 @@
         }
     },
     "extra": {
+        "installer-name": "DataTypeGeometry",
+        "configurable": true,
         "external-assets": {
             "asset/vendor/terraformer-wkt/t-wkt.umd-2.2.1.js": "https://unpkg.com/@terraformer/wkt@2.2.1/dist/t-wkt.umd.js"
         }

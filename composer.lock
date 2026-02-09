@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b1b32400d9ef855fe3ed02c354ccd7dd",
+    "content-hash": "88da0b6d76a1845d4ad6fc44d5aa2037",
     "packages": [
         {
             "name": "creof/geo-parser",
