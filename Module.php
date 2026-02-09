@@ -18,7 +18,6 @@ use Laminas\EventManager\Event;
 use Laminas\EventManager\SharedEventManagerInterface;
 use Laminas\ModuleManager\ModuleManager;
 use Laminas\Mvc\Controller\AbstractController;
-use Laminas\Mvc\MvcEvent;
 use Laminas\ServiceManager\ServiceLocatorInterface;
 use Laminas\View\Renderer\PhpRenderer;
 use LongitudeOne\Spatial\PHP\Types\Geography\GeographyInterface;
@@ -30,7 +29,7 @@ use Omeka\Module\AbstractModule;
  * Adds a data type Geometry to properties of resources and allows to manage
  * values in Omeka or an external database.
  *
- * @copyright Daniel Berthereau, 2018-2024
+ * @copyright Daniel Berthereau, 2018-2025
  * @license http://www.cecill.info/licences/Licence_CeCILL_V2.1-en.txt
  */
 class Module extends AbstractModule
@@ -49,10 +48,10 @@ class Module extends AbstractModule
         $services = $this->getServiceLocator();
         $translate = $services->get('ControllerPluginManager')->get('translate');
 
-        if (!method_exists($this, 'checkModuleActiveVersion') || !$this->checkModuleActiveVersion('Common', '3.4.60')) {
+        if (!method_exists($this, 'checkModuleActiveVersion') || !$this->checkModuleActiveVersion('Common', '3.4.78')) {
             $message = new \Omeka\Stdlib\Message(
                 $translate('The module %1$s should be upgraded to version %2$s or later.'), // @translate
-                'Common', '3.4.60'
+                'Common', '3.4.78'
             );
             throw new \Omeka\Module\Exception\ModuleCannotInstallException((string) $message);
         }
@@ -494,7 +493,7 @@ class Module extends AbstractModule
          */
         $services = $this->getServiceLocator();
         $logger = $services->get('Omeka\Logger');
-        $easyMeta = $services->get('EasyMeta');
+        $easyMeta = $services->get('Common\EasyMeta');
         $messenger = $services->get('ControllerPluginManager')->get('messenger');
 
         if (!empty($post['geometry']['convert_literal_to_coordinates'])
@@ -601,7 +600,7 @@ class Module extends AbstractModule
 
         if (!array_key_exists('srid', $data['geometry'])) {
             /** @var \Common\Stdlib\EasyMeta $easyMeta */
-            $easyMeta = $this->getServiceLocator()->get('EasyMeta');
+            $easyMeta = $this->getServiceLocator()->get('Common\EasyMeta');
             $data['geometry']['convert_literal_to_coordinates'] = !empty($data['geometry']['convert_literal_to_coordinates']);
             $data['geometry']['convert_literal_order'] = $data['geometry']['convert_literal_order'] ?? null;
             $data['geometry']['convert_literal_strict'] = !empty($data['geometry']['convert_literal_strict']);

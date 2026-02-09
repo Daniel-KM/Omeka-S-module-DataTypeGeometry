@@ -299,7 +299,7 @@ trait QueryGeometryTrait
         $expr = $qb->expr();
         if ($property) {
             $services = $adapter->getServiceLocator();
-            $propertyId = $services->get('EasyMeta')->propertyId($adapter, $property);
+            $propertyId = $services->get('Common\EasyMeta')->propertyId($adapter, $property);
             $qb
                 ->leftJoin(
                     $dataTypeClass,
