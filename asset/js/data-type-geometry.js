@@ -21,13 +21,13 @@
                 message = Omeka.jsTranslate('"multipoint", "multiline" and "multipolygon" are not supported for now. Use collection instead.');
             } else {
                 try {
-                    primitive = Terraformer.WKT.parse(val);
+                    primitive = Terraformer.wktToGeoJSON(val);
                 } catch (err) {
                     var error = true;
                     // Check ewkt.
                     if (/^srid\s*=\s*\d{1,5}\s*;\s*.+/i.test(val)) {
                         try {
-                            primitive = Terraformer.WKT.parse(val.slice(val.indexOf(';')+ 1));
+                            primitive = Terraformer.wktToGeoJSON(val.slice(val.indexOf(';')+ 1));
                             error = false;
                         } catch (err) {
                         }
@@ -43,7 +43,7 @@
                 message = Omeka.jsTranslate('"multipoint", "multiline" and "multipolygon" are not supported for now. Use collection instead.');
             } else {
                 try {
-                    primitive = Terraformer.WKT.parse(val);
+                    primitive = Terraformer.wktToGeoJSON(val);
                 } catch (err) {
                     message = invalidMessage(element);
                 }

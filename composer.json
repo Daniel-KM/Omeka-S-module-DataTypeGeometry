@@ -23,53 +23,9 @@
         "geometry",
         "wkt"
     ],
-    "repositories": [
-        {
-            "type": "package",
-            "package": {
-                "name": "terraformer/terraformer",
-                "type": "omeka-addon-asset",
-                "version": "1.0.12",
-                "dist": {
-                    "type": "file",
-                    "url": "https://github.com/Esri/terraformer/releases/download/v1.0.12/terraformer-1.0.12.min.js",
-                    "reference": ""
-                }
-            }
-        },
-        {
-            "type": "package",
-            "package": {
-                "name": "terraformer/terraformer-arcgis-parser",
-                "type": "omeka-addon-asset",
-                "version": "1.1.0",
-                "dist": {
-                    "type": "file",
-                    "url": "https://github.com/Esri/terraformer-arcgis-parser/releases/download/v1.1.0/terraformer-arcgis-parser-1.1.0.min.js",
-                    "reference": ""
-                }
-            }
-        },
-        {
-            "type": "package",
-            "package": {
-                "name": "terraformer/terraformer-wkt-parser",
-                "type": "omeka-addon-asset",
-                "version": "1.2.1",
-                "dist": {
-                    "type": "file",
-                    "url": "https://github.com/Esri/terraformer-wkt-parser/releases/download/v1.2.1/terraformer-wkt-parser-1.2.1.min.js",
-                    "reference": ""
-                }
-            }
-        }
-    ],
     "require": {
         "longitude-one/doctrine-spatial": "^3.0",
-        "oomphinc/composer-installers-extender": "^2.0",
-        "terraformer/terraformer": "1.0.12",
-        "terraformer/terraformer-arcgis-parser": "1.1.0",
-        "terraformer/terraformer-wkt-parser": "1.2.1"
+        "sempia/external-assets": "^1.0"
     },
     "provide": {
         "doctrine/lexer": "*",
@@ -88,8 +44,12 @@
             "php": "7.4"
         },
         "allow-plugins": {
-            "composer/installers": true,
-            "oomphinc/composer-installers-extender": true
+            "sempia/external-assets": true
+        }
+    },
+    "extra": {
+        "external-assets": {
+            "asset/vendor/terraformer-wkt/t-wkt.umd-2.2.1.js": "https://unpkg.com/@terraformer/wkt@2.2.1/dist/t-wkt.umd.js"
         }
     }
 }
