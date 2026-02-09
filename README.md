@@ -324,7 +324,7 @@ Copyright
 
 * See `asset/vendor/` and `vendor/` for the copyright of the libraries.
 * Some portions were initially adapted from the modules [Numeric data types] and [Neatline].
-* Copyright Daniel Berthereau, 2018-2025, (see [Daniel-KM] on GitLab)
+* Copyright Daniel Berthereau, 2018-2026, (see [Daniel-KM] on GitLab)
 
 This module was built first for the French École des hautes études en sciences
 sociales [EHESS]. The improvements were developed for the digital library of the
