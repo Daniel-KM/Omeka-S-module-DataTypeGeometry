@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-07-01 00:00+0000\n"
+"POT-Creation-Date: 2025-07-28 00:00+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,66 +17,66 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: data/scripts/upgrade.php:29 Module.php:54
+#: data/scripts/upgrade.php:29 Module.php:53
 #, php-format
 msgid "The module %1$s should be upgraded to version %2$s or later."
 msgstr ""
 
-#: Module.php:258
+#: Module.php:259
 msgid ""
 "Use \"Batch edit items\" to convert coordinates to/from mapping markers "
 "(require module Mapping)."
 msgstr ""
 
-#: Module.php:261
+#: Module.php:262
 msgid "The jobs below are useless without module Cartography."
 msgstr ""
 
-#: Module.php:263
+#: Module.php:264
 msgid ""
 "Reindex geometries or resources and annotations as geometry or geography."
 msgstr ""
 
-#: Module.php:286
+#: Module.php:287
 msgid "Process"
 msgstr ""
 
-#: Module.php:391
+#: Module.php:392
 msgid "Geographic coordinates"
 msgstr ""
 
-#: Module.php:393
+#: Module.php:394
 #, php-format
 msgid "Within %1$s %2$s of point %3$s %4$s"
 msgstr ""
 
-#: Module.php:397
+#: Module.php:398
 msgid "Geometric coordinates"
 msgstr ""
 
-#: Module.php:399
+#: Module.php:400
 #, php-format
 msgid "Within %1$s pixels of point x: %2$s, y: %3$s"
 msgstr ""
 
-#: Module.php:403
+#: Module.php:404
 msgid "Map box"
 msgstr ""
 
-#: Module.php:405 Module.php:411
+#: Module.php:406 Module.php:412
 #, php-format
 msgid "Within box %1$s,%2$s/%3$s,%4$s"
 msgstr ""
 
-#: Module.php:409
+#: Module.php:410
 msgid "Box"
 msgstr ""
 
-#: Module.php:415
+#: Module.php:416
 msgid "Within area"
 msgstr ""
 
-#: Module.php:418
+#: Module.php:419
 msgid "Within zone"
 msgstr ""
 
@@ -97,26 +97,26 @@ msgid ""
 "resource forms. They should be added to selected properties via a template."
 msgstr ""
 
-#: data/scripts/upgrade.php:109
+#: data/scripts/upgrade.php:108
 msgid ""
 "Your database is not compatible with geographic search: only flat geometry "
 "is supported."
 msgstr ""
 
-#: data/scripts/upgrade.php:115
+#: data/scripts/upgrade.php:114
 msgid ""
 "Datatype names were simplified: \"geometry\", \"geography\", \"geography:"
 "coordinates\"."
 msgstr ""
 
-#: data/scripts/upgrade.php:120
+#: data/scripts/upgrade.php:119
 msgid ""
 "Two new datatypes have been added to manage geometries: x/y coordinates "
 "(\"geometry:coordinates\") and position from top left (\"geometry:"
 "position\")."
 msgstr ""
 
-#: data/scripts/upgrade.php:127
+#: data/scripts/upgrade.php:126
 msgid ""
 "WARNING: the value representation has been normalized in the api to follow "
 "the opengis specifications for geography:coordinates, geometry:coordinates "
@@ -124,61 +124,61 @@ msgid ""
 "array. Check compatibility with your external tools if needed."
 msgstr ""
 
-#: Module.php:115
+#: Module.php:116
 msgid ""
 "Your database does not support advanced spatial search. See the minimum "
 "requirements in readme."
 msgstr ""
 
-#: Module.php:122
+#: Module.php:123
 msgid ""
 "Your database does not support modern spatial indexing. It has no impact in "
 "common cases. See the minimum requirements in readme."
 msgstr ""
 
-#: Module.php:254
+#: Module.php:255
 msgid ""
 "Your database does not support full advanced spatial search. See the minimum "
 "requirements in readme."
 msgstr ""
 
-#: Module.php:287
+#: Module.php:288
 msgid "No job launched."
 msgstr ""
 
-#: Module.php:298
+#: Module.php:299
 msgid "Processing in the background ({link}job #{job_id}{link_end})"
 msgstr ""
 
-#: Module.php:448 src/Form/BatchEditFieldset.php:17
+#: Module.php:449 src/Form/BatchEditFieldset.php:17
 msgid "Geometry and geography"
 msgstr ""
 
-#: Module.php:453
+#: Module.php:454
 msgid "Properties to convert from literal to geometric data"
 msgstr ""
 
-#: Module.php:505
+#: Module.php:506
 msgid ""
 "Your database does not support the function `regexp_substr`. Upgrade it to "
 "MariaDB 10.0.5 or MySQL 8.0."
 msgstr ""
 
-#: Module.php:521
+#: Module.php:522
 msgid "No source property set for conversion of geometric or geographic data."
 msgstr ""
 
-#: Module.php:530
+#: Module.php:531
 msgid ""
 "Invalid source properties set for conversion of geometric or geographic data."
 msgstr ""
 
-#: Module.php:541
+#: Module.php:542
 msgid ""
 "A destination property is needed to convert geometric or geographic data."
 msgstr ""
 
-#: Module.php:552
+#: Module.php:553
 msgid ""
 "Invalid destination property set for conversion of geometric or geographic "
 "data."
@@ -574,4 +574,16 @@ msgstr ""
 
 #: config/module.config.php:222
 msgid "Error in input."
+msgstr ""
+
+msgid "Coordinates"
+msgstr ""
+
+msgid "coordinates"
+msgstr ""
+
+msgid "geography"
+msgstr ""
+
+msgid "geometry"
 msgstr ""
