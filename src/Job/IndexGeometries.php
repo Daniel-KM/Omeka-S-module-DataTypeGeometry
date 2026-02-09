@@ -148,7 +148,7 @@ SQL;
             ? 'data_type_geography'
             : 'data_type_geometry';
         $defaultSrid = $this->getServiceLocator()->get('Omeka\Settings')
-            ->get('datatypegeometry_locate_srid', 4236);
+            ->get('datatypegeometry_locate_srid', 4326);
 
         if ($updateValues) {
             $sql = <<<SQL
@@ -265,7 +265,7 @@ SQL;
         $oaHasSelector = $oaHasSelector->id();
 
         $defaultSrid = $this->getServiceLocator()->get('Omeka\Settings')
-            ->get('datatypegeometry_locate_srid', 4236);
+            ->get('datatypegeometry_locate_srid', 4326);
 
         // Set all targets wkt a geography (only for property "rdf:value").
         $sql = <<<SQL
