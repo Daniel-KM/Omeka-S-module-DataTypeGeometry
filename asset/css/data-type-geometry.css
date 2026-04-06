@@ -28,19 +28,59 @@
         width: 50%;
     }
 
-    .sidebar-content .field-geometry {
-        width: calc( 100% - 30px );
+    /* Fix value-annotation layout in item stub sidebar. */
+    #sidebar-section-item-stub .value-annotation {
+        position: relative;
     }
-    .sidebar-content .field-geometry label {
+    #sidebar-section-item-stub .value-annotation div[data-data-type] {
+        width: calc(100% - 30px);
+    }
+    #sidebar-section-item-stub .value-annotation div[data-data-type] > .input-footer {
+        position: absolute;
+        right: 0;
+        top: 0;
+        width: 30px;
+    }
+
+    .sidebar-content .field-geometry {
+        width: calc(100% - 30px);
+        border-top: 0;
+    }
+    #sidebar-section-item-stub .field-geometry {
+        width: 100%;
+        border-top: 0;
+    }
+    #sidebar-section-item-stub .value-annotation legend {
+        border-bottom: 0;
+    }
+    #sidebar-section-item-stub .field-geometry-number input[type="number"] {
+        width: 0;
+    }
+    .sidebar-content .field-geometry label,
+    #sidebar-section-item-stub .field-geometry label {
         display: initial;
+        width: auto;
         font-weight: normal;
         text-align: right;
     }
-    .sidebar-content .field-geometry .field-geometry-number {
+    .sidebar-content .field-geometry .field-geometry-number,
+    #sidebar-section-item-stub .field-geometry .field-geometry-number {
         display: flex;
+        align-items: center;
+    }
+    .sidebar-content .field-geometry .field-geometry-number label,
+    #sidebar-section-item-stub .field-geometry .field-geometry-number label {
+        flex: 0 0 6em;
+        padding: 0 6px;
+        text-align: right;
+    }
+    .sidebar-content .field-geometry .field-geometry-number input,
+    #sidebar-section-item-stub .field-geometry .field-geometry-number input {
+        flex: 1 1 0%;
+        min-width: 0;
     }
     .sidebar-content .field-geometry input.geometry-position {
-        width: calc( 100% - 3em );
+        width: calc(100% - 3em);
     }
 
     .sidebar #advanced-search .inputs label.type-radio {
