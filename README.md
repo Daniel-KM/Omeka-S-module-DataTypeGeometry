@@ -25,7 +25,10 @@ and to highlight images and maps. This module can be used independantly too.
 
 It can be used with the module [Mapping]: a batch edit is added to convert
 literal data into geographical coordinates and vice-versa, so you can store
-markers as a standard rdf data in a property.
+markers as a standard rdf data in a property. It can also be combined with the
+module [Table] to resolve place names (or any code) into coordinates through a
+lookup table, and with the module [Annotate Cartography] to create
+cartographic annotations from the same lookup.
 
 It can use an external database for performance.
 
@@ -109,22 +112,26 @@ mysql functions.
 The support for MariaDB, mySql and PostgreSql is provided though [longitude-one/doctrine-spatial],
 an active fork of [creof/doctrine2-spatial].
 
+* For test
+
+The module includes a comprehensive test suite with unit and functional tests.
+Run them from the root of Omeka:
+
+```sh
+vendor/bin/phpunit -c modules/DataTypeGeometry/phpunit.xml --testdox
+```
+
 
 Usage
 -----
 
-To use the new data types, select them for some template properties.
+### Set data types in template properties
 
-### Batch edit
+To use the new data types, set them for some template properties, like dcterms:spatial
+or a dedicated one like curation:coordinates.
 
-To convert existing literal coordinates into geographic coordinates, use the
-"batch edit" process and select the appropriate options.
-
-The literal value must be formatted with a dot `.` as decimal separator and a
-comma `,` to separate the latitude and the longitude. Spaces are ignored.
-
-So the value must be formatted `latitude, longitude` with latitude between
--90 and +90 and the longitude between -180 and +180.
+Once set in a template, you can insert geometry and geographic coordinates in
+resources.
 
 ### Geometry
 
@@ -250,6 +257,77 @@ appended for geography coordinates.
 }
 ```
 
+### Batch edit
+
+A dedicated "Geometry and geography" fieldset is added to the batch edit form
+of items. It exposes several independent conversion actions that can be run
+together on a selection:
+
+#### Convert literal values into geographic coordinates
+
+Enable the option "Convert literal values to geographic coordinates" and pick
+one or several source properties. The literal value must be formatted with a
+dot `.` as decimal separator and a comma `,` to separate the latitude and
+the longitude; spaces are ignored.
+
+So the value must be formatted `latitude, longitude` with latitude between
+-90 and +90 and the longitude between -180 and +180. An option allows to
+invert the order (`longitude, latitude`). A "strict" option rejects any value
+that does not match the regex; otherwise the database function `regexp_substr`
+(MariaDB ≥ 10.0.5 / MySQL ≥ 8.0) is used to extract the first coordinates pair
+found inside a longer string.
+
+#### Copy between coordinates and map markers (requires module [Mapping])
+
+When the module [Mapping] is active, additional options synchronize data
+between the `geography:coordinates` data type and Mapping’s features/markers:
+
+- *Copy coordinates to mapping markers*: for each item, every value of the
+  chosen source properties with data type `geography:coordinates` creates a
+  matching mapping feature (or marker, for Mapping < 2.0). Duplicates are
+  skipped.
+- *Copy mapping markers to coordinates*: for each item, every mapping feature
+  (or marker) creates a value of data type `geography:coordinates` on the
+  destination property. A destination property is required.
+
+#### Resolve coordinates from a table (requires modules [Table] and [Mapping] or [Cartography])
+
+When the module [Table] is active, a table of equivalences "code → label"
+can be selected to convert place names (or any other code) into coordinates or
+directly in coordinates for the map (module [Mapping] or module [Cartography]).
+The table is built in the Table module: the `code` column holds the literal
+value to match, the `label` column holds coordinates as `latitude,longitude`.
+
+| code      | label                 |
+|-----------|-----------------------|
+| Paris     | 48.858252,2.294497    |
+| Meaux     | 48.961145,2.878437    |
+| Lyon      | 45.7640,4.8357        |
+
+The batch edit fieldset then offers three independent targets:
+
+- *Coordinates values from table*: creates a value of data type `geography:coordinates`
+  (and the associated entry in `data_type_geography`) on the destination
+  property (or, by default, on the first source property). Existing values with
+  identical coordinates are not duplicated.
+- *Cartography annotations from table (requires module [Annotate Cartography])*:
+  creates a cartographic annotation per match, with target `oa:hasSource`
+  pointing to the item and `rdf:value` of data type `geography` holding the
+  resolved WKT point. Because annotations are full Omeka resources, this
+  target is processed asynchronously through a background job. Existing
+  annotations with the same item and WKT are not duplicated.
+- *Markers from table (requires module [Mapping])*: creates a mapping feature
+  for each item whose source properties contain a literal equal to a code of
+  the table. The feature `label` stores the original literal value, and the
+  `geography` column stores the resolved point. Existing features for the
+  same item and label are not duplicated.
+
+All targets can be combined in a single batch run. Matching is case-insensitive
+(handled by the collation of the `table_code.code` column). The coordinates
+and markers targets operate in a single SQL statement per batch and scale to
+large collections; the Cartography target runs through the API and is paced
+by the job dispatcher.
+
 
 TODO
 ----
@@ -336,6 +414,7 @@ sociales [EHESS]. The improvements were developed for the digital library of the
 [WKT]: https://wikipedia.org/wiki/Well-known_text
 [Annotate Cartography]: https://gitlab.com/Daniel-KM/Omeka-S-module-Cartography
 [Mapping]: https://github.com/Omeka-S-modules/Mapping
+[Table]: https://gitlab.com/Daniel-KM/Omeka-S-module-Table
 [installing a module]: https://omeka.org/s/docs/user-manual/modules/#installing-modules
 [mySql 5.6.1]: https://dev.mysql.com/doc/relnotes/mysql/5.6/en/news-5-6-1.html
 [MariaDB 5.3.3]: https://mariadb.com/kb/en/library/mariadb-533-release-notes/
@@ -350,6 +429,7 @@ sociales [EHESS]. The improvements were developed for the digital library of the
 [`data_type_geography`]: https://gitlab.com/Daniel-KM/Omeka-S-module-DataTypeGeometry/-/blob/master/data/install/schema.sql#L11-20
 [DataTypeGeometry.zip]: https://gitlab.com/Daniel-KM/Omeka-S-module-DataTypeGeometry/-/releases
 [Common]: https://gitlab.com/Daniel-KM/Omeka-S-module-Common
+[Cartography]: https://gitlab.com/Daniel-KM/Omeka-S-module-Cartography
 [longitude-one/doctrine-spatial]: https://github.com/longitude-one/doctrine-spatial
 [creof/doctrine2-spatial]: https://github.com/creof/doctrine2-spatial/blob/HEAD/doc/index.md
 [search a point in a polygon for a sphere]: https://dev.mysql.com/doc/mysql-errors/8.0/en/server-error-reference.html
