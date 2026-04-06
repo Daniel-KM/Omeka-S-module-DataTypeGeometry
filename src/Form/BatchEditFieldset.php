@@ -68,22 +68,24 @@ class BatchEditFieldset extends Fieldset
                     'data-collection-action' => 'replace',
                 ],
             ])
+            // The TablesSelect element "resolve_table" is added dynamically
+            // in formAddElementsResourceBatchUpdateForm() when module Table
+            // is active, and inserted before this element.
             ->add([
                 'name' => 'manage_coordinates_features',
-                'type' => CommonElement\OptionalSelect::class,
+                'type' => CommonElement\OptionalMultiCheckbox::class,
                 'options' => [
                     'element_group' => 'geometry',
                     'label' => 'Manage geographic coordinates for module Mapping', // @translate
                     'value_options' => [
-                        'sync' => 'Synchronize coordinates and mapping markers', // @translate
                         'coordinates_to_features' => 'Copy coordinates to mapping markers', // @translate
                         'features_to_coordinates' => 'Copy mapping markers to coordinates', // @translate
+                        'record' => 'Create coordinates values from table', // @translate
+                        'mapping' => 'Create markers (module Mapping) from table', // @translate
                     ],
-                    'empty_option' => '[No change]', // @translate
                 ],
                 'attributes' => [
                     'id' => 'geometry_manage_coordinates_features',
-                    'class' => 'chosen-select',
                     // This attribute is required to make "batch edit all" working.
                     'data-collection-action' => 'replace',
                 ],

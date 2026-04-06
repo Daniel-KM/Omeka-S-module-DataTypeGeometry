@@ -447,10 +447,49 @@ class Module extends AbstractModule
         $groups['geometry'] = 'Geometry and geography'; // @translate
         $form->setOption('element_groups', $groups);
 
-        if (!$this->isModuleActive('Mapping')) {
+        $hasMapping = $this->isModuleActive('Mapping');
+        $hasTable = $this->isModuleActive('Table');
+
+        if (!$hasMapping && !$hasTable) {
             $fieldset->remove('manage_coordinates_features');
             $fieldset->get('from_properties')->setLabel('Properties to convert from literal to geometric data'); // @translate
             $fieldset->remove('to_property');
+        } elseif (!$hasMapping) {
+            // Without Mapping, only table-to-record is available.
+            $fieldset->get('manage_coordinates_features')->setValueOptions([
+                'record' => 'Coordinates in values from table', // @translate
+            ]);
+            $fieldset->get('from_properties')->setLabel('Properties to convert from literal to geometric data'); // @translate
+            $fieldset->remove('to_property');
+        } elseif (!$hasTable) {
+            // Without Table, only mapping sync options are available.
+            $fieldset->get('manage_coordinates_features')->setValueOptions([
+                'coordinates_to_features' => 'Copy coordinates to mapping markers', // @translate
+                'features_to_coordinates' => 'Copy mapping markers to coordinates', // @translate
+            ]);
+        }
+
+        if ($hasTable) {
+            // Add the TablesSelect dynamically before manage_coordinates_features
+            // (requires module Table active).
+            $fieldset->add([
+                'name' => 'resolve_table',
+                'type' => \Table\Form\Element\TablesSelect::class,
+                'options' => [
+                    'element_group' => 'geometry',
+                    'label' => 'Use a table to get coordinates from locations', // @translate
+                    'slug_as_value' => true,
+                    'disable_group_by_owner' => true,
+                    'empty_option' => '',
+                ],
+                'attributes' => [
+                    'id' => 'geometry_resolve_table',
+                    'class' => 'chosen-select',
+                    'data-placeholder' => 'Select a table…', // @translate
+                    // This attribute is required to make "batch edit all" working.
+                    'data-collection-action' => 'replace',
+                ],
+            ]);
         }
     }
 
@@ -509,12 +548,11 @@ class Module extends AbstractModule
             return;
         }
 
-        $manage = $post['geometry']['manage_coordinates_features'] ?? null;
-        if ($manage && !in_array($manage, ['sync', 'coordinates_to_features', 'features_to_coordinates'])) {
-            unset($data['geometry']);
-            $event->setParam('data', $data);
-            return;
-        }
+        // manage_coordinates_features is now a multi-checkbox (array).
+        $manage = $post['geometry']['manage_coordinates_features'] ?? [];
+        $manage = array_intersect((array) $manage, [
+            'coordinates_to_features', 'features_to_coordinates', 'mapping', 'record',
+        ]);
 
         if (empty($post['geometry']['from_properties'])) {
             $message = new PsrMessage('No source property set for conversion of geometric or geographic data.'); // @translate
@@ -534,7 +572,7 @@ class Module extends AbstractModule
             return;
         }
 
-        if (in_array($manage, ['sync', 'features_to_coordinates'])
+        if (in_array('features_to_coordinates', $manage)
             && empty($post['geometry']['to_property'])
         ) {
             $message = new PsrMessage('A destination property is needed to convert geometric or geographic data.'); // @translate
@@ -555,6 +593,18 @@ class Module extends AbstractModule
                 $event->setParam('data', $data);
                 return;
             }
+        }
+
+        // Validate resolve_table when table-based options are checked.
+        if (array_intersect($manage, ['mapping', 'record'])
+            && empty($post['geometry']['resolve_table'])
+        ) {
+            $message = new PsrMessage('A table must be selected to resolve coordinates.'); // @translate
+            $logger->err($message->getMessage());
+            $messenger->addError($message);
+            unset($data['geometry']);
+            $event->setParam('data', $data);
+            return;
         }
 
         $data['geometry'] = $post['geometry'];
@@ -616,56 +666,235 @@ class Module extends AbstractModule
             $this->convertLiteralToCoordinates($ids, $data);
         }
 
+        // manage_coordinates_features is a multi-checkbox (array).
+        $manage = (array) ($data['geometry']['manage_coordinates_features'] ?? []);
+
+        // Resolve coordinates from table (options 'mapping' and/or 'record').
+        if (array_intersect($manage, ['mapping', 'record'])) {
+            $this->resolveCoordinatesFromTable($ids, $data);
+        }
+
+        // Copy coordinates to/from mapping features/markers.
         if (!$this->isModuleActive('Mapping')) {
             return;
         }
 
         $isOldMapping = !$this->isModuleVersionAtLeast('Mapping', '2.0');
 
-        // TODO Use the adapter to update values/mapping markers.
-        // $adapter = $event->getTarget();
-
-        $manage = $data['geometry']['manage_coordinates_features'] ?? null;
-
-        if ($isOldMapping) {
-            switch ($manage) {
-                default:
-                    return;
-
-                case 'sync':
-                    $this->copyCoordinatesToMarkers($ids, $data);
-                    $this->copyMarkersToCoordinates($ids, $data);
-                    break;
-
-                case 'coordinates_to_markers':
-                case 'coordinates_to_features':
-                    $this->copyCoordinatesToMarkers($ids, $data);
-                    break;
-
-                case 'markers_to_coordinates':
-                case 'features_to_coordinates':
-                    $this->copyMarkersToCoordinates($ids, $data);
-                    break;
+        if (in_array('coordinates_to_features', $manage)) {
+            if ($isOldMapping) {
+                $this->copyCoordinatesToMarkers($ids, $data);
+            } else {
+                $this->copyCoordinatesToFeatures($ids, $data);
             }
+        }
+
+        if (in_array('features_to_coordinates', $manage)) {
+            if ($isOldMapping) {
+                $this->copyMarkersToCoordinates($ids, $data);
+            } else {
+                $this->copyFeaturesToCoordinates($ids, $data);
+            }
+        }
+    }
+
+    /**
+     * Resolve coordinates from a Table module table and create mapping features.
+     *
+     * For each selected item, look up literal values of source properties in
+     * the specified Table (code = literal value, label = "lat,lon") and create
+     * mapping_feature entries (map markers). Optionally also create
+     * geography:coordinates values.
+     */
+    protected function resolveCoordinatesFromTable(array $ids, array $data): void
+    {
+        $services = $this->getServiceLocator();
+
+        if (!$this->isModuleActive('Table') || !$this->isModuleActive('Mapping')) {
             return;
         }
 
-        switch ($manage) {
-            default:
+        /** @var \Doctrine\DBAL\Connection $connection */
+        $connection = $services->get('Omeka\Connection');
+
+        $tableSlug = $data['geometry']['resolve_table'] ?? null;
+        if (!$tableSlug) {
+            return;
+        }
+
+        // Get the table id from slug.
+        $sql = 'SELECT `id` FROM `tables` WHERE `slug` = :slug LIMIT 1';
+        $tableId = $connection->fetchOne($sql, ['slug' => $tableSlug]);
+        if (!$tableId) {
+            $logger = $services->get('Omeka\Logger');
+            $messenger = $services->get('ControllerPluginManager')->get('messenger');
+            $message = new PsrMessage(
+                'Table "{table}" not found.', // @translate
+                ['table' => $tableSlug]
+            );
+            $logger->err($message->getMessage(), $message->getContext());
+            $messenger->addError($message);
+            return;
+        }
+        $tableId = (int) $tableId;
+
+        $srid = $data['geometry']['srid'] ?? Geography::DEFAULT_SRID;
+        $manage = (array) ($data['geometry']['manage_coordinates_features'] ?? []);
+        $doMapping = in_array('mapping', $manage);
+        $doCoordinates = in_array('record', $manage);
+
+        $bind = [
+            'resource_ids' => array_values($ids),
+            'table_id' => $tableId,
+        ];
+        $types = [
+            'resource_ids' => $connection::PARAM_INT_ARRAY,
+            'table_id' => \Doctrine\DBAL\ParameterType::INTEGER,
+        ];
+
+        /** @var \Common\Stdlib\EasyMeta $easyMeta */
+        $easyMeta = $services->get('Common\EasyMeta');
+        $from = $data['geometry']['from_properties_ids']
+            ?? (empty($data['geometry']['from_properties']) || in_array('all', $data['geometry']['from_properties'])
+                ? []
+                : $easyMeta->propertyIds($data['geometry']['from_properties']));
+
+        if ($from) {
+            $sqlWhere = 'AND `value`.`property_id` IN (:property_ids)';
+            $bind['property_ids'] = array_values(array_map('intval', $from));
+            $types['property_ids'] = $connection::PARAM_INT_ARRAY;
+        } else {
+            $sqlWhere = '';
+        }
+
+        // Insert mapping features from table code lookup.
+        // table_code.code matches value.value (case-insensitive via collation).
+        // table_code.label contains "latitude,longitude".
+        // Deduplication via LEFT JOIN on existing mapping_feature with same
+        // item_id and label.
+        if ($doMapping && $this->isModuleActive('Mapping')) {
+            $sql = <<<SQL
+                INSERT INTO `mapping_feature`
+                    (`item_id`, `media_id`, `label`, `geography`)
+                SELECT DISTINCT
+                    `value`.`resource_id`,
+                    NULL,
+                    `value`.`value`,
+                    ST_GeomFromText(CONCAT(
+                        "POINT(",
+                        TRIM(SUBSTRING_INDEX(`tc`.`label`, ",", -1)),
+                        " ",
+                        TRIM(SUBSTRING_INDEX(`tc`.`label`, ",", 1)),
+                        ")"
+                    ), $srid)
+                FROM `value`
+                INNER JOIN `table_code` `tc`
+                    ON `tc`.`code` = `value`.`value`
+                    AND `tc`.`table_id` = :table_id
+                LEFT JOIN `mapping_feature` `mf`
+                    ON `mf`.`item_id` = `value`.`resource_id`
+                    AND `mf`.`label` = `value`.`value`
+                WHERE
+                    `value`.`resource_id` IN (:resource_ids)
+                    AND `value`.`type` = "literal"
+                    AND `mf`.`id` IS NULL
+                    $sqlWhere
+                ;
+                SQL;
+            $connection->executeStatement($sql, $bind, $types);
+        }
+
+        // Optionally also create geography:coordinates values.
+        if ($doCoordinates) {
+            $toPropertyId = $data['geometry']['to_property_id']
+                ?? ($easyMeta->propertyId($data['geometry']['to_property'] ?? null));
+            // Use the first from_property if no to_property is set.
+            if (!$toPropertyId && $from) {
+                $toPropertyId = reset($from);
+            }
+            if (!$toPropertyId) {
                 return;
+            }
 
-            case 'sync':
-                $this->copyCoordinatesToFeatures($ids, $data);
-                $this->copyFeaturesToCoordinates($ids, $data);
-                break;
+            $bind['property_id'] = (int) $toPropertyId;
+            $types['property_id'] = \Doctrine\DBAL\ParameterType::INTEGER;
 
-            case 'coordinates_to_features':
-                $this->copyCoordinatesToFeatures($ids, $data);
-                break;
+            // Insert into data_type_geography first.
+            $sql = <<<SQL
+                INSERT INTO `data_type_geography`
+                    (`resource_id`, `property_id`, `value`)
+                SELECT DISTINCT
+                    `value`.`resource_id`,
+                    :property_id,
+                    ST_GeomFromText(CONCAT(
+                        "POINT(",
+                        TRIM(SUBSTRING_INDEX(`tc`.`label`, ",", -1)),
+                        " ",
+                        TRIM(SUBSTRING_INDEX(`tc`.`label`, ",", 1)),
+                        ")"
+                    ), $srid)
+                FROM `value`
+                INNER JOIN `table_code` `tc`
+                    ON `tc`.`code` = `value`.`value`
+                    AND `tc`.`table_id` = :table_id
+                LEFT JOIN `value` `existing`
+                    ON `existing`.`resource_id` = `value`.`resource_id`
+                    AND `existing`.`property_id` = :property_id
+                    AND `existing`.`type` = "geography:coordinates"
+                    AND `existing`.`value` = CONCAT(
+                        TRIM(SUBSTRING_INDEX(`tc`.`label`, ",", 1)),
+                        ",",
+                        TRIM(SUBSTRING_INDEX(`tc`.`label`, ",", -1))
+                    )
+                WHERE
+                    `value`.`resource_id` IN (:resource_ids)
+                    AND `value`.`type` = "literal"
+                    AND `existing`.`id` IS NULL
+                    $sqlWhere
+                ON DUPLICATE KEY UPDATE
+                    `data_type_geography`.`id` = `data_type_geography`.`id`
+                ;
+                SQL;
+            $connection->executeStatement($sql, $bind, $types);
 
-            case 'features_to_coordinates':
-                $this->copyFeaturesToCoordinates($ids, $data);
-                break;
+            // Insert into value table.
+            $sql = <<<SQL
+                INSERT INTO `value`
+                    (`resource_id`, `property_id`, `value_resource_id`, `type`, `lang`, `value`, `uri`, `is_public`)
+                SELECT DISTINCT
+                    `value`.`resource_id`,
+                    :property_id,
+                    NULL,
+                    "geography:coordinates",
+                    NULL,
+                    CONCAT(
+                        TRIM(SUBSTRING_INDEX(`tc`.`label`, ",", 1)),
+                        ",",
+                        TRIM(SUBSTRING_INDEX(`tc`.`label`, ",", -1))
+                    ),
+                    NULL,
+                    1
+                FROM `value`
+                INNER JOIN `table_code` `tc`
+                    ON `tc`.`code` = `value`.`value`
+                    AND `tc`.`table_id` = :table_id
+                LEFT JOIN `value` `existing`
+                    ON `existing`.`resource_id` = `value`.`resource_id`
+                    AND `existing`.`property_id` = :property_id
+                    AND `existing`.`type` = "geography:coordinates"
+                    AND `existing`.`value` = CONCAT(
+                        TRIM(SUBSTRING_INDEX(`tc`.`label`, ",", 1)),
+                        ",",
+                        TRIM(SUBSTRING_INDEX(`tc`.`label`, ",", -1))
+                    )
+                WHERE
+                    `value`.`resource_id` IN (:resource_ids)
+                    AND `value`.`type` = "literal"
+                    AND `existing`.`id` IS NULL
+                    $sqlWhere
+                ;
+                SQL;
+            $connection->executeStatement($sql, $bind, $types);
         }
     }
 
