@@ -293,7 +293,7 @@ class NormalizeGeometryQuery extends AbstractHelper
         try {
             $geometry = new GeoWktParser($zone);
             $geometry = $geometry->parse();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return;
         }
         return $zone;
@@ -306,7 +306,7 @@ class NormalizeGeometryQuery extends AbstractHelper
         try {
             $geometry = new GeoWktParser($area);
             $geometry = $geometry->parse();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return;
         }
         return $area;

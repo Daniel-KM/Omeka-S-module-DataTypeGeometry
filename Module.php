@@ -1370,7 +1370,7 @@ class Module extends AbstractModule
         try {
             $connection->executeStatement($sql);
             $supportGeography = true;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $supportGeography = false;
         }
     }

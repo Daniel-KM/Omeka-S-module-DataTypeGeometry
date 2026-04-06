@@ -103,7 +103,7 @@ if (version_compare($oldVersion, '3.4.2-beta', '<')) {
         SQL;
     try {
         $connection->executeStatement($sql);
-    } catch (\Exception $e) {
+    } catch (\Throwable $e) {
         $message = new PsrMessage(
             'Your database is not compatible with geographic search: only flat geometry is supported.' // @translate
         );

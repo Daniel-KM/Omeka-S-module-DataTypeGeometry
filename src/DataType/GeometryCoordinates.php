@@ -139,7 +139,7 @@ class GeometryCoordinates extends Geometry
             return $geo
                 ->setGeometry($value)
                 ->getGeometry();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             throw new \InvalidArgumentException(sprintf(
                 'Invalid geometric coordinates: %s', // @translate
                 $value

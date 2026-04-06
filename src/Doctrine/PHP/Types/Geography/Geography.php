@@ -116,7 +116,7 @@ class Geography extends AbstractGeometry implements GeographyInterface
                 $geometry = $geometry->parse();
                 $type = $geometry['type'];
                 $coordinates = $geometry['value'];
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 return null;
             }
         } elseif (is_array($geometry)) {

@@ -105,7 +105,7 @@ abstract class AbstractDataType extends BaseAbstractDataType implements DataType
         try {
             $geometry = new GeoWktParser($value);
             $geometry = $geometry->parse();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return null;
         }
         return $geometry;

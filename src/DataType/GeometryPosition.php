@@ -144,7 +144,7 @@ class GeometryPosition extends Geometry
             return $geo
                 ->setGeometry($value)
                 ->getGeometry();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             throw new \InvalidArgumentException(sprintf(
                 'Invalid geometric position: %s', // @translate
                 $value

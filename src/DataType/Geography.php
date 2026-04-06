@@ -96,7 +96,7 @@ class Geography extends AbstractDataType
             return $geo
                 ->setGeometry($value)
                 ->getGeometry();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             throw new \InvalidArgumentException(sprintf(
                 'Invalid geography: %s', // @translate
                 $value

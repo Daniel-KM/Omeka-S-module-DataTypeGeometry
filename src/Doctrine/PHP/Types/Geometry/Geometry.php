@@ -119,7 +119,7 @@ class Geometry extends AbstractGeometry
                 $geometry = $geometry->parse();
                 $type = $geometry['type'];
                 $coordinates = $geometry['value'];
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 return null;
             }
         } elseif (is_array($geometry)) {

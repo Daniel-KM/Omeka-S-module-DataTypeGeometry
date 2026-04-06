@@ -72,7 +72,7 @@ class Geometry extends AbstractDataType
             return $geo
                 ->setGeometry($value)
                 ->getGeometry();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             throw new \InvalidArgumentException(sprintf(
                 'Invalid geometry: %s', // @translate
                 $value

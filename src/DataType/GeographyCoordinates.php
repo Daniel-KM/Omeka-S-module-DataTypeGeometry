@@ -160,7 +160,7 @@ class GeographyCoordinates extends Geography
             return $geo
                 ->setGeometry($value)
                 ->getGeometry();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             throw new \InvalidArgumentException(sprintf(
                 'Invalid geographic coordinates: %s', // @translate
                 $value
