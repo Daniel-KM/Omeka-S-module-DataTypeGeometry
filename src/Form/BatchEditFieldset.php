@@ -77,11 +77,20 @@ class BatchEditFieldset extends Fieldset
                 'options' => [
                     'element_group' => 'geometry',
                     'label' => 'Manage geographic coordinates for module Mapping', // @translate
+                    // Value options are filled dynamically in Module::formAddElementsResourceBatchUpdateForm()
+                    // based on which modules (Mapping, Table, Cartography) are
+                    // active.
                     'value_options' => [
                         'coordinates_to_features' => 'Copy coordinates to mapping markers', // @translate
                         'features_to_coordinates' => 'Copy mapping markers to coordinates', // @translate
                         'record' => 'Create coordinates values from table', // @translate
-                        'mapping' => 'Create markers (module Mapping) from table', // @translate
+                        'cartography' => 'Create geographic annotations from table (module Cartography)', // @translate
+                        'mapping' => 'Create markers from table (module Mapping)', // @translate
+                    ],
+                    // Stack options vertically; keep checkbox inline with its
+                    // label text.
+                    'label_attributes' => [
+                        'style' => 'display: block;',
                     ],
                 ],
                 'attributes' => [

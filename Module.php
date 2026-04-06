@@ -449,24 +449,35 @@ class Module extends AbstractModule
 
         $hasMapping = $this->isModuleActive('Mapping');
         $hasTable = $this->isModuleActive('Table');
+        $hasCartography = $this->isModuleActive('Cartography');
 
-        if (!$hasMapping && !$hasTable) {
+        // Build the list of enabled options for manage_coordinates_features
+        // based on which companion modules are active.
+        $options = [];
+        if ($hasMapping) {
+            $options['coordinates_to_features'] = 'Copy coordinates to mapping markers'; // @translate
+            $options['features_to_coordinates'] = 'Copy mapping markers to coordinates'; // @translate
+        }
+        if ($hasTable) {
+            $options['record'] = 'Create coordinates values from table'; // @translate
+            if ($hasCartography) {
+                $options['cartography'] = 'Create geographic annotations from table (module Cartography)'; // @translate
+            }
+            if ($hasMapping) {
+                $options['mapping'] = 'Create markers from table (module Mapping)'; // @translate
+            }
+        }
+
+        if (!$options) {
             $fieldset->remove('manage_coordinates_features');
             $fieldset->get('from_properties')->setLabel('Properties to convert from literal to geometric data'); // @translate
             $fieldset->remove('to_property');
-        } elseif (!$hasMapping) {
-            // Without Mapping, only table-to-record is available.
-            $fieldset->get('manage_coordinates_features')->setValueOptions([
-                'record' => 'Coordinates in values from table', // @translate
-            ]);
-            $fieldset->get('from_properties')->setLabel('Properties to convert from literal to geometric data'); // @translate
-            $fieldset->remove('to_property');
-        } elseif (!$hasTable) {
-            // Without Table, only mapping sync options are available.
-            $fieldset->get('manage_coordinates_features')->setValueOptions([
-                'coordinates_to_features' => 'Copy coordinates to mapping markers', // @translate
-                'features_to_coordinates' => 'Copy mapping markers to coordinates', // @translate
-            ]);
+        } else {
+            $fieldset->get('manage_coordinates_features')->setValueOptions($options);
+            if (!$hasMapping) {
+                $fieldset->get('from_properties')->setLabel('Properties to convert from literal to geometric data'); // @translate
+                $fieldset->remove('to_property');
+            }
         }
 
         if ($hasTable) {
@@ -551,7 +562,7 @@ class Module extends AbstractModule
         // manage_coordinates_features is now a multi-checkbox (array).
         $manage = $post['geometry']['manage_coordinates_features'] ?? [];
         $manage = array_intersect((array) $manage, [
-            'coordinates_to_features', 'features_to_coordinates', 'mapping', 'record',
+            'coordinates_to_features', 'features_to_coordinates', 'mapping', 'record', 'cartography',
         ]);
 
         if (empty($post['geometry']['from_properties'])) {
@@ -596,7 +607,7 @@ class Module extends AbstractModule
         }
 
         // Validate resolve_table when table-based options are checked.
-        if (array_intersect($manage, ['mapping', 'record'])
+        if (array_intersect($manage, ['mapping', 'record', 'cartography'])
             && empty($post['geometry']['resolve_table'])
         ) {
             $message = new PsrMessage('A table must be selected to resolve coordinates.'); // @translate
@@ -672,6 +683,20 @@ class Module extends AbstractModule
         // Resolve coordinates from table (options 'mapping' and/or 'record').
         if (array_intersect($manage, ['mapping', 'record'])) {
             $this->resolveCoordinatesFromTable($ids, $data);
+        }
+
+        // Dispatch an async job for Cartography annotations (creation goes
+        // through the API, so batch SQL is not usable here).
+        if (in_array('cartography', $manage) && $this->isModuleActive('Cartography')) {
+            $this->getServiceLocator()->get('Omeka\Job\Dispatcher')->dispatch(
+                \DataTypeGeometry\Job\ResolveCartographyFromTable::class,
+                [
+                    'item_ids' => array_values($ids),
+                    'resolve_table' => $data['geometry']['resolve_table'] ?? null,
+                    'from_properties' => $data['geometry']['from_properties'] ?? [],
+                    'srid' => $data['geometry']['srid'] ?? Geography::DEFAULT_SRID,
+                ]
+            );
         }
 
         // Copy coordinates to/from mapping features/markers.
