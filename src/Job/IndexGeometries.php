@@ -20,6 +20,9 @@ class IndexGeometries extends AbstractJob
     {
         $services = $this->getServiceLocator();
         $this->logger = $services->get('Omeka\Logger');
+        $referenceIdProcessor = new \Laminas\Log\Processor\ReferenceId();
+        $referenceIdProcessor->setReferenceId('data-type-geometry/index-geometries/job_' . $this->job->getId());
+        $this->logger->addProcessor($referenceIdProcessor);
         $this->connection = $services->get('Omeka\Connection');
 
         $processMode = $this->getArg('process_mode');
