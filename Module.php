@@ -295,14 +295,16 @@ class Module extends AbstractModule
 
         $dispatcher = $services->get(\Omeka\Job\Dispatcher::class);
         $job = $dispatcher->dispatch(IndexGeometries::class, $params);
+        $urlPlugin = $services->get('ViewHelperManager')->get('url');
         $message = new PsrMessage(
-            'Processing in the background ({link}job #{job_id}{link_end})', // @translate
+            'Processing in background (job {link_job}#{job_id}{link_end}, {link_log}logs{link_end}).', // @translate
             [
-                'link' => sprintf('<a href="%s">',
-                    htmlspecialchars($controller->url()->fromRoute('admin/id', ['controller' => 'job', 'id' => $job->getId()]))
-                ),
+                'link_job' => sprintf('<a href="%s">', htmlspecialchars($urlPlugin('admin/id', ['controller' => 'job', 'id' => $job->getId()]))),
                 'job_id' => $job->getId(),
                 'link_end' => '</a>',
+                'link_log' => class_exists('Log\Module', false)
+                    ? sprintf('<a href="%1$s">', $urlPlugin('admin/default', ['controller' => 'log'], ['query' => ['job_id' => $job->getId()]]))
+                    : sprintf('<a href="%1$s" target="_blank">', $urlPlugin('admin/id', ['controller' => 'job', 'action' => 'log', 'id' => $job->getId()])),
             ]
         );
         $message->setEscapeHtml(false);
