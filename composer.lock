@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "88da0b6d76a1845d4ad6fc44d5aa2037",
+    "content-hash": "b9f7d5cba658855126eda2c04cbac912",
     "packages": [
         {
             "name": "creof/geo-parser",
@@ -321,7 +321,7 @@
     "platform": {},
     "platform-dev": {},
     "platform-overrides": {
-        "php": "7.4"
+        "php": "8.1"
     },
     "plugin-api-version": "2.6.0"
 }

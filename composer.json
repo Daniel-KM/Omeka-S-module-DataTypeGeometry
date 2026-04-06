@@ -1,5 +1,5 @@
 {
-    "name": "daniel-km/omeka-s-module-datatypegeometry",
+    "name": "daniel-km/omeka-s-module-data-type-geometry",
     "type": "omeka-s-module",
     "description": "Module for Omeka S: Adds data types to store latitude, longitude, markers and area highlights of images and maps with wkt.",
     "keywords": [
@@ -47,7 +47,7 @@
     },
     "config": {
         "platform": {
-            "php": "7.4"
+            "php": "8.1"
         },
         "allow-plugins": {
             "sempia/external-assets": true
