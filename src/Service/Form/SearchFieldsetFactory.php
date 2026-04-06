@@ -3,7 +3,7 @@
 namespace DataTypeGeometry\Service\Form;
 
 use DataTypeGeometry\Form\SearchFieldset;
-use Interop\Container\ContainerInterface;
+use Psr\Container\ContainerInterface;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 
 class SearchFieldsetFactory implements FactoryInterface

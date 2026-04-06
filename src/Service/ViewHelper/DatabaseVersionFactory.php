@@ -3,7 +3,7 @@
 namespace DataTypeGeometry\Service\ViewHelper;
 
 use DataTypeGeometry\View\Helper\DatabaseVersion;
-use Interop\Container\ContainerInterface;
+use Psr\Container\ContainerInterface;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 
 class DatabaseVersionFactory implements FactoryInterface
