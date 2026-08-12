@@ -94,7 +94,7 @@ class GeometryPosition extends Geometry
     }
 
     /**
-     * BCT: undo the map that Geometry::render() would otherwise inherit here.
+     * Undo the map that Geometry::render() would otherwise inherit here.
      *
      * A position is not a place. Its origin is the top left corner of an image,
      * as used by an image editor, iiif or alto, so "4,52" means four pixels

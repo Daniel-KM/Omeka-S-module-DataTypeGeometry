@@ -5,7 +5,7 @@ namespace DataTypeGeometry\View\Helper;
 use Laminas\View\Helper\AbstractHelper;
 
 /**
- * BCT: draw a wkt value on a Leaflet map, and prepare the resource-form editor.
+ * Draw a wkt value on a Leaflet map, and prepare the resource-form editor.
  *
  * Both sides are here because they share one thing: the "datatypegeometry"
  * settings, which say what the map is made of. A visitor looking at a value and

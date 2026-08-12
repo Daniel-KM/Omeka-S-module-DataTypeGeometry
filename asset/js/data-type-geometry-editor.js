@@ -1,5 +1,5 @@
 /**
- * BCT: draw a geometry on a map instead of typing wkt into the field.
+ * Draw a geometry on a map instead of typing wkt into the field.
  *
  * Opened with Ctrl+Alt+M from inside a geometry or geography field, or with the
  * "Select on map" button beside it. What is drawn is written back into that same

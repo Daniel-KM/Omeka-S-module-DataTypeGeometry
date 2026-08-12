@@ -52,8 +52,8 @@ class Geography extends AbstractDataType
 
         return '<div class="error invalid-value" data-custom-validity="' . $escapeAttr($translate($validity)) . '"></div>'
             . $view->formTextarea($element)
-            # BCT: opens the map editor for this value. Ctrl+Alt+M does the same
-            # from inside the field; the button is what makes it discoverable.
+            // Opens the map editor for this value. Ctrl+Alt+M does the same
+            // from inside the field; the button is what makes it discoverable.
             . '<button type="button" class="geometry-map-open o-icon-map-select" title="'
             . $escapeAttr($translate('Select on map')) . '">' // @translate
             . $escapeAttr($translate('Select on map')) . '</button>';

@@ -104,7 +104,7 @@ class GeometryCoordinates extends Geometry
     }
 
     /**
-     * BCT: the map inherited from Geometry, given something it can read.
+     * The map inherited from Geometry, given something it can read.
      *
      * This type stores "x,y", not wkt, so the inherited render() handed the map
      * a string no wkt parser accepts and drew an empty one. The point is the

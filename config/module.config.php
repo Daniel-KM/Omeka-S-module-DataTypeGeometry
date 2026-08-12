@@ -181,7 +181,7 @@ return [
         'factories' => [
             'databaseVersion' => Service\ViewHelper\DatabaseVersionFactory::class,
             'geometryFieldset' => Service\ViewHelper\GeometryFieldsetFactory::class,
-            // BCT: draws a wkt value on a Leaflet map, and prepares the editor.
+            // Draws a wkt value on a Leaflet map, and prepares the editor.
             'geometryMap' => Service\ViewHelper\GeometryMapFactory::class,
             'normalizeGeometryQuery' => Service\ViewHelper\NormalizeGeometryQueryFactory::class,
         ],
@@ -222,7 +222,7 @@ return [
         'Please enter a valid wkt for the geometry.', // @translate
         '"multipoint", "multiline" and "multipolygon" are not supported for now. Use collection instead.', // @translate
         'Error in input.', // @translate
-        // BCT: strings used by the map editor (asset/js/data-type-geometry-editor.js).
+        // Strings used by the map editor (asset/js/data-type-geometry-editor.js).
         'Select on map', // @translate
         'Draw the geometry', // @translate
         'Apply', // @translate
@@ -260,7 +260,7 @@ return [
             'datatypegeometry_support_geographic_search' => false,
         ],
 
-        // BCT: settings for the Leaflet map that renders a wkt value on a public
+        // Settings for the Leaflet map that renders a wkt value on a public
         // page, and for the editor that draws one in the resource form. Both use
         // the same layers, so what a cataloguer draws on is what a visitor sees.
         //

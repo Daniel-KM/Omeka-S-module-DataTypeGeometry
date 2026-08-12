@@ -30,8 +30,8 @@ abstract class AbstractDataType extends BaseAbstractDataType implements DataType
             ->appendFile($assetUrl('vendor/terraformer-wkt/t-wkt.umd-2.2.1.js', 'DataTypeGeometry'), 'text/javascript', ['defer' => 'defer'])
             ->appendFile($assetUrl('js/data-type-geometry.js', 'DataTypeGeometry'), 'text/javascript', ['defer' => 'defer']);
 
-        # BCT: let a wkt value be drawn on a map instead of typed. Only adds the
-        # editor's own script here; it loads Leaflet itself, on first use.
+        // Let a wkt value be drawn on a map instead of typed. Only adds the
+        // editor's own script here; it loads Leaflet itself, on first use.
         $view->geometryMap()->prepareEditor();
     }
 
