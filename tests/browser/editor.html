@@ -1,0 +1,204 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>editor harness</title>
+<script src="https://www.goudatijdmachine.nl/omeka/application/asset/vendor/jquery/jquery.min.js"></script>
+<script src="https://www.goudatijdmachine.nl/omeka/modules/DataTypeGeometry/asset/vendor/terraformer-wkt/t-wkt.umd-2.2.1.js"></script>
+<link rel="stylesheet" href="https://www.goudatijdmachine.nl/omeka/modules/DataTypeGeometry/asset/css/data-type-geometry.css">
+</head>
+<body>
+
+<!-- Stands in for Omeka's admin page: #content, and one resource-form value row
+     shaped exactly as DataTypeGeometry\DataType\Geometry::form() emits it. -->
+<div id="content">
+  <div class="resource-property field"><div class="inputs"><div class="values">
+
+    <div class="value" data-data-type="geometry">
+      <div class="input-body">
+        <div class="error invalid-value" data-custom-validity="Please enter a valid wkt for the geometry."></div>
+        <textarea name="geometry" class="value to-require geometry" data-value-key="@value"
+                  data-invalid-message="Please enter a valid wkt for the geometry.">POINT (4.7027444 52.0097589)</textarea>
+        <button type="button" class="geometry-map-open" title="Select on map">Select on map</button>
+      </div>
+    </div>
+
+    <!-- A second row: the button must edit its own field, not the first one. -->
+    <div class="value" data-data-type="geometry">
+      <div class="input-body">
+        <textarea id="second" name="geometry" class="value to-require geometry" data-value-key="@value"></textarea>
+        <button type="button" class="geometry-map-open" title="Select on map">Select on map</button>
+      </div>
+    </div>
+
+  </div></div></div>
+</div>
+
+<pre id="results"></pre>
+
+<script>
+// Capture every map the editor builds, deterministically: intercept the moment
+// leaflet.js assigns window.L, before anything can construct a map.
+(function () {
+    var value;
+    Object.defineProperty(window, 'L', {
+        configurable: true,
+        get: function () { return value; },
+        set: function (L) {
+            value = L;
+            if (L && L.Map && L.Map.prototype && !L.Map.prototype.__dtgPatched) {
+                var original = L.Map.prototype.initialize;
+                L.Map.prototype.initialize = function () {
+                    window.__dtgTestMap = this;
+                    return original.apply(this, arguments);
+                };
+                L.Map.prototype.__dtgPatched = true;
+            }
+        }
+    });
+})();
+
+// Minimal stand-ins for the pieces of Omeka the editor talks to.
+window.Omeka = {
+    openSidebar: function (sidebar) { sidebar.addClass('active'); sidebar.trigger('o:sidebar-opened'); },
+    closeSidebar: function (sidebar) { sidebar.removeClass('active'); sidebar.trigger('o:sidebar-closed'); },
+    jsTranslate: function (s) { return s; }
+};
+
+var BASE = 'https://www.goudatijdmachine.nl/omeka/modules/DataTypeGeometry/asset/';
+window.DataTypeGeometryConfig = {
+    map: {
+        height: 400, center: [52.011, 4.71], zoom: 16, max_zoom: 21, fit_max_zoom: 19,
+        style: {color: '#d22e25', weight: 4, fillColor: '#d22e25', fillOpacity: 0.3}
+    },
+    baseLayers: {osm: {label: 'OpenStreetMap', type: 'tile',
+        url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', options: {maxZoom: 19}}},
+    extraLayers: {hisgis: {label: 'HISGIS minuutplannen', type: 'tile',
+        url: 'https://tileserver.huc.knaw.nl/{z}/{x}/{y}', options: {minZoom: 10, maxZoom: 21}}},
+    assets: {
+        leafletCss: BASE + 'vendor/leaflet/leaflet.css',
+        leafletJs: BASE + 'vendor/leaflet/leaflet.js',
+        leafletDrawCss: BASE + 'vendor/leaflet-draw/leaflet.draw.css',
+        leafletDrawJs: BASE + 'vendor/leaflet-draw/leaflet.draw.js'
+    }
+};
+
+var out = [];
+var failures = 0;
+function check(description, ok, detail) {
+    if (ok === true) { out.push('    ok    ' + description); return; }
+    failures++;
+    out.push('    FAIL  ' + description + (detail ? '\n          ' + detail : ''));
+}
+function report() {
+    out.push('');
+    out.push(out.length + ' lines, ' + failures + ' failures');
+    document.getElementById('results').textContent = out.join('\n');
+    document.title = failures ? 'FAILURES ' + failures : 'ALL OK';
+}
+</script>
+
+<!-- The real file under test. -->
+<script src="https://www.goudatijdmachine.nl/omeka/modules/DataTypeGeometry/asset/js/data-type-geometry-editor.js"></script>
+
+<script>
+$(function () {
+    var $first = $('textarea.value.geometry').first();
+    var changes = 0;
+    $(document).on('change', 'textarea.value.geometry', function () { changes++; });
+
+    check('Leaflet is NOT loaded before the editor is opened', !window.L,
+        'window.L already exists, so the lazy load did nothing');
+
+    // Open with the keyboard, on the first field.
+    $first.trigger($.Event('keydown', {ctrlKey: true, altKey: true, key: 'm'}));
+
+    // Give the lazy loader time to fetch Leaflet and Leaflet.draw.
+    setTimeout(function () {
+        check('Leaflet loaded lazily on first open', !!window.L, 'window.L is still undefined');
+        check('Leaflet.draw loaded lazily too', !!(window.L && L.Control && L.Control.Draw),
+            'L.Control.Draw is undefined: the draw toolbar would not exist');
+
+        var $sidebar = $('#geometry-map-sidebar');
+        check('the sidebar was built and opened', $sidebar.length === 1 && $sidebar.hasClass('active'),
+            'sidebar found: ' + $sidebar.length + ', active: ' + $sidebar.hasClass('active'));
+
+        // Leaflet adds the class to the element it was given, not to a child.
+        var $canvas = $sidebar.find('.geometry-map-canvas');
+        check('the map initialised into the sidebar canvas',
+            $canvas.hasClass('leaflet-container'), 'classes: ' + $canvas.attr('class'));
+        check('the map has a real size (invalidateSize ran)',
+            $canvas.height() > 0 && window.__dtgTestMap
+                && window.__dtgTestMap.getSize().x > 0,
+            'css height ' + $canvas.height() + ', leaflet size '
+                + (window.__dtgTestMap ? window.__dtgTestMap.getSize().toString() : 'no map'));
+
+        check('the draw toolbar is on the map', $sidebar.find('.leaflet-draw-toolbar').length > 0,
+            'no .leaflet-draw-toolbar');
+        check('circle drawing is not offered (wkt cannot carry a radius)',
+            $sidebar.find('.leaflet-draw-draw-circle').length === 0, 'a circle button is present');
+        check('the layer switcher offers the configured overlay',
+            $sidebar.text().indexOf('HISGIS minuutplannen') !== -1, 'HISGIS not listed');
+
+        // The existing value should have been read onto the map.
+        var seeded = 0;
+        $sidebar.find('.leaflet-marker-icon').each(function () { seeded++; });
+        check('the existing POINT value was seeded onto the map', seeded === 1,
+            'markers on the map: ' + seeded);
+
+        // Apply without touching anything must not rewrite the value.
+        var before = $first.val();
+        $sidebar.find('.geometry-map-apply').trigger('click');
+        check('applying an untouched editor leaves the value alone',
+            $first.val() === before && changes === 0,
+            'value now ' + JSON.stringify($first.val()) + ', change events: ' + changes);
+        check('applying closes the sidebar', !$sidebar.hasClass('active'), 'still active');
+
+        // Reopen and draw something.
+        $first.trigger($.Event('keydown', {ctrlKey: true, altKey: true, key: 'm'}));
+        setTimeout(function () {
+            // Feed the map a drawn layer the way Leaflet.draw does when the user
+            // finishes a shape.
+            var polygon = L.polygon([[52.01, 4.70], [52.02, 4.70], [52.02, 4.71], [52.01, 4.71]]);
+            var found = window.__dtgTestMap || null;
+            check('the map instance is reachable for the draw test', !!found,
+                'could not reach the map; drawing could not be simulated');
+            if (found) {
+                found.fire('draw:created', {layer: polygon, layerType: 'polygon'});
+                $sidebar.find('.geometry-map-apply').trigger('click');
+                var value = $first.val();
+                check('drawing then applying writes wkt into the field',
+                    /^POLYGON\s*\(\(/.test(value), 'field now holds ' + JSON.stringify(value));
+                check('it is a single polygon, never MULTIPOLYGON',
+                    value.indexOf('MULTI') === -1, value);
+                check('the write fired a change event, so validation reruns', changes === 1,
+                    'change events: ' + changes);
+                check('the written wkt round-trips through the parser',
+                    (function () {
+                        try { return !!Terraformer.wktToGeoJSON(value); } catch (e) { return false; }
+                    })(), 'the module\'s own validator would reject it');
+            }
+
+            // The second row's button must target its own field.
+            // Not .closest('.value'): the field carries that class itself.
+            $('#second').siblings('.geometry-map-open').trigger('click');
+            setTimeout(function () {
+                var polygon2 = L.polygon([[52.03, 4.72], [52.04, 4.72], [52.04, 4.73]]);
+                if (window.__dtgTestMap) {
+                    window.__dtgTestMap.fire('draw:created', {layer: polygon2, layerType: 'polygon'});
+                    $('#geometry-map-sidebar').find('.geometry-map-apply').trigger('click');
+                }
+                check('the button edits its own row, not the first one',
+                    $('#second').val().indexOf('POLYGON') === 0 && $first.val().indexOf('52.03') === -1,
+                    'second: ' + JSON.stringify($('#second').val().slice(0, 40))
+                        + ' first: ' + JSON.stringify($first.val().slice(0, 40)));
+                report();
+            }, 1200);
+        }, 1200);
+    }, 4000);
+});
+</script>
+
+
+</body>
+</html>

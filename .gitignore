@@ -1,4 +1,8 @@
-/asset/vendor/
+/asset/vendor/*
+!/asset/vendor/leaflet/
+!/asset/vendor/leaflet-draw/
+!/asset/vendor/leaflet-fullscreen/
+!/asset/vendor/VERSIONS.md
 /build/
 /language/debug.po
 /language/debug.mo

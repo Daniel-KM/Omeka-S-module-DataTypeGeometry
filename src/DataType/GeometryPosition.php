@@ -93,6 +93,19 @@ class GeometryPosition extends Geometry
         $value->setValueResource(null);
     }
 
+    /**
+     * BCT: undo the map that Geometry::render() would otherwise inherit here.
+     *
+     * A position is not a place. Its origin is the top left corner of an image,
+     * as used by an image editor, iiif or alto, so "4,52" means four pixels
+     * across and fifty-two down — drawn on a world map it would land in the Gulf
+     * of Guinea. Values of this type render as what they are: text.
+     */
+    public function render(PhpRenderer $view, ValueRepresentation $value)
+    {
+        return (string) $value->value();
+    }
+
     public function getFulltextText(PhpRenderer $view, ValueRepresentation $value)
     {
         return (string) $value->value();

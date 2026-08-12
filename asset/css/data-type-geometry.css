@@ -90,6 +90,58 @@
     .sidebar #advanced-search .inputs label.type-radio::after {
         background: initial;
     }
+
+    /* BCT: the map editor. */
+
+    .geometry-map-open {
+        margin-top: 6px;
+    }
+
+    /* Font Awesome 5.15.4 "map-marked-alt", from the solid face Omeka already
+       loads. The glyph itself is all this rule supplies: the font family and
+       weight come from core's [class*="o-icon-"]:before, which is why the class
+       has to keep the o-icon- prefix even though the name is this module's own.
+
+       Deliberately not "draw-polygon" (\f5ee) or "map-marker-alt" (\f3c5): those
+       two are already the icons for the geometry and geography data types, and
+       they sit a few pixels away in the same row. */
+    .o-icon-map-select:before {
+        content: "\f5a0";
+    }
+
+    .geometry-map-open:before {
+        margin-right: 6px;
+    }
+
+    /* Wider than Omeka's default 25%: drawing a shape in a narrow column means
+       panning instead of seeing where the shape is going. */
+    #geometry-map-sidebar {
+        width: 40%;
+        min-width: 380px;
+    }
+
+    #geometry-map-sidebar .geometry-map-canvas {
+        width: 100%;
+        height: 400px;
+    }
+
+    #geometry-map-sidebar .geometry-map-notice {
+        margin-bottom: 6px;
+    }
+
+    #geometry-map-sidebar .geometry-map-actions {
+        margin-top: 12px;
+    }
+
+    #geometry-map-sidebar .geometry-map-cancel {
+        background-color: transparent;
+        color: inherit;
+    }
+
+    /* The value being rendered on a public page. */
+    .datatype-geometry-map {
+        max-width: 100%;
+    }
 }
 
 @media screen and (max-width:640px) {
