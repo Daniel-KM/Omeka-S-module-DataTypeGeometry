@@ -12,6 +12,18 @@ item edit page, which a headless run cannot reach.
 |---|---|
 | `editor.html` | Ctrl+Alt+M and the button open the editor, Leaflet and Leaflet.draw load lazily on first use, the map gets a real size inside the sidebar, an existing value is seeded onto it, drawing writes a single non-`MULTI*` wkt back into the field with a `change` event, an untouched editor writes nothing, and each button edits its own row |
 | `collision.html` | The Mapping module's Leaflet 1.9.3 is left alone: the editor adds no second Leaflet, does not replace `window.L`, reuses the Leaflet.draw already there, and Mapping's own map keeps working |
+| `sidebar-layout.html` | The panel and the map inside it stay within the viewport, and the layer switcher at the map's top right corner is painted, unclipped and reachable by `elementFromPoint` |
+
+`sidebar-layout.html` is the only one that loads Omeka's own `style.css`, and it
+has to: the sidebar has no geometry without it, so a map overflowing the panel
+looks perfectly fine in the other two. It exists because that is precisely what
+shipped — the panel was widened to 40% while core's `.sidebar.active` kept it at
+`left:75%`, so 15% of it hung off the right edge and `overflow-x: hidden` cropped
+the layer switcher away. Append **`?bug=1`** to restore that mistake and watch the
+assertions catch it; three of them fail.
+
+Measure, do not eyeball, and assert against the viewport as well as the parent:
+the switcher was correctly positioned *relative to the panel* the whole time.
 
 Both point at `https://www.goudatijdmachine.nl/omeka/`. Change the `BASE`
 constant, and the `<script src>` at the top, to test a different installation.

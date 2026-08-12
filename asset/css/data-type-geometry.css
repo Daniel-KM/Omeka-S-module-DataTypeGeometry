@@ -113,13 +113,6 @@
         margin-right: 6px;
     }
 
-    /* Wider than Omeka's default 25%: drawing a shape in a narrow column means
-       panning instead of seeing where the shape is going. */
-    #geometry-map-sidebar {
-        width: 40%;
-        min-width: 380px;
-    }
-
     #geometry-map-sidebar .geometry-map-canvas {
         width: 100%;
         height: 400px;
@@ -149,5 +142,29 @@
     .resource-form #resource-values .inputs .values [data-data-type="geometry:coordinates"] .input-body label,
     .resource-form #resource-values .inputs .values [data-data-type="geography:coordinates"] .input-body label {
         text-align: initial;
+    }
+}
+
+/* Wider than Omeka's default 25%: drawing a shape in a narrow column means
+   panning instead of seeing where the shape is going.
+
+   Core couples the width to the offset — .sidebar is width:25% parked at
+   left:100%, and .active slides it to left:75% — so the two have to keep adding
+   up to 100%. Widening one alone pushes the panel's right edge past the
+   viewport, where .sidebar's own overflow-x:hidden crops it, and what gets
+   cropped is whatever sits at the right edge of the map: the layer switcher.
+   Hence left:60% alongside width:40%, and no min-width, which would break the
+   arithmetic again between 641px and 950px.
+
+   Kept above core's 640px breakpoint. Below it the sidebar is already full
+   width and positioned differently, and there is nothing to widen. */
+@media screen and (min-width: 641px) {
+    #geometry-map-sidebar {
+        width: 40%;
+    }
+
+    #geometry-map-sidebar.active,
+    #geometry-map-sidebar.always-open {
+        left: 60%;
     }
 }
