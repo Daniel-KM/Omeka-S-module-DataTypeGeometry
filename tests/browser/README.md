@@ -13,6 +13,27 @@ item edit page, which a headless run cannot reach.
 | `editor.html` | Ctrl+Alt+M and the button open the editor, Leaflet and Leaflet.draw load lazily on first use, the map gets a real size inside the sidebar, an existing value is seeded onto it, drawing writes a single non-`MULTI*` wkt back into the field with a `change` event, an untouched editor writes nothing, and each button edits its own row |
 | `collision.html` | The Mapping module's stack is left alone: it preloads the same three files Mapping's item form does (Leaflet 1.9.3, Leaflet.draw 1.0.4, leaflet.fullscreen 2.4.0) and checks the editor adds no second Leaflet, pulls nothing at all from this module's own `asset/vendor`, does not replace `window.L`, and leaves Mapping's own map working |
 | `sidebar-layout.html` | The panel and the map inside it stay within the viewport, and the layer switcher at the map's top right corner is painted, unclipped and reachable by `elementFromPoint` |
+| `tile-seams.html` | Both maps composite tiles with `mix-blend-mode: normal`, so tile edges do not clip to white where the browser scales them |
+
+`tile-seams.html` is also the measurement rig for that override, and the only page
+here worth running with a scale factor. Leaflet 1.9's `plus-lighter` only shows
+itself when a tile is laid out across a fractional number of device pixels, which
+is what 110% page zoom or fractional display scaling does — at scale 1 there is
+nothing to see, in either mode. Serve it and render with
+`--force-device-scale-factor=1.1`:
+
+- default: a flat tile the colour of OpenStreetMap's land, so any line at a tile
+  boundary is the compositing and nothing else
+- `?blend=1`: puts `plus-lighter` back
+- `?osm=1`: the real base layer, to confirm on the cartography the bug was
+  reported against
+
+Measured across the map interior at scale 1.1, flat tile: **1006 pure-white pixels
+with `plus-lighter`, none with `normal`**. On real OSM tiles the same run gives seam
+columns 281px apart, ~35 grey levels above their neighbours, and none after. The
+detector is the one that identified the bug from the reported screenshot: a column
+or row consistently lighter than the pixels two either side of it. Tile seams form a
+regular ~281px grid (256 × 1.1); anything irregular is map detail.
 
 `sidebar-layout.html` is the only one that loads Omeka's own `style.css`, and it
 has to: the sidebar has no geometry without it, so a map overflowing the panel

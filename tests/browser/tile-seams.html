@@ -1,0 +1,101 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>tile seam harness</title>
+<script src="https://www.goudatijdmachine.nl/omeka/modules/DataTypeGeometry/asset/vendor/leaflet/leaflet.js"></script>
+<link rel="stylesheet" href="https://www.goudatijdmachine.nl/omeka/modules/DataTypeGeometry/asset/vendor/leaflet/leaflet.css">
+<link rel="stylesheet" href="https://www.goudatijdmachine.nl/omeka/modules/DataTypeGeometry/asset/vendor/leaflet-fullscreen/Control.FullScreen.css">
+<link rel="stylesheet" href="https://www.goudatijdmachine.nl/omeka/modules/DataTypeGeometry/asset/css/data-type-geometry.css">
+<script src="https://www.goudatijdmachine.nl/omeka/modules/DataTypeGeometry/asset/vendor/leaflet-fullscreen/Control.FullScreen.umd.js"></script>
+<script src="https://www.goudatijdmachine.nl/omeka/modules/DataTypeGeometry/asset/vendor/terraformer-wkt/t-wkt.umd-2.2.1.js"></script>
+<style>
+  body { margin: 0; background: #000; }
+  /* A hard edge round the map so the screenshot can be cropped exactly. */
+  #frame { width: 900px; height: 400px; }
+</style>
+</head>
+<body>
+
+<!-- ?blend=1 puts Leaflet 1.9's plus-lighter back, to show the harness
+     measures the thing it claims to measure. -->
+<script>
+if (/[?&]normal=1/.test(location.search)) {
+    var n = document.createElement('style');
+    n.textContent = '.datatype-geometry-map.leaflet-container img.leaflet-tile'
+        + '{mix-blend-mode:normal}';
+    document.documentElement.appendChild(n);
+}
+if (/[?&]blend=1/.test(location.search)) {
+    var s = document.createElement('style');
+    s.textContent = '.datatype-geometry-map.leaflet-container img.leaflet-tile'
+        + '{mix-blend-mode:plus-lighter}';
+    document.documentElement.appendChild(s);
+}
+</script>
+
+<div id="frame"><div class="datatype-geometry-map" style="width:900px;height:400px"
+     data-geometry-map='{"map": {"height": 400, "center": [52.011, 4.71], "zoom": 16, "max_zoom": 21, "fit_max_zoom": 19, "style": {"color": "#d22e25", "weight": 4}}, "baseLayers": {"flat": {"label": "Flat grey", "type": "tile", "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAIAAADTED8xAAACAElEQVR42u3TQQkAAAgEwevf1JdgAt9mcGASLGymC96KBBgADAAGAAOAAcAAYAAwABgADAAGAAOAAcAAYAAwABgADAAGAAOAAcAAYAAwABgADAAGAAOAAcAAYAAwABgADAAGAAOAAcAAYAAwABgADAAGAAOAAcAAYAAwABgADAAGwAAqYAAwABgADAAGAAOAAcAAYAAwABgADAAGAAOAAcAAYAAwABgADAAGAAOAAcAAYAAwABgADAAGAAOAAcAAYAAwABgADAAGAAOAAcAAYAAwABgADAAGAAOAAcAAYAAwABgAA4ABwABgADAAGAAMAAYAA4ABwABgADAAGAAMAAYAA4ABwABgADAAGAAMAAYAA4ABwABgADAAGAAMAAYAA4ABwABgADAAGAAMAAYAA4ABwABgADAAGAAMAAYAA4ABwAAYQAUMAAYAA4ABwABgADAAGAAMAAYAA4ABwABgADAAGAAMAAYAA4ABwABgADAAGAAMAAYAA4ABwABgADAAGAAMAAYAA4ABwABgADAAGAAMAAYAA4ABwABgADAAGAAMAAYAA2AAMAAYAAwABgADgAHAAGAAMAAYAAwABgADgAHAAGAAMAAYAAwABgADgAHAAGAAMAAYAAwABgADgAHAAGAAMAAYAAwABgADgAHAAGAAMAAYAAwABgADgAHAAHAtm2sp1zlLHgEAAAAASUVORK5CYII=", "options": {"maxZoom": 21}}}, "extraLayers": {}, "wkt": ""}'></div></div>
+
+<!-- The editor builds its map on a different class, so the override has to name
+     both. This one is only here to have its computed style read. -->
+<div class="geometry-map-canvas leaflet-container" style="width:1px;height:1px">
+  <img class="leaflet-tile" alt="">
+</div>
+
+<pre id="results" style="color:#fff;font-size:11px;margin:0"></pre>
+
+<script>
+// ?osm=1 swaps the flat tile for the real base layer, to confirm on the
+// cartography the bug was actually reported against.
+if (/[?&]osm=1/.test(location.search)) {
+    var el = document.querySelector('[data-geometry-map]');
+    var c = JSON.parse(el.getAttribute('data-geometry-map'));
+    c.baseLayers = {osm: {label: 'OpenStreetMap', type: 'tile',
+        url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', options: {maxZoom: 19}}};
+    el.setAttribute('data-geometry-map', JSON.stringify(c));
+}
+</script>
+<script src="https://www.goudatijdmachine.nl/omeka/modules/DataTypeGeometry/asset/js/data-type-geometry-map.js"></script>
+
+<script>
+window.addEventListener('load', function () {
+    setTimeout(function () {
+        var out = [], failures = 0;
+        function check(d, ok, detail) {
+            if (ok === true) { out.push('    ok    ' + d); return; }
+            failures++;
+            out.push('    FAIL  ' + d + (detail ? '\n          ' + detail : ''));
+        }
+
+        var tile = document.querySelector('.datatype-geometry-map img.leaflet-tile');
+        check('the public map has tiles to composite', !!tile, 'no tile rendered');
+
+        if (tile) {
+            check('the public map composites tiles normally',
+                getComputedStyle(tile).mixBlendMode === 'normal',
+                'mix-blend-mode is ' + getComputedStyle(tile).mixBlendMode
+                    + ': tile edges clip to white wherever the browser scales them');
+        }
+
+        var editorTile = document.querySelector('.geometry-map-canvas img.leaflet-tile');
+        check('the editor map composites tiles normally',
+            getComputedStyle(editorTile).mixBlendMode === 'normal',
+            'mix-blend-mode is ' + getComputedStyle(editorTile).mixBlendMode
+                + ': the override names .datatype-geometry-map but not .geometry-map-canvas');
+
+        // The map must be at an integer zoom; a fractional one would scale the
+        // tiles in Leaflet too, which is a different problem with the same look.
+        var pane = document.querySelector('.datatype-geometry-map .leaflet-tile-pane .leaflet-layer');
+        out.push('    tiles: ' + document.querySelectorAll('.datatype-geometry-map img.leaflet-tile').length
+            + ', tile pane transform: ' + (pane ? getComputedStyle(pane).transform : '?'));
+
+        out.push('');
+        out.push(failures + ' failures');
+        document.getElementById('results').textContent = out.join('\n');
+    }, 3000);
+});
+</script>
+
+</body>
+</html>

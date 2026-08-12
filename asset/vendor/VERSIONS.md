@@ -33,13 +33,30 @@ are byte-identical to Leaflet's own `images/`. Only `leaflet.draw.{js,css}`, the
 re-copy from a new release, re-check the `url()` list — `grep -o "url([^)]*)"
 leaflet.draw.css` — before deleting anything.
 
-**Leaflet's tile blending is left alone here, unlike in GeoJsonMap.** Leaflet 1.9.0 added
-`mix-blend-mode: plus-lighter` to `.leaflet-container img.leaflet-tile`, which blows tile
-edges out to white at *fractional* zoom. GeoJsonMap sets `zoomSnap: 0` and therefore has
-to override it back to `normal`. This module deliberately does not set `zoomSnap`, so its
-maps sit at integer zoom, the overlap does not occur, and no override is needed. If you
-ever add fractional zoom here, copy `asset/css/geo-json-map.css`'s override with it — and
-read that module's `VERSIONS.md`, which records the measurement behind it.
+**Leaflet's tile blending is overridden, as it is in GeoJsonMap.** Leaflet 1.9.0 added
+`mix-blend-mode: plus-lighter` to `.leaflet-container img.leaflet-tile`, to hide the dark
+seam a tile shows while it fades in. `asset/css/data-type-geometry.css` puts both of this
+module's maps back to `mix-blend-mode: normal`.
+
+This file used to claim the override was unnecessary here, on the reasoning that the maps
+stay at integer zoom and so never scale their tiles. The reasoning was wrong, and it was
+wrong in a way worth recording: Leaflet is not the only thing that scales a tile. At 110%
+page zoom, or on a display with fractional scaling, a 256px tile is laid out across 281.6
+device pixels, neighbouring tiles overlap by a fraction of a pixel, and plus-lighter adds
+both contributions. On a base layer as light as OpenStreetMap the sum clips to white, so
+every tile edge draws as a white line on a ~281px grid — which is exactly how the bug was
+reported, and how it was recognised: the grid spacing in the screenshot was 281–282px,
+not 256.
+
+Measured on a flat OSM-coloured tile at scale 1.1, across the map interior: **1006
+pure-white pixels with plus-lighter, none with normal.** Normal is never worse at any
+scale factor tested — 1, 1.1, 1.25, 1.5 — and strictly better at 1.1 and 1.5. The trade
+is that a tile may show its dark edge for the length of a fade-in.
+
+`tests/browser/tile-seams.html` holds the measurement; append `?blend=1` to put
+plus-lighter back and watch it fail. Re-check it against any Leaflet upgrade, and do not
+delete the override on the reasoning that Leaflet ought to know best — that is the
+reasoning that produced the bug.
 
 ## Checking a copy against upstream
 
