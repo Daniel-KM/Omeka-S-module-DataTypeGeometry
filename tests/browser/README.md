@@ -11,7 +11,7 @@ item edit page, which a headless run cannot reach.
 | Page | What it proves |
 |---|---|
 | `editor.html` | Ctrl+Alt+M and the button open the editor, Leaflet and Leaflet.draw load lazily on first use, the map gets a real size inside the sidebar, an existing value is seeded onto it, drawing writes a single non-`MULTI*` wkt back into the field with a `change` event, an untouched editor writes nothing, and each button edits its own row |
-| `collision.html` | The Mapping module's Leaflet 1.9.3 is left alone: the editor adds no second Leaflet, does not replace `window.L`, reuses the Leaflet.draw already there, and Mapping's own map keeps working |
+| `collision.html` | The Mapping module's stack is left alone: it preloads the same three files Mapping's item form does (Leaflet 1.9.3, Leaflet.draw 1.0.4, leaflet.fullscreen 2.4.0) and checks the editor adds no second Leaflet, pulls nothing at all from this module's own `asset/vendor`, does not replace `window.L`, and leaves Mapping's own map working |
 | `sidebar-layout.html` | The panel and the map inside it stay within the viewport, and the layer switcher at the map's top right corner is painted, unclipped and reachable by `elementFromPoint` |
 
 `sidebar-layout.html` is the only one that loads Omeka's own `style.css`, and it

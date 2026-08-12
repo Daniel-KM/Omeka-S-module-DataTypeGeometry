@@ -10,9 +10,16 @@
      Leaflet.draw 1.0.4 on the very same item edit form. This is the collision
      the editor's lazy loading exists to survive: a second Leaflet would replace
      window.L under Mapping and break its map. -->
+     Mapping loads all three of these on the item edit form, in this order:
+     see Mapping/view/common/mapping-item-form.phtml lines 2-11. Its
+     leaflet.fullscreen is 2.4.0, an ordinary script rather than the es module
+     later majors ship, and it registers the same L.Control.FullScreen under the
+     same leaflet-control-zoom-fullscreen class, so the editor can take it. -->
 <link rel="stylesheet" href="https://www.goudatijdmachine.nl/omeka/modules/Mapping/asset/node_modules/leaflet/dist/leaflet.css">
+<link rel="stylesheet" href="https://www.goudatijdmachine.nl/omeka/modules/Mapping/asset/node_modules/leaflet.fullscreen/Control.FullScreen.css">
 <script src="https://www.goudatijdmachine.nl/omeka/modules/Mapping/asset/node_modules/leaflet/dist/leaflet.js"></script>
 <script src="https://www.goudatijdmachine.nl/omeka/modules/Mapping/asset/node_modules/leaflet-draw/dist/leaflet.draw.js"></script>
+<script src="https://www.goudatijdmachine.nl/omeka/modules/Mapping/asset/node_modules/leaflet.fullscreen/Control.FullScreen.js"></script>
 </head>
 <body>
 
@@ -47,7 +54,9 @@ window.DataTypeGeometryConfig = {
         leafletCss: BASE + 'vendor/leaflet/leaflet.css',
         leafletJs: BASE + 'vendor/leaflet/leaflet.js',
         leafletDrawCss: BASE + 'vendor/leaflet-draw/leaflet.draw.css',
-        leafletDrawJs: BASE + 'vendor/leaflet-draw/leaflet.draw.js'
+        leafletDrawJs: BASE + 'vendor/leaflet-draw/leaflet.draw.js',
+        fullscreenCss: BASE + 'vendor/leaflet-fullscreen/Control.FullScreen.css',
+        fullscreenJs: BASE + 'vendor/leaflet-fullscreen/Control.FullScreen.umd.js'
     }
 };
 
@@ -64,8 +73,19 @@ var mappingMarker = L.marker([52.011, 4.71]).addTo(mappingMap);
 var mappingLeaflet = L.version;
 var mappingL = window.L;
 
-function countLeafletScripts() {
-    return $('script[src*="leaflet"]').length;
+// Leaflet core only. A substring match on "leaflet" also catches the plugins,
+// whose paths contain the word, and would report a plugin load as a second
+// Leaflet.
+function countLeafletCore() {
+    return $('script[src]').filter(function () {
+        return /\/leaflet(-src)?\.js(\?|$)/.test(this.src);
+    }).length;
+}
+
+// Anything at all pulled from this module's vendor directory. When the page
+// already has the whole stack, the editor should add nothing.
+function countOwnVendor() {
+    return $('script[src*="/DataTypeGeometry/asset/vendor/"], link[href*="/DataTypeGeometry/asset/vendor/"]').length;
 }
 </script>
 
@@ -73,7 +93,8 @@ function countLeafletScripts() {
 
 <script>
 $(function () {
-    var before = countLeafletScripts();
+    var before = countLeafletCore();
+    var ownBefore = countOwnVendor();
 
     $('.geometry-map-open').trigger('click');
 
@@ -81,8 +102,16 @@ $(function () {
         check('Mapping\'s Leaflet was already on the page', mappingLeaflet === '1.9.3',
             'expected 1.9.3, found ' + mappingLeaflet);
 
-        check('the editor loaded NO second Leaflet', countLeafletScripts() === before,
-            'script[src*=leaflet] went from ' + before + ' to ' + countLeafletScripts());
+        check('Mapping\'s fullscreen plugin was already on the page',
+            !!(L.Control && L.Control.FullScreen),
+            'L.Control.FullScreen missing, so this run is not testing reuse at all');
+
+        check('the editor loaded NO second Leaflet', countLeafletCore() === before,
+            'Leaflet core scripts went from ' + before + ' to ' + countLeafletCore());
+
+        check('the editor pulled nothing from its own vendor directory',
+            countOwnVendor() === ownBefore,
+            'own vendor assets went from ' + ownBefore + ' to ' + countOwnVendor());
 
         check('window.L was not replaced under Mapping', window.L === mappingL,
             'window.L is a different object now: Mapping\'s map would be broken');
@@ -97,6 +126,10 @@ $(function () {
 
         check('the draw toolbar is present, using the Leaflet.draw already there',
             $sidebar.find('.leaflet-draw-toolbar').length > 0, 'no toolbar');
+
+        check('the fullscreen button is present, using Mapping\'s 2.4.0 plugin',
+            $sidebar.find('.leaflet-control-zoom-fullscreen').length === 1,
+            'found ' + $sidebar.find('.leaflet-control-zoom-fullscreen').length);
 
         check('the existing value was still seeded onto the editor map',
             $sidebar.find('.leaflet-marker-icon').length === 1,

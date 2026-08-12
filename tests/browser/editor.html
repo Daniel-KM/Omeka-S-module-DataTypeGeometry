@@ -79,7 +79,9 @@ window.DataTypeGeometryConfig = {
         leafletCss: BASE + 'vendor/leaflet/leaflet.css',
         leafletJs: BASE + 'vendor/leaflet/leaflet.js',
         leafletDrawCss: BASE + 'vendor/leaflet-draw/leaflet.draw.css',
-        leafletDrawJs: BASE + 'vendor/leaflet-draw/leaflet.draw.js'
+        leafletDrawJs: BASE + 'vendor/leaflet-draw/leaflet.draw.js',
+        fullscreenCss: BASE + 'vendor/leaflet-fullscreen/Control.FullScreen.css',
+        fullscreenJs: BASE + 'vendor/leaflet-fullscreen/Control.FullScreen.umd.js'
     }
 };
 
@@ -135,6 +137,12 @@ $(function () {
 
         check('the draw toolbar is on the map', $sidebar.find('.leaflet-draw-toolbar').length > 0,
             'no .leaflet-draw-toolbar');
+        check('the fullscreen plugin loaded lazily as well',
+            !!(window.L && L.Control && L.Control.FullScreen),
+            'L.Control.FullScreen is undefined: fullscreenControl would be ignored silently');
+        check('the fullscreen button is on the editor map',
+            $sidebar.find('.leaflet-control-zoom-fullscreen').length === 1,
+            'found ' + $sidebar.find('.leaflet-control-zoom-fullscreen').length);
         check('circle drawing is not offered (wkt cannot carry a radius)',
             $sidebar.find('.leaflet-draw-draw-circle').length === 0, 'a circle button is present');
         check('the layer switcher offers the configured overlay',

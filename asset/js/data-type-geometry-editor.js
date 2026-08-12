@@ -61,7 +61,11 @@
     }
 
     /**
-     * Load Leaflet and Leaflet.draw, but only the parts that are missing.
+     * Load Leaflet and its two plugins, but only the parts that are missing.
+     *
+     * Strictly ordered: a plugin registers itself on L, so Leaflet has to be
+     * there first. The two plugins are independent of each other and load
+     * together.
      */
     function ensureLeaflet() {
         if (loading) {
@@ -75,10 +79,14 @@
                 return Promise.all([loadCss(assets.leafletCss), loadJs(assets.leafletJs)]);
             })
             .then(function () {
-                if (window.L && L.Control && L.Control.Draw) {
-                    return null;
+                var wanted = [];
+                if (!(L.Control && L.Control.Draw)) {
+                    wanted.push(loadCss(assets.leafletDrawCss), loadJs(assets.leafletDrawJs));
                 }
-                return Promise.all([loadCss(assets.leafletDrawCss), loadJs(assets.leafletDrawJs)]);
+                if (!(L.Control && L.Control.FullScreen)) {
+                    wanted.push(loadCss(assets.fullscreenCss), loadJs(assets.fullscreenJs));
+                }
+                return wanted.length ? Promise.all(wanted) : null;
             });
         return loading;
     }
@@ -156,7 +164,11 @@
         map = L.map($sidebar.find('.geometry-map-canvas')[0], {
             center: settings.center || [0, 0],
             zoom: settings.zoom || 16,
-            maxZoom: settings.max_zoom || 21
+            maxZoom: settings.max_zoom || 21,
+            // The sidebar is a narrow column, and drawing a large shape in it
+            // means panning rather than seeing the shape. Same control as the
+            // public map, registered by Control.FullScreen.umd.js.
+            fullscreenControl: true
         });
         addLayers(map);
 

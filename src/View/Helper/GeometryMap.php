@@ -110,6 +110,9 @@ class GeometryMap extends AbstractHelper
             'leafletJs' => $assetUrl('vendor/leaflet/leaflet.js', 'DataTypeGeometry'),
             'leafletDrawCss' => $assetUrl('vendor/leaflet-draw/leaflet.draw.css', 'DataTypeGeometry'),
             'leafletDrawJs' => $assetUrl('vendor/leaflet-draw/leaflet.draw.js', 'DataTypeGeometry'),
+            'fullscreenCss' => $assetUrl('vendor/leaflet-fullscreen/Control.FullScreen.css', 'DataTypeGeometry'),
+            // The UMD build, for the same reason as on the public side.
+            'fullscreenJs' => $assetUrl('vendor/leaflet-fullscreen/Control.FullScreen.umd.js', 'DataTypeGeometry'),
         ];
 
         $view->headScript()
