@@ -6,12 +6,13 @@
 <script src="https://www.goudatijdmachine.nl/omeka/application/asset/vendor/jquery/jquery.min.js"></script>
 <script src="https://www.goudatijdmachine.nl/omeka/modules/DataTypeGeometry/asset/vendor/terraformer-wkt/t-wkt.umd-2.2.1.js"></script>
 
-<!-- The Mapping module, which is installed and puts its own Leaflet 1.9.3 and
-     Leaflet.draw 1.0.4 on the very same item edit form. This is the collision
-     the editor's lazy loading exists to survive: a second Leaflet would replace
-     window.L under Mapping and break its map. -->
-     Mapping loads all three of these on the item edit form, in this order:
-     see Mapping/view/common/mapping-item-form.phtml lines 2-11. Its
+<!-- The Mapping module, which is installed and puts its own Leaflet on the very
+     same item edit form. This is the collision the editor's lazy loading exists
+     to survive: a second Leaflet would replace window.L under Mapping and break
+     its map.
+
+     Mapping loads all three of these on that form, in this order: see
+     Mapping/view/common/mapping-item-form.phtml lines 2-11. Its
      leaflet.fullscreen is 2.4.0, an ordinary script rather than the es module
      later majors ship, and it registers the same L.Control.FullScreen under the
      same leaflet-control-zoom-fullscreen class, so the editor can take it. -->
@@ -27,7 +28,7 @@
   <div class="value" data-data-type="geometry">
     <div class="input-body">
       <textarea name="geometry" class="value to-require geometry" data-value-key="@value">POINT (4.7027444 52.0097589)</textarea>
-      <button type="button" class="geometry-map-open">Select on map</button>
+      <button type="button" class="geometry-map-open">Use geometry editor</button>
     </div>
   </div>
   <!-- Mapping's own map, built before the editor is ever opened. -->

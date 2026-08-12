@@ -2,7 +2,7 @@
  * Draw a geometry on a map instead of typing wkt into the field.
  *
  * Opened with Ctrl+Alt+M from inside a geometry or geography field, or with the
- * "Select on map" button beside it. What is drawn is written back into that same
+ * "Use geometry editor" button beside it. What is drawn is written back into that same
  * field as wkt, and the field's own validation runs on it as if it had been
  * typed: this editor is a way of writing into the input, not a second way of
  * storing a value. Omeka collects the value on submit by reading
@@ -140,7 +140,7 @@
             + '</div>'
             + '</div></div>'
         );
-        $sidebar.find('.geometry-map-title').text(translate('Draw the geometry'));
+        $sidebar.find('.geometry-map-title').text(translate('Geometry editor'));
         $sidebar.find('.geometry-map-apply').text(translate('Apply'));
         $sidebar.find('.geometry-map-cancel').text(translate('Cancel'));
         // Inside #content so that Omeka's own delegated handler closes it.

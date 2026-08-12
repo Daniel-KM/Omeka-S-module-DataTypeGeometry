@@ -223,8 +223,8 @@ return [
         '"multipoint", "multiline" and "multipolygon" are not supported for now. Use collection instead.', // @translate
         'Error in input.', // @translate
         // Strings used by the map editor (asset/js/data-type-geometry-editor.js).
-        'Select on map', // @translate
-        'Draw the geometry', // @translate
+        'Use geometry editor', // @translate
+        'Geometry editor', // @translate
         'Apply', // @translate
         'Cancel', // @translate
         'The map could not be loaded.', // @translate

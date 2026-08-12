@@ -278,7 +278,7 @@ section('Translatable strings');
 checking('the editor\'s strings are in js_translate_strings', function () use ($services) {
     $strings = $services->get('Config')['js_translate_strings'] ?? [];
     $missing = array_diff(
-        ['Select on map', 'Draw the geometry', 'Apply', 'Cancel', 'The map could not be loaded.'],
+        ['Use geometry editor', 'Geometry editor', 'Apply', 'Cancel', 'The map could not be loaded.'],
         $strings
     );
     return $missing ? 'missing: ' . implode(', ', $missing) : true;

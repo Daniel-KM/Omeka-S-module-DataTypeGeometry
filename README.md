@@ -335,8 +335,8 @@ the geometry drawn on it, rather than as raw WKT. A `geometric position` is not:
 its origin is the top left corner of an image, so it stays text.
 
 In the resource form, a `geometry` or `geography` value can be drawn instead of
-typed. Press **Ctrl+Alt+M** inside the field, or use the **Select on map**
-button beside it. What you draw is written back into that field as WKT and
+typed. Press **Ctrl+Alt+M** inside the field, or click the **Use geometry
+editor** button beside it. What you draw is written back into that field as WKT and
 validated as if it had been typed, so nothing about how the value is stored
 changes. One shape per field: drawing a second replaces the first, because a
 value that needed `MULTIPOLYGON` would be rejected by this module's own
