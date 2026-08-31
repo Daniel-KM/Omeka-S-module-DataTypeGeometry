@@ -40,6 +40,11 @@ class Module extends AbstractModule
 
     const NAMESPACE = __NAMESPACE__;
 
+    /**
+     * @var array Cache of geo-bearing data types (core + modules).
+     */
+    protected $geometryDataTypes;
+
     public function init(ModuleManager $moduleManager)
     {
         require_once __DIR__ . '/vendor/autoload.php';
@@ -1302,10 +1307,14 @@ class Module extends AbstractModule
                 $entityManager->persist($entity);
             }
 
-            $mainGeo = strtok($dataTypeName, ':');
-            $currentSrid = $mainGeo === 'geography' ? $srid : 0;
-
+            // Derive the main geo type from the entity class rather than the
+            // data type name, so data types registered by other modules (whose
+            // name has no "geography:"/"geometry:" prefix) are grouped right.
             $dataTypeClass = $dataType->getEntityClass();
+            $mainGeo = $dataTypeClass === \DataTypeGeometry\Entity\DataTypeGeography::class
+                ? 'geography'
+                : 'geometry';
+            $currentSrid = $mainGeo === 'geography' ? $srid : 0;
 
             /** @var \DataTypeGeometry\Entity\DataTypeGeometry[] $existingDataValues */
             $existingDataValues = &$entityDataTypeValues[$mainGeo];
@@ -1380,19 +1389,37 @@ class Module extends AbstractModule
     }
 
     /**
-     * Get all data types added by this module.
+     * Get the data types whose values are indexed as geometry or geography.
+     *
+     * Other modules can register their own geo-bearing data types through the
+     * event "data_types.geometry" so their values are indexed and made
+     * searchable and facetable spatially. Each registered data type must
+     * implement getGeometryFromValue() and getEntityClass() (returning
+     * DataTypeGeography or DataTypeGeometry).
      *
      * @return \Omeka\DataType\AbstractDataType[]
      */
     protected function getGeometryDataTypes()
     {
-        $dataTypes = $this->getServiceLocator()->get('Omeka\DataTypeManager');
-        return [
+        if ($this->geometryDataTypes !== null) {
+            return $this->geometryDataTypes;
+        }
+
+        $services = $this->getServiceLocator();
+        $dataTypes = $services->get('Omeka\DataTypeManager');
+        $geoDataTypes = [
             'geography' => $dataTypes->get('geography'),
             'geography:coordinates' => $dataTypes->get('geography:coordinates'),
             'geometry' => $dataTypes->get('geometry'),
             'geometry:coordinates' => $dataTypes->get('geometry:coordinates'),
             'geometry:position' => $dataTypes->get('geometry:position'),
         ];
+
+        $eventManager = new \Laminas\EventManager\EventManager($services->get('SharedEventManager'));
+        $eventManager->setIdentifiers([__NAMESPACE__]);
+        $args = $eventManager->prepareArgs(['data_types' => $geoDataTypes]);
+        $eventManager->trigger('data_types.geometry', $this, $args);
+
+        return $this->geometryDataTypes = $args['data_types'];
     }
 }
