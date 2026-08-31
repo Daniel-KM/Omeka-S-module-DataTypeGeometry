@@ -23,17 +23,27 @@
         "issues": "https://gitlab.com/Daniel-KM/Omeka-S-module-DataTypeGeometry/-/issues",
         "forum": "https://forum.omeka.org/"
     },
-    "_require (not set until Omeka S merges PR #2412)": {
+    "_require (not set until Omeka S merges PR #2432)": {
         "omeka/omeka-s": "^4.0",
         "daniel-km/omeka-s-module-common": "*"
     },
     "require": {
         "longitude-one/doctrine-spatial": "^3.0",
-        "sempia/external-assets": "^1.0"
+        "sempia/external-assets": "^1.1"
     },
-    "provide": {
+    "_comment (replace)": "Doctrine is provided by Omeka, that overrides some of its classes (see bootstrap.php and application/data/overrides/). A copy in the module would be loaded first by its own autoloader and would break the overrides, so these packages are never installed here.",
+    "replace": {
+        "doctrine/cache": "*",
+        "doctrine/collections": "*",
+        "doctrine/common": "*",
+        "doctrine/dbal": "*",
+        "doctrine/deprecations": "*",
+        "doctrine/event-manager": "*",
+        "doctrine/inflector": "*",
+        "doctrine/instantiator": "*",
         "doctrine/lexer": "*",
-        "doctrine/orm": "*"
+        "doctrine/orm": "*",
+        "doctrine/persistence": "*"
     },
     "autoload": {
         "psr-4": {
