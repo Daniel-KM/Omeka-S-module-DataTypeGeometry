@@ -180,6 +180,7 @@ return [
     'faceted_browse_facet_types' => [
         'factories' => [
             'around_point' => Service\FacetedBrowse\FacetType\AroundPointFactory::class,
+            'within_box' => Service\FacetedBrowse\FacetType\WithinBoxFactory::class,
         ],
     ],
     'view_helpers' => [
