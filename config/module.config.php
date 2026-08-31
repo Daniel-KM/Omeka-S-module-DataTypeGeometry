@@ -177,6 +177,11 @@ return [
             dirname(__DIR__) . '/view',
         ],
     ],
+    'faceted_browse_facet_types' => [
+        'factories' => [
+            'around_point' => Service\FacetedBrowse\FacetType\AroundPointFactory::class,
+        ],
+    ],
     'view_helpers' => [
         'factories' => [
             'databaseVersion' => Service\ViewHelper\DatabaseVersionFactory::class,
