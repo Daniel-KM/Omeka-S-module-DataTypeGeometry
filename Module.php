@@ -140,6 +140,7 @@ class Module extends AbstractModule
             'Omeka\Controller\Admin\Media',
             'Omeka\Controller\Admin\Query',
             \Annotate\Controller\Admin\AnnotationController::class,
+            'DigitalObject\Controller\Admin\DigitalObject',
             'Omeka\Controller\Site\Item',
             'Omeka\Controller\Site\ItemSet',
             'Omeka\Controller\Site\Media',
@@ -167,6 +168,7 @@ class Module extends AbstractModule
             \Annotate\Api\Adapter\AnnotationAdapter::class,
             \Annotate\Api\Adapter\AnnotationBodyHydrator::class,
             \Annotate\Api\Adapter\AnnotationTargetHydrator::class,
+            'DigitalObject\Api\Adapter\DigitalObjectAdapter',
         ];
         foreach ($adapters as $adapter) {
             // Search resources and annotations by geometries.
@@ -220,6 +222,11 @@ class Module extends AbstractModule
         );
         $sharedEventManager->attach(
             'Omeka\Controller\Admin\Annotation',
+            'view.layout',
+            [$this, 'addAdminResourceHeaders']
+        );
+        $sharedEventManager->attach(
+            'DigitalObject\Controller\Admin\DigitalObject',
             'view.layout',
             [$this, 'addAdminResourceHeaders']
         );
