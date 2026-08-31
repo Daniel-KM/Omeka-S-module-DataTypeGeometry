@@ -57,7 +57,9 @@ if (version_compare($oldVersion, '3.3.1.6', '<')) {
         DROP INDEX `idx_value` ON `data_type_geometry`;
         CREATE SPATIAL INDEX `idx_value` ON `data_type_geometry` (`value`);
         SQL;
-    $connection->executeStatement($sql);
+    foreach (array_filter(array_map('trim', explode(";\n", $sql))) as $sql) {
+        $connection->executeStatement($sql);
+    }
 
     $settings->delete('datatypegeometry_buttons');
 
