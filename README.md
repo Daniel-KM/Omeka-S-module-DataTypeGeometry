@@ -329,6 +329,49 @@ large collections; the Cartography target runs through the API and is paced
 by the job dispatcher.
 
 
+Development
+-----------
+
+### Register a geo-bearing data type from another module
+
+By default, only the five data types of this module are indexed in the tables
+`data_type_geometry` and `data_type_geography`, so only their values are
+searchable and facetable spatially. Other modules can register their own
+geo-bearing data types through the event `data_types.geometry`, so their values
+are indexed, searched and faceted spatially too, without depending on the
+internal structure of this module.
+
+The event is triggered with the identifier `DataTypeGeometry` and an argument
+`data_types`, an array of data types keyed by their name. A listener appends its
+own data types to this array. Each registered data type must implement two
+methods:
+
+- `getEntityClass()`: returns `DataTypeGeometry\Entity\DataTypeGeography::class`
+  or `DataTypeGeometry\Entity\DataTypeGeometry::class`, to select the index
+  table (geography for spherical coordinates, geometry for planar ones);
+- `getGeometryFromValue(string $value)`: converts the stored value into a
+  geometry object (a `Geography` or a `Geometry`) to be indexed.
+
+For example, the module [Data type Place] registers its data type `place` as a
+geography, so a place value (a toponym with its coordinates) is indexed as a
+point and can be found through the spatial search and the geo facets:
+
+```php
+$sharedEventManager->attach(
+    'DataTypeGeometry',
+    'data_types.geometry',
+    function (\Laminas\EventManager\Event $event): void {
+        $dataTypes = $event->getParam('data_types');
+        $dataTypes['place'] = new \DataTypePlace\Stdlib\PlaceGeographyConverter();
+        $event->setParam('data_types', $dataTypes);
+    }
+);
+```
+
+The result of the event is cached for the request, so the listeners are run only
+once.
+
+
 TODO
 ----
 
@@ -415,6 +458,7 @@ sociales [EHESS]. The improvements were developed for the digital library of the
 [Annotate Cartography]: https://gitlab.com/Daniel-KM/Omeka-S-module-Cartography
 [Mapping]: https://github.com/Omeka-S-modules/Mapping
 [Table]: https://gitlab.com/Daniel-KM/Omeka-S-module-Table
+[Data type Place]: https://gitlab.com/Daniel-KM/Omeka-S-module-DataTypePlace
 [installing a module]: https://omeka.org/s/docs/user-manual/modules/#installing-modules
 [mySql 5.6.1]: https://dev.mysql.com/doc/relnotes/mysql/5.6/en/news-5-6-1.html
 [MariaDB 5.3.3]: https://mariadb.com/kb/en/library/mariadb-533-release-notes/
