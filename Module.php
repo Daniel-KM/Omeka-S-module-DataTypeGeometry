@@ -2,6 +2,12 @@
 
 namespace DataTypeGeometry;
 
+// Load the module dependencies when installed as a zip.
+// With composer, libraries are stored in omeka vendor/ and the module has none.
+if (file_exists(__DIR__ . '/vendor/autoload.php')) {
+    require_once __DIR__ . '/vendor/autoload.php';
+}
+
 if (!class_exists('Common\TraitModule', false)) {
     require_once file_exists(dirname(__DIR__) . '/Common/src/TraitModule.php')
         ? dirname(__DIR__) . '/Common/src/TraitModule.php'
@@ -44,11 +50,6 @@ class Module extends AbstractModule
      * @var array Cache of geo-bearing data types (core + modules).
      */
     protected $geometryDataTypes;
-
-    public function init(ModuleManager $moduleManager)
-    {
-        require_once __DIR__ . '/vendor/autoload.php';
-    }
 
     protected function preInstall(): void
     {
