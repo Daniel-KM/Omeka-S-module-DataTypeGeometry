@@ -40,12 +40,24 @@ class Geometry extends AbstractDataType
         ]);
 
         return '<div class="error invalid-value" data-custom-validity="' . $escapeAttr($translate($validity)) . '"></div>'
-            . $view->formTextarea($element);
+            . $view->formTextarea($element)
+            // Opens the map editor for this value. Ctrl+Alt+M does the same
+            // from inside the field; the button is what makes it discoverable.
+            . '<button type="button" class="geometry-map-open o-icon-map-select" title="'
+            . $escapeAttr($translate('Use geometry editor')) . '">' // @translate
+            . $escapeAttr($translate('Use geometry editor')) . '</button>';
     }
 
     public function getEntityClass(): string
     {
         return \DataTypeGeometry\Entity\DataTypeGeometry::class;
+    }
+
+    public function render(PhpRenderer $view, ValueRepresentation $value)
+    {
+        // Render the wkt geometry as a Leaflet map, from this module's own
+        // assets. See src/View/Helper/GeometryMap.php.
+        return $view->geometryMap((string) $value->value());
     }
 
     /**

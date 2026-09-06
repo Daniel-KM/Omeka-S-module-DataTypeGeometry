@@ -328,6 +328,68 @@ and markers targets operate in a single SQL statement per batch and scale to
 large collections; the Cartography target runs through the API and is paced
 by the job dispatcher.
 
+### Maps
+
+A `geometry` or `geometric coordinates` value is displayed as a Leaflet map with
+the geometry drawn on it, rather than as raw WKT. A `geometric position` is not:
+its origin is the top left corner of an image, so it stays text.
+
+In the resource form, a `geometry` or `geography` value can be drawn instead of
+typed. Press **Ctrl+Alt+M** inside the field, or click the button beside it,
+**Use geometry editor**. What you draw is written back into that field as WKT
+and validated as if it had been typed, so nothing about how the value is stored
+changes. One shape per field: drawing a second replaces the first, because a
+value that needed `MULTIPOLYGON` would be rejected by this module's own
+validation. Circles are not offered — WKT has no way to carry a radius. Closing
+the editor without drawing leaves the value exactly as it was.
+
+Everything the maps need is bundled in `asset/vendor`; nothing is fetched from a
+CDN at runtime. Leaflet is loaded lazily in the resource form, and reused if
+another module (such as [Mapping]) already put it on the page.
+
+The maps are configured under the `datatypegeometry` key. The defaults live in
+`config/module.config.php` and are overridden from Omeka's
+`config/local.config.php`; arrays merge, so naming one key leaves the rest
+alone:
+
+```php
+'datatypegeometry' => [
+    // Map defaults: height, center, zoom, max_zoom, fit_max_zoom, and the
+    // Leaflet path style the geometry is drawn in.
+    'map' => [
+        'height' => 400,
+    ],
+    // Exactly one is active at a time, the first by default. Ships with
+    // OpenStreetMap so a stock installation draws something.
+    'base_layers' => [
+        'osm' => [
+            'label' => 'OpenStreetMap',
+            'type' => 'tile',
+            'url' => 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+            'options' => ['maxZoom' => 19, 'attribution' => '…'],
+        ],
+    ],
+    // Any number may be switched on, all off until then. Empty by default:
+    // which historical maps are worth showing belongs to a collection, not to
+    // this module.
+    'extra_layers' => [
+        'hisgis' => [
+            'label' => 'HISGIS minuutplannen',
+            'type' => 'tile',
+            'url' => 'https://tileserver.huc.knaw.nl/{z}/{x}/{y}',
+            'options' => ['minZoom' => 10, 'maxZoom' => 21, 'attribution' => 'Tiles HUC KNAW'],
+        ],
+    ],
+],
+```
+
+An entry's `type` is `tile` or `wms`, its `url` is used exactly as written — so
+a caching or rewriting proxy in front of a tile server is simply part of the
+url — and its `options` are passed straight to Leaflet.
+
+To draw the same map from a theme template:
+`echo $this->geometryMap('POINT (4.7027444 52.0097589)');`
+
 
 Development
 -----------
@@ -377,7 +439,7 @@ TODO
 
 - [x] Remove doctrine:lexer from composer vendor.
 - [ ] Add a checkbox in resource form to append marker to map of module Mapping or a main option?
-- [ ] Add a button "select on map" in resource form to specify coordinates directly.
+- [x] Add a button "select on map" in resource form to specify coordinates directly.
 - [ ] Add a js to convert wkt into svg icon (via geojson/d3 or directly).
 - [ ] Upgrade terraformer to terraformer.js (need a precompiled js).
 - [x] Rename api keys to "geometry", "geography", "geography:coordinates" for Omeka S v4.
@@ -436,8 +498,9 @@ of the CeCILL license and that you accept its terms.
 
 ### Libraries
 
-This module uses many open source leaflet libraries. See `asset/vendor` for
-details.
+This module bundles Leaflet, Leaflet.draw, leaflet.fullscreen and
+@terraformer/wkt. See [asset/vendor/VERSIONS.md](asset/vendor/VERSIONS.md) for
+the exact versions, their licences, and how to check a copy against upstream.
 
 
 Copyright

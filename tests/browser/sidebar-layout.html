@@ -1,0 +1,177 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>sidebar layout harness</title>
+
+<!-- Omeka's real admin stylesheet. Without it the sidebar has no geometry at
+     all, and a map that overflows the panel looks perfectly fine. -->
+<link rel="stylesheet" href="https://www.goudatijdmachine.nl/omeka/application/asset/css/iconfonts.css">
+<link rel="stylesheet" href="https://www.goudatijdmachine.nl/omeka/application/asset/css/style.css">
+<link rel="stylesheet" href="https://www.goudatijdmachine.nl/omeka/modules/DataTypeGeometry/asset/css/data-type-geometry.css">
+
+<script src="https://www.goudatijdmachine.nl/omeka/application/asset/vendor/jquery/jquery.min.js"></script>
+<script src="https://www.goudatijdmachine.nl/omeka/modules/DataTypeGeometry/asset/vendor/terraformer-wkt/t-wkt.umd-2.2.1.js"></script>
+</head>
+<body class="resource-form">
+
+<div id="content">
+  <div id="resource-values"><div class="resource-property field"><div class="inputs"><div class="values">
+    <div class="value" data-data-type="geometry">
+      <div class="input-body">
+        <textarea name="geometry" class="value to-require geometry" data-value-key="@value">POINT (4.7027444 52.0097589)</textarea>
+        <button type="button" class="geometry-map-open o-icon-map-select" title="Use geometry editor">Use geometry editor</button>
+      </div>
+    </div>
+  </div></div></div></div>
+</div>
+
+<pre id="results" style="position:fixed;bottom:0;left:0;background:#fff;margin:0;font-size:11px"></pre>
+
+<script>
+// Core's openSidebar also reserves the space, which shrinks #content. Without
+// that the panel measures differently than it does in Omeka.
+window.Omeka = {
+    openSidebar: function (s) {
+        s.addClass('active');
+        $('body').addClass('sidebar-open');
+        s.trigger('o:sidebar-opened');
+    },
+    closeSidebar: function (s) {
+        s.removeClass('active');
+        $('body').removeClass('sidebar-open');
+        s.trigger('o:sidebar-closed');
+    },
+    jsTranslate: function (s) { return s; }
+};
+
+var BASE = 'https://www.goudatijdmachine.nl/omeka/modules/DataTypeGeometry/asset/';
+window.DataTypeGeometryConfig = {
+    map: {height: 400, center: [52.011, 4.71], zoom: 16, max_zoom: 21, fit_max_zoom: 19,
+        style: {color: '#d22e25', weight: 4}},
+    baseLayers: {osm: {label: 'OpenStreetMap', type: 'tile',
+        url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', options: {maxZoom: 19}}},
+    extraLayers: {hisgis: {label: 'HISGIS minuutplannen', type: 'tile',
+        url: 'https://tileserver.huc.knaw.nl/{z}/{x}/{y}', options: {minZoom: 10, maxZoom: 21}}},
+    assets: {
+        leafletCss: BASE + 'vendor/leaflet/leaflet.css',
+        leafletJs: BASE + 'vendor/leaflet/leaflet.js',
+        leafletDrawCss: BASE + 'vendor/leaflet-draw/leaflet.draw.css',
+        leafletDrawJs: BASE + 'vendor/leaflet-draw/leaflet.draw.js',
+        fullscreenCss: BASE + 'vendor/leaflet-fullscreen/Control.FullScreen.css',
+        fullscreenJs: BASE + 'vendor/leaflet-fullscreen/Control.FullScreen.umd.js'
+    }
+};
+
+// ?bug=1 restores the original mistake — a widened panel whose offset was left
+// at core's 75% — so this harness can be shown to actually catch it.
+if (/[?&]bug=1/.test(location.search)) {
+    var broken = document.createElement('style');
+    broken.textContent = '@media screen and (min-width:641px){'
+        + '#geometry-map-sidebar{width:40%;min-width:380px}'
+        + '#geometry-map-sidebar.active{left:75%}}';
+    document.head.appendChild(broken);
+}
+
+var out = [], failures = 0;
+function check(d, ok, detail) {
+    if (ok === true) { out.push('    ok    ' + d); return; }
+    failures++;
+    out.push('    FAIL  ' + d + (detail ? '\n          ' + detail : ''));
+}
+</script>
+
+<script src="https://www.goudatijdmachine.nl/omeka/modules/DataTypeGeometry/asset/js/data-type-geometry-editor.js"></script>
+
+<script>
+$(function () {
+    $('.geometry-map-open').trigger('click');
+
+    setTimeout(function () {
+        var $sidebar = $('#geometry-map-sidebar');
+        var sidebar = $sidebar[0].getBoundingClientRect();
+        var vw = document.documentElement.clientWidth;
+
+        out.push('    viewport ' + vw + 'px, sidebar ' + Math.round(sidebar.left)
+            + '..' + Math.round(sidebar.right) + ' (' + Math.round(sidebar.width) + 'px)');
+
+        check('the sidebar is actually wider than core\'s default 25%',
+            sidebar.width > vw * 0.3, Math.round(sidebar.width) + 'px of ' + vw);
+
+        // The bug: widening the panel without moving it left pushed its right
+        // edge past the viewport, and .sidebar's overflow-x:hidden cropped it.
+        check('the sidebar\'s right edge is inside the viewport',
+            Math.round(sidebar.right) <= vw,
+            'right edge at ' + Math.round(sidebar.right) + ', viewport ' + vw);
+
+        check('the sidebar does not overlap the form',
+            sidebar.left >= $('#content')[0].getBoundingClientRect().right - 1,
+            'sidebar starts at ' + Math.round(sidebar.left) + ', content ends at '
+                + Math.round($('#content')[0].getBoundingClientRect().right));
+
+        var $canvas = $sidebar.find('.geometry-map-canvas');
+        var canvas = $canvas[0].getBoundingClientRect();
+        check('the map fits inside the panel',
+            Math.round(canvas.right) <= Math.round(sidebar.right),
+            'map right ' + Math.round(canvas.right) + ' vs panel right ' + Math.round(sidebar.right));
+
+        // What the user actually reported missing.
+        var $layers = $sidebar.find('.leaflet-control-layers');
+        check('the layer switcher exists', $layers.length === 1, 'found ' + $layers.length);
+
+        if ($layers.length) {
+            var layers = $layers[0].getBoundingClientRect();
+            out.push('    layer switcher at ' + Math.round(layers.left) + '..' + Math.round(layers.right));
+            check('the layer switcher is fully within the viewport',
+                layers.right <= vw && layers.left >= 0,
+                'spans ' + Math.round(layers.left) + '..' + Math.round(layers.right) + ', viewport ' + vw);
+            check('the layer switcher is not cropped by the panel',
+                Math.round(layers.right) <= Math.round(sidebar.right),
+                'switcher right ' + Math.round(layers.right) + ' vs panel right ' + Math.round(sidebar.right));
+            check('the layer switcher has been painted',
+                layers.width > 0 && layers.height > 0,
+                Math.round(layers.width) + 'x' + Math.round(layers.height));
+            // elementFromPoint proves it is reachable, not merely positioned.
+            var mid = document.elementFromPoint(layers.left + layers.width / 2,
+                                                layers.top + layers.height / 2);
+            check('the layer switcher is the top element at its own centre',
+                !!mid && $(mid).closest('.leaflet-control-layers').length === 1,
+                'topmost element there is ' + (mid ? mid.className || mid.tagName : 'nothing'));
+        }
+
+        // The fullscreen button, which the editor lacked entirely at first: it
+        // lazy-loaded Leaflet and Leaflet.draw but not the fullscreen plugin,
+        // so the option was passed to a control that was never registered.
+        check('the fullscreen plugin registered on L', !!(L.Control && L.Control.FullScreen),
+            'L.Control.FullScreen is undefined, so fullscreenControl is ignored silently');
+
+        var $full = $sidebar.find('.leaflet-control-zoom-fullscreen');
+        check('the fullscreen button exists on the editor map', $full.length === 1,
+            'found ' + $full.length);
+
+        if ($full.length) {
+            var full = $full[0].getBoundingClientRect();
+            check('the fullscreen button is painted and inside the panel',
+                full.width > 0 && full.height > 0
+                    && full.left >= sidebar.left && Math.round(full.right) <= Math.round(sidebar.right),
+                Math.round(full.width) + 'x' + Math.round(full.height)
+                    + ' at ' + Math.round(full.left) + '..' + Math.round(full.right));
+        }
+
+        // The zoom and draw toolbars sit at the left edge; check the other side too.
+        var $zoom = $sidebar.find('.leaflet-control-zoom');
+        if ($zoom.length) {
+            var zoom = $zoom[0].getBoundingClientRect();
+            check('the zoom control is inside the panel',
+                zoom.left >= sidebar.left, Math.round(zoom.left) + ' vs ' + Math.round(sidebar.left));
+        }
+
+        out.push('');
+        out.push(failures + ' failures');
+        document.getElementById('results').textContent = out.join('\n');
+    }, 4500);
+});
+</script>
+
+</body>
+</html>

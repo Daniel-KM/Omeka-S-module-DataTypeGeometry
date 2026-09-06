@@ -90,6 +90,77 @@
     .sidebar #advanced-search .inputs label.type-radio::after {
         background: initial;
     }
+
+    /* The map editor. */
+
+    .geometry-map-open {
+        margin-top: 6px;
+    }
+
+    /* Font Awesome 5.15.4 "map-marked-alt", from the solid face Omeka already
+       loads. The glyph itself is all this rule supplies: the font family and
+       weight come from core's [class*="o-icon-"]:before, which is why the class
+       has to keep the o-icon- prefix even though the name is this module's own.
+
+       Deliberately not "draw-polygon" (\f5ee) or "map-marker-alt" (\f3c5): those
+       two are already the icons for the geometry and geography data types, and
+       they sit a few pixels away in the same row. */
+    .o-icon-map-select:before {
+        content: "\f5a0";
+    }
+
+    .geometry-map-open:before {
+        margin-right: 6px;
+    }
+
+    #geometry-map-sidebar .geometry-map-canvas {
+        width: 100%;
+        height: 400px;
+    }
+
+    #geometry-map-sidebar .geometry-map-notice {
+        margin-bottom: 6px;
+    }
+
+    #geometry-map-sidebar .geometry-map-actions {
+        margin-top: 12px;
+    }
+
+    #geometry-map-sidebar .geometry-map-cancel {
+        background-color: transparent;
+        color: inherit;
+    }
+
+    /* The value being rendered on a public page. */
+    .datatype-geometry-map {
+        max-width: 100%;
+    }
+
+    /* Leaflet 1.9 composites tiles with `mix-blend-mode: plus-lighter`, to hide
+       the dark seam a tile would otherwise show while it fades in. It costs
+       more than it saves here.
+
+       The map sits at an integer zoom, so the tiles are not scaled by Leaflet.
+       They are still scaled by the browser: at 110% page zoom, or on a display
+       with fractional scaling, a 256px tile becomes 281.6 device pixels and
+       neighbouring tiles overlap by a fraction of a pixel. plus-lighter adds
+       both contributions, and on a base layer as light as OpenStreetMap the sum
+       clips to white, so every tile edge draws as a white line on a ~281px
+       grid. Measured on a flat OSM-coloured tile at 1.1: 1006 pure-white pixels
+       across the map interior with plus-lighter, none with normal. Compositing
+       normally is never worse at any scale factor tested (1, 1.1, 1.25, 1.5),
+       and strictly better at three of them.
+
+       Both of this module's maps: the value on a public page, and the editor's
+       canvas in the sidebar. Specific enough (0,3,1) to beat Leaflet's own
+       (0,2,1) without depending on stylesheet order, which matters because the
+       Mapping module may have loaded its Leaflet after ours. Scoped to this
+       module so other modules' maps keep whatever they chose. Keep it while any
+       Leaflet on the page sets plus-lighter; see asset/vendor/VERSIONS.md. */
+    .datatype-geometry-map.leaflet-container img.leaflet-tile,
+    .geometry-map-canvas.leaflet-container img.leaflet-tile {
+        mix-blend-mode: normal;
+    }
 }
 
 @media screen and (max-width:640px) {
@@ -97,5 +168,29 @@
     .resource-form #resource-values .inputs .values [data-data-type="geometry:coordinates"] .input-body label,
     .resource-form #resource-values .inputs .values [data-data-type="geography:coordinates"] .input-body label {
         text-align: initial;
+    }
+}
+
+/* Wider than Omeka's default 25%: drawing a shape in a narrow column means
+   panning instead of seeing where the shape is going.
+
+   Core couples the width to the offset — .sidebar is width:25% parked at
+   left:100%, and .active slides it to left:75% — so the two have to keep adding
+   up to 100%. Widening one alone pushes the panel's right edge past the
+   viewport, where .sidebar's own overflow-x:hidden crops it, and what gets
+   cropped is whatever sits at the right edge of the map: the layer switcher.
+   Hence left:60% alongside width:40%, and no min-width, which would break the
+   arithmetic again between 641px and 950px.
+
+   Kept above core's 640px breakpoint. Below it the sidebar is already full
+   width and positioned differently, and there is nothing to widen. */
+@media screen and (min-width: 641px) {
+    #geometry-map-sidebar {
+        width: 40%;
+    }
+
+    #geometry-map-sidebar.active,
+    #geometry-map-sidebar.always-open {
+        left: 60%;
     }
 }

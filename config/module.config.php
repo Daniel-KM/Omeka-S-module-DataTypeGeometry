@@ -187,6 +187,8 @@ return [
         'factories' => [
             'databaseVersion' => Service\ViewHelper\DatabaseVersionFactory::class,
             'geometryFieldset' => Service\ViewHelper\GeometryFieldsetFactory::class,
+            // Draws a wkt value on a Leaflet map, and prepares the editor.
+            'geometryMap' => Service\ViewHelper\GeometryMapFactory::class,
             'normalizeGeometryQuery' => Service\ViewHelper\NormalizeGeometryQueryFactory::class,
         ],
     ],
@@ -226,6 +228,13 @@ return [
         'Please enter a valid wkt for the geometry.', // @translate
         '"multipoint", "multiline" and "multipolygon" are not supported for now. Use collection instead.', // @translate
         'Error in input.', // @translate
+        // Strings used by the map editor (asset/js/data-type-geometry-editor.js).
+        'Use geometry editor', // @translate
+        'Geometry editor', // @translate
+        'Apply', // @translate
+        'Cancel', // @translate
+        'The map could not be loaded.', // @translate
+        'The current value is not a geometry this editor can read. Drawing will replace it.', // @translate
     ],
     'csv_import' => [
         'data_types' => [
@@ -256,5 +265,54 @@ return [
             'datatypegeometry_locate_srid' => 4326,
             'datatypegeometry_support_geographic_search' => false,
         ],
+
+        // Settings for the Leaflet map that renders a wkt value on a public
+        // page, and for the editor that draws one in the resource form. Both use
+        // the same layers, so what a cataloguer draws on is what a visitor sees.
+        //
+        // Override any of it from Omeka's config/local.config.php: arrays merge,
+        // so naming one key here leaves the rest of these defaults in place.
+        'map' => [
+            'height' => 400,
+            // Used only until a geometry is drawn or read; a value always fits its
+            // own bounds. This is the Markt in Gouda.
+            'center' => [52.011, 4.71],
+            'zoom' => 16,
+            'max_zoom' => 21,
+            'fit_max_zoom' => 19,
+            // The colour a geometry is drawn in, on both the public map and the
+            // editor. Passed to Leaflet as a path style.
+            'style' => [
+                'color' => '#d22e25',
+                'weight' => 4,
+                'fillColor' => '#d22e25',
+                'fillOpacity' => 0.3,
+            ],
+        ],
+
+        // Base layers: exactly one is active at a time, the first by default.
+        // OpenStreetMap so that a stock installation draws something without an
+        // account anywhere. Each entry: label, type (tile|wms), url, and options
+        // passed straight to Leaflet.
+        'base_layers' => [
+            'osm' => [
+                'label' => 'OpenStreetMap',
+                'type' => 'tile',
+                'url' => 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                'options' => [
+                    'maxZoom' => 19,
+                    'attribution' => '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                ],
+            ],
+        ],
+
+        // Overlays offered in the layer switcher, all off until switched on. Empty
+        // on purpose: which historical maps are worth showing is a property of a
+        // collection, not of this module, so they belong in local.config.php.
+        //
+        // A url is used exactly as written, so a caching or rewriting proxy in
+        // front of a tile server is simply part of the url — there is nothing for
+        // this module to know about it.
+        'extra_layers' => [],
     ],
 ];

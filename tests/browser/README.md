@@ -1,0 +1,73 @@
+# Browser checks
+
+`tests/verify-wiring.php` proves the module is wired into Omeka. It cannot prove
+a map draws: that needs a browser, a real Leaflet, and a real Leaflet.draw.
+
+These two pages drive `asset/js/data-type-geometry-editor.js` — the actual file,
+loaded over http from the running site — against a stand-in for the Omeka admin
+resource form. They exist because the editor only appears on an authenticated
+item edit page, which a headless run cannot reach.
+
+| Page | What it proves |
+|---|---|
+| `editor.html` | Ctrl+Alt+M and the button open the editor, Leaflet and Leaflet.draw load lazily on first use, the map gets a real size inside the sidebar, an existing value is seeded onto it, drawing writes a single non-`MULTI*` wkt back into the field with a `change` event, an untouched editor writes nothing, and each button edits its own row |
+| `collision.html` | The Mapping module's stack is left alone: it preloads the same three files Mapping's item form does (Leaflet 1.9.3, Leaflet.draw 1.0.4, leaflet.fullscreen 2.4.0) and checks the editor adds no second Leaflet, pulls nothing at all from this module's own `asset/vendor`, does not replace `window.L`, and leaves Mapping's own map working |
+| `sidebar-layout.html` | The panel and the map inside it stay within the viewport, and the layer switcher at the map's top right corner is painted, unclipped and reachable by `elementFromPoint` |
+| `tile-seams.html` | Both maps composite tiles with `mix-blend-mode: normal`, so tile edges do not clip to white where the browser scales them |
+
+`tile-seams.html` is also the measurement rig for that override, and the only page
+here worth running with a scale factor. Leaflet 1.9's `plus-lighter` only shows
+itself when a tile is laid out across a fractional number of device pixels, which
+is what 110% page zoom or fractional display scaling does — at scale 1 there is
+nothing to see, in either mode. Serve it and render with
+`--force-device-scale-factor=1.1`:
+
+- default: a flat tile the colour of OpenStreetMap's land, so any line at a tile
+  boundary is the compositing and nothing else
+- `?blend=1`: puts `plus-lighter` back
+- `?osm=1`: the real base layer, to confirm on the cartography the bug was
+  reported against
+
+Measured across the map interior at scale 1.1, flat tile: **1006 pure-white pixels
+with `plus-lighter`, none with `normal`**. On real OSM tiles the same run gives seam
+columns 281px apart, ~35 grey levels above their neighbours, and none after. The
+detector is the one that identified the bug from the reported screenshot: a column
+or row consistently lighter than the pixels two either side of it. Tile seams form a
+regular ~281px grid (256 × 1.1); anything irregular is map detail.
+
+`sidebar-layout.html` is the only one that loads Omeka's own `style.css`, and it
+has to: the sidebar has no geometry without it, so a map overflowing the panel
+looks perfectly fine in the other two. It exists because that is precisely what
+shipped — the panel was widened to 40% while core's `.sidebar.active` kept it at
+`left:75%`, so 15% of it hung off the right edge and `overflow-x: hidden` cropped
+the layer switcher away. Append **`?bug=1`** to restore that mistake and watch the
+assertions catch it; three of them fail.
+
+Measure, do not eyeball, and assert against the viewport as well as the parent:
+the switcher was correctly positioned *relative to the panel* the whole time.
+
+Both point at `https://www.goudatijdmachine.nl/omeka/`. Change the `BASE`
+constant, and the `<script src>` at the top, to test a different installation.
+
+## Running them
+
+They must be served over http, not opened as files:
+
+```sh
+cd tests/browser && php -S 127.0.0.1:8899 &
+chromium --headless --disable-gpu --no-sandbox --virtual-time-budget=25000 \
+    --dump-dom http://127.0.0.1:8899/editor.html \
+    | sed -n '/<pre id="results">/,/<\/pre>/p'
+```
+
+Every line should read `ok`, and the last line `0 failures`. The assertions run
+on timers, so a slow network shows up as a failure to load Leaflet rather than
+as a hang — raise the `setTimeout` values before believing such a result.
+
+Two traps met while writing these, worth knowing before editing them:
+
+- Leaflet puts `leaflet-container` **on** the element it is given, not on a
+  child, so a map inside `.geometry-map-canvas` is not found by
+  `.find('.leaflet-container')`.
+- `map.setZoom()` animates, and `getZoom()` still reports the old value on the
+  next line. Assert with `setZoom(n, {animate: false})`.

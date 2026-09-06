@@ -1,0 +1,159 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>collision harness</title>
+<script src="https://www.goudatijdmachine.nl/omeka/application/asset/vendor/jquery/jquery.min.js"></script>
+<script src="https://www.goudatijdmachine.nl/omeka/modules/DataTypeGeometry/asset/vendor/terraformer-wkt/t-wkt.umd-2.2.1.js"></script>
+
+<!-- The Mapping module, which is installed and puts its own Leaflet on the very
+     same item edit form. This is the collision the editor's lazy loading exists
+     to survive: a second Leaflet would replace window.L under Mapping and break
+     its map.
+
+     Mapping loads all three of these on that form, in this order: see
+     Mapping/view/common/mapping-item-form.phtml lines 2-11. Its
+     leaflet.fullscreen is 2.4.0, an ordinary script rather than the es module
+     later majors ship, and it registers the same L.Control.FullScreen under the
+     same leaflet-control-zoom-fullscreen class, so the editor can take it. -->
+<link rel="stylesheet" href="https://www.goudatijdmachine.nl/omeka/modules/Mapping/asset/node_modules/leaflet/dist/leaflet.css">
+<link rel="stylesheet" href="https://www.goudatijdmachine.nl/omeka/modules/Mapping/asset/node_modules/leaflet.fullscreen/Control.FullScreen.css">
+<script src="https://www.goudatijdmachine.nl/omeka/modules/Mapping/asset/node_modules/leaflet/dist/leaflet.js"></script>
+<script src="https://www.goudatijdmachine.nl/omeka/modules/Mapping/asset/node_modules/leaflet-draw/dist/leaflet.draw.js"></script>
+<script src="https://www.goudatijdmachine.nl/omeka/modules/Mapping/asset/node_modules/leaflet.fullscreen/Control.FullScreen.js"></script>
+</head>
+<body>
+
+<div id="content">
+  <div class="value" data-data-type="geometry">
+    <div class="input-body">
+      <textarea name="geometry" class="value to-require geometry" data-value-key="@value">POINT (4.7027444 52.0097589)</textarea>
+      <button type="button" class="geometry-map-open">Use geometry editor</button>
+    </div>
+  </div>
+  <!-- Mapping's own map, built before the editor is ever opened. -->
+  <div id="mapping-map" style="width:400px;height:300px"></div>
+</div>
+
+<pre id="results"></pre>
+
+<script>
+window.Omeka = {
+    openSidebar: function (s) { s.addClass('active'); s.trigger('o:sidebar-opened'); },
+    closeSidebar: function (s) { s.removeClass('active'); s.trigger('o:sidebar-closed'); },
+    jsTranslate: function (s) { return s; }
+};
+
+var BASE = 'https://www.goudatijdmachine.nl/omeka/modules/DataTypeGeometry/asset/';
+window.DataTypeGeometryConfig = {
+    map: {height: 400, center: [52.011, 4.71], zoom: 16, max_zoom: 21, fit_max_zoom: 19,
+        style: {color: '#d22e25', weight: 4}},
+    baseLayers: {osm: {label: 'OpenStreetMap', type: 'tile',
+        url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', options: {maxZoom: 19}}},
+    extraLayers: {},
+    assets: {
+        leafletCss: BASE + 'vendor/leaflet/leaflet.css',
+        leafletJs: BASE + 'vendor/leaflet/leaflet.js',
+        leafletDrawCss: BASE + 'vendor/leaflet-draw/leaflet.draw.css',
+        leafletDrawJs: BASE + 'vendor/leaflet-draw/leaflet.draw.js',
+        fullscreenCss: BASE + 'vendor/leaflet-fullscreen/Control.FullScreen.css',
+        fullscreenJs: BASE + 'vendor/leaflet-fullscreen/Control.FullScreen.umd.js'
+    }
+};
+
+var out = [], failures = 0;
+function check(d, ok, detail) {
+    if (ok === true) { out.push('    ok    ' + d); return; }
+    failures++;
+    out.push('    FAIL  ' + d + (detail ? '\n          ' + detail : ''));
+}
+
+// Mapping's map, and a marker on it, exactly as that module would have.
+var mappingMap = L.map('mapping-map').setView([52.011, 4.71], 14);
+var mappingMarker = L.marker([52.011, 4.71]).addTo(mappingMap);
+var mappingLeaflet = L.version;
+var mappingL = window.L;
+
+// Leaflet core only. A substring match on "leaflet" also catches the plugins,
+// whose paths contain the word, and would report a plugin load as a second
+// Leaflet.
+function countLeafletCore() {
+    return $('script[src]').filter(function () {
+        return /\/leaflet(-src)?\.js(\?|$)/.test(this.src);
+    }).length;
+}
+
+// Anything at all pulled from this module's vendor directory. When the page
+// already has the whole stack, the editor should add nothing.
+function countOwnVendor() {
+    return $('script[src*="/DataTypeGeometry/asset/vendor/"], link[href*="/DataTypeGeometry/asset/vendor/"]').length;
+}
+</script>
+
+<script src="https://www.goudatijdmachine.nl/omeka/modules/DataTypeGeometry/asset/js/data-type-geometry-editor.js"></script>
+
+<script>
+$(function () {
+    var before = countLeafletCore();
+    var ownBefore = countOwnVendor();
+
+    $('.geometry-map-open').trigger('click');
+
+    setTimeout(function () {
+        check('Mapping\'s Leaflet was already on the page', mappingLeaflet === '1.9.3',
+            'expected 1.9.3, found ' + mappingLeaflet);
+
+        check('Mapping\'s fullscreen plugin was already on the page',
+            !!(L.Control && L.Control.FullScreen),
+            'L.Control.FullScreen missing, so this run is not testing reuse at all');
+
+        check('the editor loaded NO second Leaflet', countLeafletCore() === before,
+            'Leaflet core scripts went from ' + before + ' to ' + countLeafletCore());
+
+        check('the editor pulled nothing from its own vendor directory',
+            countOwnVendor() === ownBefore,
+            'own vendor assets went from ' + ownBefore + ' to ' + countOwnVendor());
+
+        check('window.L was not replaced under Mapping', window.L === mappingL,
+            'window.L is a different object now: Mapping\'s map would be broken');
+
+        check('L.version is still Mapping\'s', L.version === '1.9.3',
+            'now ' + L.version);
+
+        var $sidebar = $('#geometry-map-sidebar');
+        check('the editor still opened and built its map',
+            $sidebar.hasClass('active') && $sidebar.find('.geometry-map-canvas').hasClass('leaflet-container'),
+            'sidebar active: ' + $sidebar.hasClass('active'));
+
+        check('the draw toolbar is present, using the Leaflet.draw already there',
+            $sidebar.find('.leaflet-draw-toolbar').length > 0, 'no toolbar');
+
+        check('the fullscreen button is present, using Mapping\'s 2.4.0 plugin',
+            $sidebar.find('.leaflet-control-zoom-fullscreen').length === 1,
+            'found ' + $sidebar.find('.leaflet-control-zoom-fullscreen').length);
+
+        check('the existing value was still seeded onto the editor map',
+            $sidebar.find('.leaflet-marker-icon').length === 1,
+            'markers: ' + $sidebar.find('.leaflet-marker-icon').length);
+
+        // Mapping's own map has to be untouched by all of this.
+        check('Mapping\'s map still works after the editor opened',
+            mappingMap.getZoom() === 14 && mappingMap.hasLayer(mappingMarker)
+                && $('#mapping-map').hasClass('leaflet-container'),
+            'zoom ' + mappingMap.getZoom() + ', marker attached: ' + mappingMap.hasLayer(mappingMarker));
+
+        // Without animate:false the zoom is applied over time and getZoom()
+        // still reports the old value on the next line.
+        mappingMap.setZoom(15, {animate: false});
+        check('Mapping\'s map still responds to interaction', mappingMap.getZoom() === 15,
+            'zoom is ' + mappingMap.getZoom());
+
+        out.push('');
+        out.push(failures + ' failures');
+        document.getElementById('results').textContent = out.join('\n');
+    }, 4000);
+});
+</script>
+
+</body>
+</html>
